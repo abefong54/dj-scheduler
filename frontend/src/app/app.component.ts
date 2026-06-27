@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
+import { LanguageService } from './services/language.service';
 
 @Component({
   selector: 'app-root',
@@ -21,14 +22,14 @@ import { CommonModule } from '@angular/common';
         </a>
       </div>
       <div class="flex gap-1">
-        <button (click)="setLang('en')"
+        <button (click)="langService.setLanguage('en')"
           class="px-3 py-1 rounded text-xs font-medium transition-colors"
-          [class]="currentLang==='en' ? 'bg-white text-slate-900' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'">
+          [class]="langService.currentLang() === 'en' ? 'bg-white text-slate-900' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'">
           EN
         </button>
-        <button (click)="setLang('zh-TW')"
+        <button (click)="langService.setLanguage('zh-TW')"
           class="px-3 py-1 rounded text-xs font-medium transition-colors"
-          [class]="currentLang==='zh-TW' ? 'bg-white text-slate-900' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'">
+          [class]="langService.currentLang() === 'zh-TW' ? 'bg-white text-slate-900' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'">
           中文
         </button>
       </div>
@@ -38,17 +39,6 @@ import { CommonModule } from '@angular/common';
     </main>
   `,
 })
-export class AppComponent implements OnInit {
-  currentLang = 'en';
-  constructor(private translate: TranslateService) {}
-  ngOnInit() {
-    const saved = localStorage.getItem('lang') || 'en';
-    this.translate.use(saved);
-    this.currentLang = saved;
-  }
-  setLang(lang: string) {
-    this.translate.use(lang);
-    this.currentLang = lang;
-    localStorage.setItem('lang', lang);
-  }
+export class AppComponent {
+  langService = inject(LanguageService);
 }
