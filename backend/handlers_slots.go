@@ -20,7 +20,7 @@ func listSlots(pool *pgxpool.Pool) gin.HandlerFunc {
 		rows, err := pool.Query(context.Background(), `
 			SELECT sl.id, sl.event_id, sl.stage_id, st.name,
 			       COALESCE(sl.dj_id::text,''), COALESCE(d.name,''),
-			       sl.slot_date::text, sl.start_time::text, sl.end_time::text, COALESCE(sl.notes,'')
+			       sl.slot_date::text, to_char(sl.start_time,'HH24:MI'), to_char(sl.end_time,'HH24:MI'), COALESCE(sl.notes,'')
 			FROM slots sl
 			JOIN stages st ON st.id = sl.stage_id
 			LEFT JOIN djs d ON d.id = sl.dj_id

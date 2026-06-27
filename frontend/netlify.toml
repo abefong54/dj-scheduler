@@ -1,6 +1,8 @@
+# Set RAILWAY_API_URL in Netlify dashboard (Site settings → Environment variables)
+# to your Railway backend URL, e.g. https://myapp.up.railway.app
 [build]
   base    = "frontend"
-  command = "npm run build"
+  command = "sed -i \"s|https://YOUR_RAILWAY_URL.up.railway.app|${RAILWAY_API_URL}|\" src/environments/environment.prod.ts && npm run build"
   publish = "dist/frontend/browser"
 
 [[redirects]]
