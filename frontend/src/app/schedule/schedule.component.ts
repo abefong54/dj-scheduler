@@ -84,7 +84,7 @@ import { ApiService, Event, Stage, Slot } from '../services/api.service';
             <thead>
               <tr>
                 <th class="border border-gray-200 bg-gray-50 px-3 py-2 text-left w-36 text-xs font-medium text-gray-600">
-                  Stage
+                  {{ 'slots.stage' | translate }}
                 </th>
                 <th *ngFor="let t of timeHeaders"
                     class="border border-gray-200 bg-gray-50 px-2 py-2 text-xs font-medium text-gray-500 w-20 text-center">
