@@ -96,3 +96,48 @@ func TestGetEvent(t *testing.T) {
 		t.Fatalf("expected id %s, got %s", id, e.ID)
 	}
 }
+
+func TestDeleteEvent(t *testing.T) {
+	pool := setupTestDB(t)
+	id := createTestEvent(t, pool)
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodDelete, "/api/events/"+id, nil)
+	eventRouter(pool).ServeHTTP(w, req)
+
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("expected 204, got %d: %s", w.Code, w.Body.String())
+	}
+	// Verify it's gone
+	w2 := httptest.NewRecorder()
+	req2 := httptest.NewRequest(http.MethodGet, "/api/events/"+id, nil)
+	eventRouter(pool).ServeHTTP(w2, req2)
+	if w2.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 after delete, got %d", w2.Code)
+	}
+}
+
+func TestDuplicateEvent(t *testing.T) {
+	pool := setupTestDB(t)
+	id := createTestEvent(t, pool)
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/events/"+id+"/duplicate", nil)
+	eventRouter(pool).ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+	var e Event
+	json.NewDecoder(w.Body).Decode(&e)
+	if e.ID == "" {
+		t.Fatal("expected ID in duplicate response")
+	}
+	if e.ID == id {
+		t.Fatal("duplicate should have a new ID")
+	}
+	// Cleanup the duplicate
+	t.Cleanup(func() {
+		pool.Exec(context.Background(), "DELETE FROM events WHERE id = $1", e.ID)
+	})
+}

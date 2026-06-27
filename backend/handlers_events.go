@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -120,15 +121,24 @@ func duplicateEvent(pool *pgxpool.Pool) gin.HandlerFunc {
 		}
 
 		// Copy stages (not slots — dates would need adjustment)
-		rows, _ := pool.Query(ctx,
+		rows, err := pool.Query(ctx,
 			`SELECT name, color, display_order FROM stages WHERE event_id = $1 ORDER BY display_order`, origID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 		defer rows.Close()
 		for rows.Next() {
 			var s Stage
 			rows.Scan(&s.Name, &s.Color, &s.DisplayOrder)
-			pool.Exec(ctx,
+			if _, execErr := pool.Exec(ctx,
 				`INSERT INTO stages (event_id, name, color, display_order) VALUES ($1,$2,$3,$4)`,
-				newEvent.ID, s.Name, s.Color, s.DisplayOrder)
+				newEvent.ID, s.Name, s.Color, s.DisplayOrder); execErr != nil {
+				log.Printf("duplicate stage insert: %v", execErr)
+			}
+		}
+		if err := rows.Err(); err != nil {
+			log.Printf("duplicate stage rows error: %v", err)
 		}
 
 		c.JSON(http.StatusCreated, newEvent)
