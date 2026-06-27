@@ -16,6 +16,7 @@
   "eventNew.startDate": "Start date",
   "eventNew.endDate": "End date (optional — defaults to start)",
   "eventNew.create": "Create Event",
+  "eventNew.back": "← Back to Events",
   "eventDetail.shareViaLine": "Share via LINE",
   "eventDetail.viewPublic": "View Public Schedule",
   "stages.title": "Stages",

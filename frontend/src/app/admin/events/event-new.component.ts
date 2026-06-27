@@ -12,7 +12,7 @@ import { ApiService } from '../../services/api.service';
   template: `
     <div class="max-w-lg mx-auto px-6 py-8">
       <a routerLink="/admin/events" class="text-sm text-indigo-600 hover:underline mb-6 inline-block">
-        ← Back to Events
+        {{ 'eventNew.back' | translate }}
       </a>
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
         <h1 class="text-xl font-semibold text-gray-900 mb-6">{{ 'eventNew.title' | translate }}</h1>

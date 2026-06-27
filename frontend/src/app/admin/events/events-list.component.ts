@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ApiService, Event } from '../../services/api.service';
 
 @Component({
@@ -100,7 +100,7 @@ export class EventsListComponent implements OnInit {
   activeTab: 'upcoming' | 'past' = 'upcoming';
   today = new Date().toISOString().slice(0, 10);
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private translate: TranslateService) {}
 
   ngOnInit() { this.load(); }
 
@@ -117,7 +117,7 @@ export class EventsListComponent implements OnInit {
   }
 
   delete(id: string) {
-    if (!confirm('Delete this event and all its stages and slots?')) return;
+    if (!confirm(this.translate.instant('events.deleteConfirm'))) return;
     this.api.deleteEvent(id).subscribe(() => this.load());
   }
 
