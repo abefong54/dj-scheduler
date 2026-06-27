@@ -17,6 +17,7 @@
   "eventNew.endDate": "結束日期（選填，預設同開始日期）",
   "eventNew.create": "建立活動",
   "eventNew.back": "← 返回活動",
+  "eventDetail.backToEvents": "← 活動列表",
   "eventDetail.shareViaLine": "分享至 LINE",
   "eventDetail.viewPublic": "查看公開節目表",
   "stages.title": "舞台",

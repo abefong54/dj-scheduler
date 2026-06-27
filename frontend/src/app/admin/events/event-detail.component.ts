@@ -14,7 +14,7 @@ import { ApiService, Event, Stage, Slot, DJ } from '../../services/api.service';
       <!-- Header -->
       <div class="mb-6">
         <a routerLink="/admin/events" class="text-sm text-indigo-600 hover:underline mb-2 inline-block">
-          ← Events
+          {{ 'eventDetail.backToEvents' | translate }}
         </a>
         <div class="flex items-start justify-between flex-wrap gap-3">
           <div>
@@ -49,7 +49,7 @@ import { ApiService, Event, Stage, Slot, DJ } from '../../services/api.service';
               <span class="text-sm text-gray-800 flex-1 truncate">{{ s.name }}</span>
               <button (click)="deleteStage(s.id)"
                 class="text-gray-400 hover:text-red-500 transition-colors text-sm ml-auto"
-                aria-label="Delete stage">✕</button>
+                [attr.aria-label]="'actions.delete' | translate">✕</button>
             </li>
           </ul>
           <form (ngSubmit)="addStage()" class="space-y-2">
@@ -98,7 +98,7 @@ import { ApiService, Event, Stage, Slot, DJ } from '../../services/api.service';
                 class="border border-gray-300 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-24" />
               <button type="submit"
                 class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-3 py-2 rounded-md text-sm transition-colors"
-                aria-label="Add slot">+</button>
+                [attr.aria-label]="'actions.add' | translate">+</button>
             </div>
           </form>
 
@@ -134,7 +134,7 @@ import { ApiService, Event, Stage, Slot, DJ } from '../../services/api.service';
                   <td class="px-4 py-2 text-right">
                     <button (click)="deleteSlot(s.id)"
                       class="text-gray-400 hover:text-red-500 transition-colors"
-                      aria-label="Delete slot">✕</button>
+                      [attr.aria-label]="'actions.delete' | translate">✕</button>
                   </td>
                 </tr>
               </tbody>
