@@ -43,5 +43,6 @@ func main() {
 }
 
 func registerRoutes(r *gin.Engine, pool *pgxpool.Pool) {
-	// filled in by handler tasks
+	api := r.Group("/api")
+	registerDJRoutes(api, pool)
 }
