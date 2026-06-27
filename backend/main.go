@@ -45,4 +45,5 @@ func main() {
 func registerRoutes(r *gin.Engine, pool *pgxpool.Pool) {
 	api := r.Group("/api")
 	registerDJRoutes(api, pool)
+	registerEventRoutes(api, pool)
 }
