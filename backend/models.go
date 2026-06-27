@@ -4,6 +4,7 @@ type DJ struct {
 	ID        string   `json:"id"`
 	Name      string   `json:"name"`
 	GenreTags []string `json:"genre_tags"`
+	CreatedAt string   `json:"created_at"`
 }
 
 type Event struct {
