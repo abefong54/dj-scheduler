@@ -36,6 +36,7 @@
   "djs.title": "DJs",
   "djs.name": "Name",
   "djs.genre": "Genre tags (comma-separated)",
+  "djs.genrePlaceholder": "hip hop, r&b, house",
   "djs.add": "Add DJ",
   "djs.noDJs": "No DJs yet. Add your first DJ above.",
   "schedule.share": "Share via LINE",

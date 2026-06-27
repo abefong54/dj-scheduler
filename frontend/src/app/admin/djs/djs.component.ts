@@ -23,7 +23,7 @@ import { ApiService, DJ } from '../../services/api.service';
           <div class="flex-1 min-w-40">
             <label class="block text-xs font-medium text-gray-600 mb-1">{{ 'djs.genre' | translate }}</label>
             <input [(ngModel)]="newGenre" name="genre"
-              placeholder="hip hop, r&b, house"
+              [attr.placeholder]="'djs.genrePlaceholder' | translate"
               class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-500" />
           </div>
           <button type="submit"

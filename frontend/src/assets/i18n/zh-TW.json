@@ -36,6 +36,7 @@
   "djs.title": "DJ 名單",
   "djs.name": "名稱",
   "djs.genre": "音樂類型（逗號分隔）",
+  "djs.genrePlaceholder": "hip hop，r&b，house",
   "djs.add": "新增 DJ",
   "djs.noDJs": "尚未新增 DJ，請在上方新增。",
   "schedule.share": "分享至 LINE",
