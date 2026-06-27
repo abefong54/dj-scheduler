@@ -1,0 +1,9 @@
+# backend/railway.toml
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "./server"
+healthcheckPath = "/api/events"
+healthcheckTimeout = 10
