@@ -56,3 +56,8 @@
 .color-swatch { @apply w-7 h-7 rounded-full border-2 transition-all; }
 .swatch-active { @apply border-gray-900; }
 .swatch-inactive { @apply border-transparent; }
+
+/* Slot notes column */
+.slot-notes-cell { @apply px-3 py-3 max-w-36; }
+.slot-notes-text { @apply block text-xs text-gray-500 truncate cursor-help; }
+.edit-notes-input { @apply text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-400 w-28; }

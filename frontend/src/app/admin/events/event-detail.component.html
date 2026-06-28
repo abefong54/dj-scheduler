@@ -76,6 +76,7 @@
                 {{ 'slots.start' | translate }}{{ sortIndicator('start_time') }}
               </th>
               <th class="slot-th">{{ 'slots.duration' | translate }}</th>
+              <th class="slot-th">{{ 'slots.notes' | translate }}</th>
               <th class="slot-th"></th>
             </tr>
           </thead>
@@ -130,6 +131,13 @@
                       }
                     </datalist>
                   </td>
+                  <td class="edit-cell">
+                    <input [(ngModel)]="editSlotNotes" [name]="'es_notes_' + slot.id"
+                      type="text" class="edit-notes-input"
+                      [placeholder]="'slots.notes' | translate"
+                      (keydown.enter)="saveEdit(slot.id)"
+                      (keydown.escape)="cancelEdit()" />
+                  </td>
                   <td class="edit-actions-cell">
                     <button (click)="saveEdit(slot.id)" class="btn-save">{{ 'actions.save' | translate }}</button>
                     <button (click)="cancelEdit()" class="btn-cancel-edit">{{ 'actions.cancel' | translate }}</button>
@@ -147,6 +155,11 @@
                   <td class="slot-genre-cell">{{ slot.genre || '—' }}</td>
                   <td class="slot-time-cell">{{ slot.start_time }}</td>
                   <td class="slot-time-cell">{{ duration(slot.start_time, slot.end_time) }}</td>
+                  <td class="slot-notes-cell">
+                    @if (slot.notes) {
+                      <span class="slot-notes-text" [title]="slot.notes">{{ slot.notes }}</span>
+                    }
+                  </td>
                   <td class="slot-actions-cell">
                     <button (click)="startEdit(slot)" class="slot-edit-btn">{{ 'actions.edit' | translate }}</button>
                     <button (click)="deleteSlot(slot.id)" class="btn-danger">
@@ -204,6 +217,13 @@
                     (keydown.enter)="submitAddRow()"
                     (keydown.escape)="cancelAddRow()" />
                 </td>
+                <td class="add-cell">
+                  <input [(ngModel)]="addNotes" name="addNotes"
+                    type="text" class="edit-notes-input"
+                    [placeholder]="'slots.notes' | translate"
+                    (keydown.enter)="submitAddRow()"
+                    (keydown.escape)="cancelAddRow()" />
+                </td>
                 <td class="add-cell text-right whitespace-nowrap">
                   <button (click)="submitAddRow()" class="btn-save">{{ 'actions.save' | translate }}</button>
                   <button (click)="cancelAddRow()" class="btn-cancel-edit">{{ 'actions.cancel' | translate }}</button>
@@ -211,7 +231,7 @@
               </tr>
             } @else {
               <tr class="add-trigger-row" (click)="activateAddRow()">
-                <td colspan="6" class="add-trigger-cell">
+                <td colspan="7" class="add-trigger-cell">
                   + {{ 'slots.new' | translate }}
                 </td>
               </tr>
