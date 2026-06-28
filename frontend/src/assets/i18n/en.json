@@ -39,6 +39,9 @@
   "slots.selectOption": "— select —",
   "slots.djFirst": "— DJ first —",
   "slots.deleteConfirm": "Delete this slot?",
+  "slots.error.djDoubleBooked": "{{djName}} is already booked at this time",
+  "slots.error.stageOverlap": "{{stageName}} already has a set at this time",
+  "slots.error.generic": "Something went wrong, please try again",
 
   "djs.title": "DJs",
   "djs.new": "Add a DJ",

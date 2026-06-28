@@ -89,6 +89,7 @@ export class EventDetailComponent implements OnDestroy {
   addStart = '';
   addDuration = 60;
   addNotes = '';
+  addConflictError = signal<string | null>(null);
 
   defaultStageId = computed(() => this.stages().length === 1 ? this.stages()[0].id : '');
 
@@ -138,10 +139,12 @@ export class EventDetailComponent implements OnDestroy {
     this.addStart = this.defaultStartTime();
     this.addDuration = 60;
     this.addNotes = '';
+    this.addConflictError.set(null);
     this.addRowActive.set(true);
   }
 
   cancelAddRow() {
+    this.addConflictError.set(null);
     this.addRowActive.set(false);
   }
 
@@ -156,12 +159,32 @@ export class EventDetailComponent implements OnDestroy {
       start_time: this.addStart,
       end_time: this.addMinutes(this.addStart, this.addDuration),
       notes: this.addNotes,
-    }).subscribe(() => {
-      this.api.getSlots(eventId).subscribe(s => {
-        this.slots.set(s);
-        this.activateAddRow(); // reset with fresh pre-fills for the next slot
-      });
+    }).subscribe({
+      next: () => {
+        this.api.getSlots(eventId).subscribe(s => {
+          this.slots.set(s);
+          this.activateAddRow(); // reset with fresh pre-fills (also clears the error) for the next slot
+        });
+      },
+      error: (err) => this.addConflictError.set(this.conflictMessage(err, this.addDjId, this.addStageId)),
     });
+  }
+
+  // Maps a slot write error to a user-facing message: a 409 reports the specific
+  // DJ double-booking or stage overlap; anything else is a generic failure.
+  private conflictMessage(err: unknown, djId: string, stageId: string): string {
+    const e = err as { status?: number; error?: { type?: string } };
+    if (e?.status === 409) {
+      if (e.error?.type === 'dj_double_booked') {
+        const djName = this.djs().find(d => d.id === djId)?.name ?? '';
+        return this.translate.instant('slots.error.djDoubleBooked', { djName });
+      }
+      if (e.error?.type === 'stage_overlap') {
+        const stageName = this.stages().find(s => s.id === stageId)?.name ?? '';
+        return this.translate.instant('slots.error.stageOverlap', { stageName });
+      }
+    }
+    return this.translate.instant('slots.error.generic');
   }
 
   tabDate(d: string): string {
@@ -340,6 +363,7 @@ export class EventDetailComponent implements OnDestroy {
   editSlotStart = '';
   editSlotDuration = 60;
   editSlotNotes = '';
+  editConflictError = signal<string | null>(null);
 
   startEdit(slot: Slot) {
     this.editSlotStageId = slot.stage_id;
@@ -349,6 +373,7 @@ export class EventDetailComponent implements OnDestroy {
     this.editSlotStart = slot.start_time;
     this.editSlotDuration = this.toMins(slot.end_time) - this.toMins(slot.start_time);
     this.editSlotNotes = slot.notes;
+    this.editConflictError.set(null);
     this.editingSlotId.set(slot.id);
   }
 
@@ -362,13 +387,18 @@ export class EventDetailComponent implements OnDestroy {
       start_time: this.editSlotStart,
       end_time: this.addMinutes(this.editSlotStart, Number(this.editSlotDuration)),
       notes: this.editSlotNotes,
-    }).subscribe(() => {
-      this.api.getSlots(eventId).subscribe(s => this.slots.set(s));
-      this.editingSlotId.set(null);
+    }).subscribe({
+      next: () => {
+        this.api.getSlots(eventId).subscribe(s => this.slots.set(s));
+        this.editConflictError.set(null);
+        this.editingSlotId.set(null);
+      },
+      error: (err) => this.editConflictError.set(this.conflictMessage(err, this.editSlotDjId, this.editSlotStageId)),
     });
   }
 
   cancelEdit() {
+    this.editConflictError.set(null);
     this.editingSlotId.set(null);
   }
 
