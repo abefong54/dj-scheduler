@@ -38,6 +38,9 @@
   "slots.selectOption": "— 請選擇 —",
   "slots.djFirst": "— 請先選擇 DJ —",
   "slots.deleteConfirm": "確定要刪除此時段嗎？",
+  "slots.error.djDoubleBooked": "{{djName}} 在此時段已有排程",
+  "slots.error.stageOverlap": "{{stageName}} 在此時段已有演出",
+  "slots.error.generic": "發生錯誤，請再試一次",
 
   "djs.title": "DJ 名單",
   "djs.new": "新增 DJ",

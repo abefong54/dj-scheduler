@@ -132,6 +132,10 @@
   .add-trigger-row { @apply hover:bg-violet-50 cursor-pointer transition-colors; }
   .add-trigger-cell { @apply px-3 py-3 text-sm text-violet-600 font-medium; }
 
+  /* Inline conflict warning (slot add / edit) */
+  .conflict-cell { @apply px-3 py-2 text-sm text-red-700 bg-red-50; }
+  .conflict-text { @apply inline-flex items-center gap-1; }
+
   /* Stage modal field wrapper */
   .modal-field { @apply mb-5; }
 
