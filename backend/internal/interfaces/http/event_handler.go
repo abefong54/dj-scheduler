@@ -8,6 +8,7 @@ import (
 
 	"eventlineup/internal/domain/apperrors"
 	"eventlineup/internal/domain/model"
+	"eventlineup/internal/interfaces/http/middleware"
 	eventuc "eventlineup/internal/usecase/event"
 )
 
@@ -32,7 +33,8 @@ func (h *EventHandler) Register(rg *gin.RouterGroup) {
 // @Failure     500  {object}  map[string]string
 // @Router      /api/events [get]
 func (h *EventHandler) list(c *gin.Context) {
-	events, err := h.uc.List(c.Request.Context())
+	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
+	events, err := h.uc.List(c.Request.Context(), organizerID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -49,7 +51,8 @@ func (h *EventHandler) list(c *gin.Context) {
 // @Failure     404  {object}  map[string]string
 // @Router      /api/events/{id} [get]
 func (h *EventHandler) get(c *gin.Context) {
-	e, err := h.uc.Get(c.Request.Context(), c.Param("id"))
+	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
+	e, err := h.uc.Get(c.Request.Context(), c.Param("id"), organizerID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return
@@ -80,7 +83,8 @@ func (h *EventHandler) create(c *gin.Context) {
 	if body.EndDate == "" {
 		body.EndDate = body.StartDate
 	}
-	e, err := h.uc.Create(c.Request.Context(), body)
+	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
+	e, err := h.uc.Create(c.Request.Context(), body, organizerID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -117,7 +121,8 @@ func (h *EventHandler) patch(c *gin.Context) {
 		body.Genres = []string{}
 	}
 	body.ID = c.Param("id")
-	e, err := h.uc.Update(c.Request.Context(), body)
+	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
+	e, err := h.uc.Update(c.Request.Context(), body, organizerID)
 	if errors.Is(err, apperrors.ErrNotFound) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "event not found"})
 		return
@@ -137,7 +142,8 @@ func (h *EventHandler) patch(c *gin.Context) {
 // @Failure     500  {object}  map[string]string
 // @Router      /api/events/{id} [delete]
 func (h *EventHandler) delete(c *gin.Context) {
-	if err := h.uc.Delete(c.Request.Context(), c.Param("id")); err != nil {
+	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
+	if err := h.uc.Delete(c.Request.Context(), c.Param("id"), organizerID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -153,7 +159,8 @@ func (h *EventHandler) delete(c *gin.Context) {
 // @Failure     404  {object}  map[string]string
 // @Router      /api/events/{id}/duplicate [post]
 func (h *EventHandler) duplicate(c *gin.Context) {
-	e, err := h.uc.Duplicate(c.Request.Context(), c.Param("id"))
+	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
+	e, err := h.uc.Duplicate(c.Request.Context(), c.Param("id"), organizerID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return

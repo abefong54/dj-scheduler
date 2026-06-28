@@ -17,8 +17,8 @@ func NewDJRepository(pool *pgxpool.Pool) *djRepo {
 	return &djRepo{pool: pool}
 }
 
-func (r *djRepo) List(ctx context.Context) ([]model.DJ, error) {
-	rows, err := r.pool.Query(ctx, queryDJList)
+func (r *djRepo) List(ctx context.Context, organizerID string) ([]model.DJ, error) {
+	rows, err := r.pool.Query(ctx, queryDJList, organizerID)
 	if err != nil {
 		return nil, err
 	}
@@ -34,9 +34,9 @@ func (r *djRepo) List(ctx context.Context) ([]model.DJ, error) {
 	return djs, rows.Err()
 }
 
-func (r *djRepo) Get(ctx context.Context, id string) (model.DJ, error) {
+func (r *djRepo) Get(ctx context.Context, id, organizerID string) (model.DJ, error) {
 	var d model.DJ
-	err := r.pool.QueryRow(ctx, queryDJGet, id).
+	err := r.pool.QueryRow(ctx, queryDJGet, id, organizerID).
 		Scan(&d.ID, &d.Name, &d.GenreTags, &d.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return model.DJ{}, apperrors.ErrNotFound
@@ -44,16 +44,16 @@ func (r *djRepo) Get(ctx context.Context, id string) (model.DJ, error) {
 	return d, err
 }
 
-func (r *djRepo) Create(ctx context.Context, name string, tags []string) (model.DJ, error) {
+func (r *djRepo) Create(ctx context.Context, name string, tags []string, organizerID string) (model.DJ, error) {
 	var d model.DJ
-	err := r.pool.QueryRow(ctx, queryDJInsert, name, tags).
+	err := r.pool.QueryRow(ctx, queryDJInsert, name, tags, organizerID).
 		Scan(&d.ID, &d.Name, &d.GenreTags, &d.CreatedAt)
 	return d, err
 }
 
-func (r *djRepo) Update(ctx context.Context, dj model.DJ) (model.DJ, error) {
+func (r *djRepo) Update(ctx context.Context, dj model.DJ, organizerID string) (model.DJ, error) {
 	var d model.DJ
-	err := r.pool.QueryRow(ctx, queryDJUpdate, dj.Name, dj.GenreTags, dj.ID).
+	err := r.pool.QueryRow(ctx, queryDJUpdate, dj.Name, dj.GenreTags, dj.ID, organizerID).
 		Scan(&d.ID, &d.Name, &d.GenreTags, &d.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return model.DJ{}, apperrors.ErrNotFound
@@ -61,7 +61,7 @@ func (r *djRepo) Update(ctx context.Context, dj model.DJ) (model.DJ, error) {
 	return d, err
 }
 
-func (r *djRepo) Delete(ctx context.Context, id string) error {
-	_, err := r.pool.Exec(ctx, queryDJDelete, id)
+func (r *djRepo) Delete(ctx context.Context, id, organizerID string) error {
+	_, err := r.pool.Exec(ctx, queryDJDelete, id, organizerID)
 	return err
 }

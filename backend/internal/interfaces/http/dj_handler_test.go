@@ -9,31 +9,42 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 
+	"eventlineup/internal/domain/model"
 	"eventlineup/internal/infrastructure/database"
 	httphandler "eventlineup/internal/interfaces/http"
-	"eventlineup/internal/domain/model"
 	djuc "eventlineup/internal/usecase/dj"
 )
 
-func djRouter(t *testing.T) (*gin.Engine, func()) {
+func djRouterForOrg(t *testing.T, pool *pgxpool.Pool, organizerID string) *gin.Engine {
 	t.Helper()
-	pool := setupTestDB(t)
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	repo := database.NewDJRepository(pool)
-	h := httphandler.NewDJHandler(djuc.New(repo))
-	h.Register(r.Group("/api"))
-	return r, func() { pool.Close() }
+	r.Use(orgContext(organizerID))
+	httphandler.NewDJHandler(djuc.New(database.NewDJRepository(pool))).Register(r.Group("/api"))
+	return r
+}
+
+func seedDJ(t *testing.T, pool *pgxpool.Pool, organizerID, name string) string {
+	t.Helper()
+	var id string
+	if err := pool.QueryRow(context.Background(),
+		`INSERT INTO djs (name, genre_tags, organizer_id) VALUES ($1, '{"techno"}', $2) RETURNING id`,
+		name, organizerID).Scan(&id); err != nil {
+		t.Fatalf("seed dj: %v", err)
+	}
+	t.Cleanup(func() { pool.Exec(context.Background(), "DELETE FROM djs WHERE id = $1", id) })
+	return id
 }
 
 func TestListDJs(t *testing.T) {
-	r, cleanup := djRouter(t)
-	defer cleanup()
-	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/api/djs", nil)
-	r.ServeHTTP(w, req)
+	pool := setupTestDB(t)
+	org := createTestOrganizer(t, pool)
+	r := djRouterForOrg(t, pool, org)
 
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/djs", nil))
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)
 	}
@@ -43,17 +54,42 @@ func TestListDJs(t *testing.T) {
 	}
 }
 
+// US-002: DJ roster is scoped to the organizer.
+func TestListDJsScopedToOrganizer(t *testing.T) {
+	pool := setupTestDB(t)
+	orgA := createTestOrganizer(t, pool)
+	orgB := createTestOrganizer(t, pool)
+	djA := seedDJ(t, pool, orgA, "dj-a")
+	djB := seedDJ(t, pool, orgB, "dj-b")
+
+	r := djRouterForOrg(t, pool, orgA)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/djs", nil))
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+	var djs []model.DJ
+	json.NewDecoder(w.Body).Decode(&djs)
+
+	ids := map[string]bool{}
+	for _, d := range djs {
+		ids[d.ID] = true
+	}
+	if !ids[djA] {
+		t.Fatal("organizer A should see their own DJ")
+	}
+	if ids[djB] {
+		t.Fatal("organizer A must NOT see organizer B's DJ")
+	}
+}
+
 func TestCreateDJ(t *testing.T) {
 	pool := setupTestDB(t)
+	org := createTestOrganizer(t, pool)
 	t.Cleanup(func() {
 		pool.Exec(context.Background(), "DELETE FROM djs WHERE name = 'test-dj'")
 	})
-
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	repo := database.NewDJRepository(pool)
-	h := httphandler.NewDJHandler(djuc.New(repo))
-	h.Register(r.Group("/api"))
+	r := djRouterForOrg(t, pool, org)
 
 	body, _ := json.Marshal(map[string]interface{}{
 		"name":       "test-dj",
@@ -75,28 +111,27 @@ func TestCreateDJ(t *testing.T) {
 	if len(d.GenreTags) != 2 {
 		t.Fatalf("expected 2 genre tags, got %v", d.GenreTags)
 	}
+
+	var ownerID string
+	if err := pool.QueryRow(context.Background(),
+		"SELECT organizer_id FROM djs WHERE id = $1", d.ID).Scan(&ownerID); err != nil {
+		t.Fatalf("read organizer_id: %v", err)
+	}
+	if ownerID != org {
+		t.Fatalf("expected organizer_id %s, got %s", org, ownerID)
+	}
 }
 
 func TestGetDJ(t *testing.T) {
 	pool := setupTestDB(t)
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	repo := database.NewDJRepository(pool)
-	h := httphandler.NewDJHandler(djuc.New(repo))
-	h.Register(r.Group("/api"))
+	orgA := createTestOrganizer(t, pool)
+	orgB := createTestOrganizer(t, pool)
+	djID := seedDJ(t, pool, orgA, "get-test-dj")
 
-	var djID string
-	if err := pool.QueryRow(context.Background(),
-		`INSERT INTO djs (name, genre_tags) VALUES ('get-test-dj', '{"techno"}') RETURNING id`,
-	).Scan(&djID); err != nil {
-		t.Fatalf("seed dj: %v", err)
-	}
-	t.Cleanup(func() { pool.Exec(context.Background(), "DELETE FROM djs WHERE id = $1", djID) })
-
-	t.Run("returns 200 with valid ID", func(t *testing.T) {
+	t.Run("owner gets 200", func(t *testing.T) {
+		r := djRouterForOrg(t, pool, orgA)
 		w := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodGet, "/api/djs/"+djID, nil)
-		r.ServeHTTP(w, req)
+		r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/djs/"+djID, nil))
 		if w.Code != http.StatusOK {
 			t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
 		}
@@ -107,10 +142,19 @@ func TestGetDJ(t *testing.T) {
 		}
 	})
 
-	t.Run("returns 404 for unknown UUID", func(t *testing.T) {
+	t.Run("other organizer gets 404", func(t *testing.T) {
+		r := djRouterForOrg(t, pool, orgB)
 		w := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodGet, "/api/djs/00000000-0000-0000-0000-000000000000", nil)
-		r.ServeHTTP(w, req)
+		r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/djs/"+djID, nil))
+		if w.Code != http.StatusNotFound {
+			t.Fatalf("expected 404 for cross-organizer access, got %d", w.Code)
+		}
+	})
+
+	t.Run("returns 404 for unknown UUID", func(t *testing.T) {
+		r := djRouterForOrg(t, pool, orgA)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/djs/00000000-0000-0000-0000-000000000000", nil))
 		if w.Code != http.StatusNotFound {
 			t.Fatalf("expected 404, got %d", w.Code)
 		}
@@ -119,19 +163,9 @@ func TestGetDJ(t *testing.T) {
 
 func TestPatchDJ(t *testing.T) {
 	pool := setupTestDB(t)
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	repo := database.NewDJRepository(pool)
-	h := httphandler.NewDJHandler(djuc.New(repo))
-	h.Register(r.Group("/api"))
-
-	var djID string
-	if err := pool.QueryRow(context.Background(),
-		`INSERT INTO djs (name, genre_tags) VALUES ('patch-test-dj', '{}') RETURNING id`,
-	).Scan(&djID); err != nil {
-		t.Fatalf("seed dj: %v", err)
-	}
-	t.Cleanup(func() { pool.Exec(context.Background(), "DELETE FROM djs WHERE id = $1", djID) })
+	org := createTestOrganizer(t, pool)
+	r := djRouterForOrg(t, pool, org)
+	djID := seedDJ(t, pool, org, "patch-test-dj")
 
 	t.Run("updates name and genre tags", func(t *testing.T) {
 		body, _ := json.Marshal(map[string]interface{}{

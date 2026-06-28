@@ -8,6 +8,7 @@ import (
 
 	"eventlineup/internal/domain/apperrors"
 	"eventlineup/internal/domain/model"
+	"eventlineup/internal/interfaces/http/middleware"
 	djuc "eventlineup/internal/usecase/dj"
 )
 
@@ -31,7 +32,8 @@ func (h *DJHandler) Register(rg *gin.RouterGroup) {
 // @Failure     500  {object}  map[string]string
 // @Router      /api/djs [get]
 func (h *DJHandler) list(c *gin.Context) {
-	djs, err := h.uc.List(c.Request.Context())
+	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
+	djs, err := h.uc.List(c.Request.Context(), organizerID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
@@ -49,7 +51,8 @@ func (h *DJHandler) list(c *gin.Context) {
 // @Failure     500  {object}  map[string]string
 // @Router      /api/djs/{id} [get]
 func (h *DJHandler) get(c *gin.Context) {
-	d, err := h.uc.Get(c.Request.Context(), c.Param("id"))
+	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
+	d, err := h.uc.Get(c.Request.Context(), c.Param("id"), organizerID)
 	if errors.Is(err, apperrors.ErrNotFound) {
 		c.JSON(http.StatusNotFound, map[string]string{"error": "dj not found"})
 		return
@@ -84,7 +87,8 @@ func (h *DJHandler) create(c *gin.Context) {
 	if body.GenreTags == nil {
 		body.GenreTags = []string{}
 	}
-	d, err := h.uc.Create(c.Request.Context(), body.Name, body.GenreTags)
+	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
+	d, err := h.uc.Create(c.Request.Context(), body.Name, body.GenreTags, organizerID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
@@ -118,7 +122,8 @@ func (h *DJHandler) patch(c *gin.Context) {
 		body.GenreTags = []string{}
 	}
 	body.ID = c.Param("id")
-	d, err := h.uc.Update(c.Request.Context(), body)
+	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
+	d, err := h.uc.Update(c.Request.Context(), body, organizerID)
 	if errors.Is(err, apperrors.ErrNotFound) {
 		c.JSON(http.StatusNotFound, map[string]string{"error": "dj not found"})
 		return
@@ -138,7 +143,8 @@ func (h *DJHandler) patch(c *gin.Context) {
 // @Failure     500  {object}  map[string]string
 // @Router      /api/djs/{id} [delete]
 func (h *DJHandler) delete(c *gin.Context) {
-	if err := h.uc.Delete(c.Request.Context(), c.Param("id")); err != nil {
+	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
+	if err := h.uc.Delete(c.Request.Context(), c.Param("id"), organizerID); err != nil {
 		c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
 	}

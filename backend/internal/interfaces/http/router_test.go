@@ -39,7 +39,9 @@ func fullRouter(t *testing.T) *gin.Engine {
 func mintRouterToken(t *testing.T) string {
 	t.Helper()
 	claims := middleware.Claims{
-		OrganizerID: "org-router",
+		// A syntactically valid UUID so the now-scoped queries don't error; it need
+		// not exist (the list simply comes back empty).
+		OrganizerID: "00000000-0000-0000-0000-0000000000aa",
 		Email:       "organizer@example.com",
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
