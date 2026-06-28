@@ -1,8 +1,8 @@
 <div class="page">
-  <h1 class="page-title">{{ 'djs.title' | translate }}</h1>
+  <h1 class="page-title mb-6">{{ 'djs.title' | translate }}</h1>
 
-  <div class="card card-body">
-    <h2 class="section-title">{{ 'djs.new' | translate }}</h2>
+  <div class="card card-body mb-6">
+    <h2 class="section-title mb-4">{{ 'djs.new' | translate }}</h2>
     <div class="form-group">
       <label class="form-label">{{ 'djs.name' | translate }}</label>
       <input [ngModel]="newDJ().name" (ngModelChange)="newDJ.set({name: $event})"

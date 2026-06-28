@@ -1,12 +1,6 @@
-.tabs { @apply flex gap-4 border-b border-gray-200 mb-6; }
-.tab-btn { @apply pb-3 text-sm font-medium transition-colors; }
-.tab-active { @apply border-b-2 border-violet-600 text-violet-600; }
-.tab-inactive { @apply text-gray-500 hover:text-gray-700; }
-
-.event-list { @apply space-y-3; }
-.event-card { @apply bg-white border border-gray-200 rounded-lg p-4 shadow-sm; }
-.event-card-past { @apply bg-white border border-gray-200 rounded-lg p-4 shadow-sm opacity-75; }
-.event-name { @apply font-semibold text-gray-900; }
-.event-meta { @apply text-sm text-gray-500 mt-0.5; }
-.event-actions { @apply flex items-center gap-3 mt-3; }
-.event-delete-btn { @apply ml-auto; }
+/* Styles for this component live in the global components layer in
+   src/styles.css (migrated in EL-032). Do NOT add Tailwind apply-directive
+   rules to this file — they expand inline and inflate the component's compiled
+   stylesheet past Angular's per-component anyComponentStyle budget, failing
+   `ng build`. Put utilities in the template markup, or add a shared class to
+   styles.css. Enforced by stylelint + a pre-commit hook. */

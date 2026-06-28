@@ -1,43 +1,6 @@
-.schedule-page { @apply min-h-dvh bg-gray-50; }
-.schedule-header { @apply bg-white border-b border-gray-200 px-4 py-4 sticky top-0 z-10; }
-.schedule-header-inner { @apply max-w-5xl mx-auto flex items-start justify-between gap-4; }
-.schedule-event-name { @apply text-lg font-bold text-gray-900 leading-tight; }
-.schedule-venue { @apply text-sm text-gray-500 mt-0.5; }
-.schedule-body { @apply max-w-5xl mx-auto px-4 py-4; }
-
-/* Share button */
-.share-btn { @apply w-full sm:w-auto mb-4 flex items-center justify-center gap-2; }
-
-/* Back link: flex-shrink override for header layout */
-.schedule-back-link { @apply shrink-0; }
-
-.date-tabs { @apply flex gap-2 flex-wrap mb-4; }
-.date-tab { @apply px-4 py-2 rounded-full text-sm font-medium transition-colors; }
-.date-tab-active { @apply bg-violet-600 text-white; }
-.date-tab-inactive { @apply bg-gray-100 text-gray-700 hover:bg-gray-200; }
-.empty-schedule { @apply text-gray-400 text-center py-12 text-sm; }
-
-/* Mobile stage cards */
-.stage-cards { @apply block lg:hidden space-y-4; }
-.stage-card { @apply bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm; }
-.stage-card-header { @apply flex items-center gap-2 px-4 py-2 border-b border-gray-100 bg-gray-50; }
-.stage-card-dot { @apply w-3 h-3 rounded-full shrink-0; }
-.stage-card-name { @apply text-sm font-semibold text-gray-800; }
-.stage-card-slots { @apply divide-y divide-gray-100; }
-.stage-card-slot { @apply flex items-center gap-3 px-4 py-3; }
-.slot-time-label { @apply text-xs text-gray-400 w-24 shrink-0; }
-.slot-dj-label { @apply text-sm font-medium text-gray-900; }
-.slot-genre-badge { @apply text-xs text-indigo-600 font-medium; }
-.slot-notes-label { @apply text-xs text-gray-400 ml-auto; }
-
-/* Desktop grid */
-.desktop-grid { @apply hidden lg:block overflow-x-auto; }
-.grid-table { @apply w-full border-collapse text-sm; }
-.grid-stage-th { @apply border border-gray-200 bg-gray-50 px-3 py-2 text-left w-36 text-xs font-medium text-gray-600; }
-.grid-time-th { @apply border border-gray-200 bg-gray-50 px-2 py-2 text-xs font-medium text-gray-500 w-20 text-center; }
-.grid-stage-td { @apply border border-gray-200 bg-gray-50 px-3 py-2; }
-.grid-stage-inner { @apply flex items-center gap-2; }
-.grid-stage-dot { @apply w-2.5 h-2.5 rounded-full shrink-0; }
-.grid-stage-name { @apply text-xs font-medium text-gray-800; }
-.grid-cell { @apply border border-gray-200 px-1 py-1 min-w-[5rem] align-top; }
-.grid-slot-block { @apply rounded px-2 py-1 text-white text-xs font-medium leading-tight; }
+/* Styles for this component live in the global components layer in
+   src/styles.css (migrated in EL-032). Do NOT add Tailwind apply-directive
+   rules to this file — they expand inline and inflate the component's compiled
+   stylesheet past Angular's per-component anyComponentStyle budget, failing
+   `ng build`. Put utilities in the template markup, or add a shared class to
+   styles.css. Enforced by stylelint + a pre-commit hook. */

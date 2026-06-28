@@ -1,4 +1,6 @@
-.slot-form { @apply bg-white border border-gray-200 rounded-lg p-6 space-y-4; }
-
-/* Component-scoped spacing override */
-.form-actions { @apply pt-2; }
+/* Styles for this component live in the global components layer in
+   src/styles.css (migrated in EL-032). Do NOT add Tailwind apply-directive
+   rules to this file — they expand inline and inflate the component's compiled
+   stylesheet past Angular's per-component anyComponentStyle budget, failing
+   `ng build`. Put utilities in the template markup, or add a shared class to
+   styles.css. Enforced by stylelint + a pre-commit hook. */

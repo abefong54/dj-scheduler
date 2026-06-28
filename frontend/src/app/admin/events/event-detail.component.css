@@ -1,4 +1,6 @@
-/* Component-local override: tighten the bottom margin of the shared `.tabs`
-   row for the slots date tabs. All other event-detail / slots-table styles
-   live in the global `@layer components` block in styles.css. */
-.tabs { @apply mb-4; }
+/* Styles for this component live in the global components layer in
+   src/styles.css (migrated in EL-032). Do NOT add Tailwind apply-directive
+   rules to this file — they expand inline and inflate the component's compiled
+   stylesheet past Angular's per-component anyComponentStyle budget, failing
+   `ng build`. Put utilities in the template markup, or add a shared class to
+   styles.css. Enforced by stylelint + a pre-commit hook. */
