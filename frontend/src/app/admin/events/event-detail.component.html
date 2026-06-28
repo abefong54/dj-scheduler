@@ -163,7 +163,7 @@
                 <td class="add-cell">
                   <select [(ngModel)]="addStageId" name="addStageId" class="edit-select"
                     (keydown.escape)="cancelAddRow()">
-                    <option value="">— stage —</option>
+                    <option value="">{{ 'slots.stage' | translate }}</option>
                     @for (s of stages(); track s.id) {
                       <option [value]="s.id">{{ s.name }}</option>
                     }
@@ -185,7 +185,7 @@
                     class="edit-select"
                     (keydown.escape)="cancelAddRow()">
                     <option value="">
-                      {{ addDjId ? (djGenresForAdd().length ? ('slots.selectOption' | translate) : '—') : '— DJ first —' }}
+                      {{ addDjId ? (djGenresForAdd().length ? ('slots.selectOption' | translate) : '—') : ('slots.djFirst' | translate) }}
                     </option>
                     @for (g of djGenresForAdd(); track g) {
                       <option [value]="g">{{ g }}</option>

@@ -36,6 +36,7 @@
   "slots.duration": "時長（分鐘）",
   "slots.unassigned": "— 未指定 —",
   "slots.selectOption": "— 請選擇 —",
+  "slots.djFirst": "— 請先選擇 DJ —",
   "slots.deleteConfirm": "確定要刪除此時段嗎？",
 
   "djs.title": "DJ 名單",

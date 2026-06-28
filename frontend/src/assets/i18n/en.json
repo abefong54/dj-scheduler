@@ -37,6 +37,7 @@
   "slots.duration": "Duration (mins)",
   "slots.unassigned": "— unassigned —",
   "slots.selectOption": "— select —",
+  "slots.djFirst": "— DJ first —",
   "slots.deleteConfirm": "Delete this slot?",
 
   "djs.title": "DJs",
