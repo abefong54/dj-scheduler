@@ -1,0 +1,12 @@
+.dt-wrap { @apply w-full; }
+.dt-toolbar { @apply mb-3; }
+.dt-search { @apply w-full sm:w-72 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400; }
+.dt-table-scroll { @apply overflow-x-auto rounded-lg border border-gray-200; }
+.dt-table { @apply w-full text-sm bg-white; }
+.dt-head-row { @apply border-b border-gray-200 bg-gray-50; }
+.dt-th { @apply text-left px-4 py-3 font-medium text-gray-700 select-none whitespace-nowrap; }
+.dt-th-sortable { @apply cursor-pointer hover:bg-gray-100; }
+.dt-sort-icon { @apply ml-1 text-violet-600; }
+.dt-row { @apply border-b border-gray-100 last:border-0 hover:bg-gray-50; }
+.dt-td { @apply px-4 py-3 text-gray-700; }
+.dt-empty { @apply px-4 py-8 text-center text-gray-400 text-sm; }

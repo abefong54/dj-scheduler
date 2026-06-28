@@ -1,0 +1,53 @@
+<div class="dt-wrap">
+  <div class="dt-toolbar">
+    <input
+      type="text"
+      [ngModel]="searchQuery()"
+      (ngModelChange)="searchQuery.set($event)"
+      class="dt-search"
+      [placeholder]="'table.search' | translate"
+    />
+  </div>
+  <div class="dt-table-scroll">
+    <table class="dt-table">
+      <thead>
+        <tr class="dt-head-row">
+          @for (col of columns(); track col.key) {
+            <th
+              class="dt-th"
+              [class.dt-th-sortable]="col.sortable !== false"
+              (click)="sort(col)"
+            >
+              {{ col.label }}
+              @if (sortKey() === col.key) {
+                <span class="dt-sort-icon">{{ sortDir() === 'asc' ? '↑' : '↓' }}</span>
+              }
+            </th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of filteredData(); track row['id']) {
+          <tr class="dt-row">
+            @for (col of columns(); track col.key) {
+              <td class="dt-td">
+                @if (getTemplate(col.key); as tpl) {
+                  <ng-container *ngTemplateOutlet="tpl; context: { row: row }"></ng-container>
+                } @else {
+                  {{ row[col.key] }}
+                }
+              </td>
+            }
+          </tr>
+        }
+        @if (filteredData().length === 0) {
+          <tr>
+            <td [attr.colspan]="columns().length" class="dt-empty">
+              {{ 'table.empty' | translate }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
