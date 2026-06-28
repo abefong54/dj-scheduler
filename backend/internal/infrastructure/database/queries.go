@@ -62,6 +62,15 @@ const (
 
 	queryStageDelete = `DELETE FROM stages WHERE id = $1 AND event_id = $2`
 
+	queryStageGet = `
+		SELECT id, event_id, name, color, display_order
+		FROM stages WHERE id = $1 AND event_id = $2`
+
+	queryStageUpdate = `
+		UPDATE stages SET name = $1, color = $2
+		WHERE id = $3 AND event_id = $4
+		RETURNING id, event_id, name, color, display_order`
+
 	queryStageListForDuplicate   = `SELECT name, color, display_order FROM stages WHERE event_id = $1 ORDER BY display_order`
 	queryStageInsertForDuplicate = `INSERT INTO stages (event_id, name, color, display_order) VALUES ($1,$2,$3,$4)`
 

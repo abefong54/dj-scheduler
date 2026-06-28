@@ -25,7 +25,9 @@ type EventRepository interface {
 
 type StageRepository interface {
 	List(ctx context.Context, eventID string) ([]model.Stage, error)
+	Get(ctx context.Context, id, eventID string) (model.Stage, error)
 	Create(ctx context.Context, eventID, name, color string) (model.Stage, error)
+	Update(ctx context.Context, s model.Stage) (model.Stage, error)
 	Delete(ctx context.Context, id, eventID string) error
 }
 
