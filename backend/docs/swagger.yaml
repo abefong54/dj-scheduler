@@ -1,9 +1,172 @@
 basePath: /
+definitions:
+  model.DJ:
+    properties:
+      created_at:
+        type: string
+      genre_tags:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      name:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
   description: DJ scheduling and event management API
   title: EventLineup API
   version: "1.0"
-paths: {}
+paths:
+  /api/djs:
+    get:
+      description: Returns all DJs ordered by name
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.DJ'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List DJs
+      tags:
+      - djs
+    post:
+      consumes:
+      - application/json
+      description: Creates a new DJ
+      parameters:
+      - description: DJ
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.DJ'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.DJ'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create DJ
+      tags:
+      - djs
+  /api/djs/{id}:
+    delete:
+      description: Deletes a DJ by ID
+      parameters:
+      - description: DJ ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete DJ
+      tags:
+      - djs
+    get:
+      description: Returns a single DJ by ID
+      parameters:
+      - description: DJ ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.DJ'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get DJ
+      tags:
+      - djs
+    patch:
+      consumes:
+      - application/json
+      description: Updates a DJ's name and genre tags
+      parameters:
+      - description: DJ ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.DJ'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.DJ'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Patch DJ
+      tags:
+      - djs
 swagger: "2.0"
