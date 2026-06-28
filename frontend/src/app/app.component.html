@@ -21,6 +21,11 @@
       [class]="langService.currentLang() === 'zh-TW' ? 'lang-btn-active' : 'lang-btn-inactive'">
       中文
     </button>
+    @if (auth.isAuthenticated()) {
+      <button (click)="auth.signOut()" class="lang-btn lang-btn-inactive">
+        {{ 'nav.signOut' | translate }}
+      </button>
+    }
   </div>
 </nav>
 <main class="app-main">
