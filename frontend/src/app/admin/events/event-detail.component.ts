@@ -3,9 +3,9 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
-import * as XLSX from 'xlsx';
 import { ApiService, Event, Stage, Slot, DJ } from '../../services/api.service';
 import { DialogService } from '../../shared/dialog.service';
+import { ScheduleExportService } from '../../services/schedule-export.service';
 
 @Component({
   selector: 'app-event-detail',
@@ -19,6 +19,7 @@ export class EventDetailComponent implements OnDestroy {
   private route = inject(ActivatedRoute);
   private translate = inject(TranslateService);
   private dialog = inject(DialogService);
+  private exporter = inject(ScheduleExportService);
 
   event = signal<Event | null>(null);
   stages = signal<Stage[]>([]);
@@ -242,50 +243,16 @@ export class EventDetailComponent implements OnDestroy {
   }
 
   exportXlsx() {
-    const event = this.event()!;
-    const t = (key: string) => this.translate.instant(key);
-
-    const headers = [t('slots.date'), t('slots.stage'), t('export.timeSlot'), 'DJ', t('export.genre'), t('slots.notes')];
-
-    const sorted = [...this.slots()].sort((a, b) => {
-      if (a.slot_date !== b.slot_date) return a.slot_date.localeCompare(b.slot_date);
-      if ((a.stage_name ?? '') !== (b.stage_name ?? '')) {
-        return (a.stage_name ?? '').localeCompare(b.stage_name ?? '');
-      }
-      return a.start_time.localeCompare(b.start_time);
+    const e = this.event();
+    if (!e) return;
+    this.exporter.download(e.name, this.slots(), {
+      date: this.translate.instant('export.date'),
+      stage: this.translate.instant('export.stage'),
+      timeSlot: this.translate.instant('export.timeSlot'),
+      dj: this.translate.instant('export.dj'),
+      genre: this.translate.instant('export.genre'),
+      notes: this.translate.instant('export.notes'),
     });
-
-    const rows: (string | number)[][] = [];
-    let lastDate = '';
-    for (const slot of sorted) {
-      if (lastDate && slot.slot_date !== lastDate) rows.push([]);
-      lastDate = slot.slot_date;
-
-      const [, month, day] = slot.slot_date.split('-');
-      const dateStr = `${parseInt(month, 10)}/${parseInt(day, 10)}`;
-      const mins = this.toMins(slot.end_time) - this.toMins(slot.start_time);
-      const hrs = Math.round((mins / 60) * 10) / 10;  // one decimal place
-      const timeSlot = `${slot.start_time} - ${slot.end_time} (${hrs}hr)`;
-
-      rows.push([
-        dateStr,
-        slot.stage_name ?? '',
-        timeSlot,
-        slot.dj_name ?? '',
-        slot.genre ?? '',
-        slot.notes ?? '',
-      ]);
-    }
-
-    const wsData: (string | number)[][] = [[event.name], headers, ...rows];
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    if (!ws['!merges']) ws['!merges'] = [];
-    ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } });
-    if (ws['A1']) { ws['A1'].s = { font: { bold: true } }; }
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Schedule');
-    XLSX.writeFile(wb, `${event.name.replace(/\s+/g, '-')}-schedule.xlsx`);
   }
 
   showStageModal = signal(false);
