@@ -17,7 +17,9 @@
   "events.noUpcoming": "No upcoming events",
   "events.noPast": "No past events",
   "events.view": "View",
-  "events.duplicate": "Duplicate",
+  "events.clone": "Clone",
+  "events.clone.confirm": "Clone this event? A copy with the same stages (no slots) will be created.",
+  "events.clone.success": "Event cloned successfully",
   "events.genres": "Genres (comma-separated)",
   "events.deleteConfirm": "Delete this event and all its stages and slots?",
 

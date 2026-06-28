@@ -40,6 +40,6 @@ func (uc *UseCase) Delete(ctx context.Context, id, organizerID string) error {
 	return uc.repo.Delete(ctx, id, organizerID)
 }
 
-func (uc *UseCase) Duplicate(ctx context.Context, id, organizerID string) (model.Event, error) {
-	return uc.repo.Duplicate(ctx, id, organizerID)
+func (uc *UseCase) Clone(ctx context.Context, id, organizerID string) (model.Event, error) {
+	return uc.repo.Clone(ctx, id, organizerID)
 }

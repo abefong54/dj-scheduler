@@ -32,8 +32,8 @@
             <a [routerLink]="['/admin/events', e.id]" class="btn-sm-outline">
               {{ 'events.view' | translate }}
             </a>
-            <button (click)="duplicate(e.id)" class="btn-sm-outline">
-              {{ 'events.duplicate' | translate }}
+            <button (click)="clone(e.id)" class="btn-sm-outline">
+              {{ 'events.clone' | translate }}
             </button>
             <button (click)="delete(e.id)" class="btn-danger event-delete-btn">
               {{ 'actions.delete' | translate }}
@@ -55,8 +55,8 @@
             <a [routerLink]="['/admin/events', e.id]" class="btn-sm-outline">
               {{ 'events.view' | translate }}
             </a>
-            <button (click)="duplicate(e.id)" class="btn-sm-outline">
-              {{ 'events.duplicate' | translate }}
+            <button (click)="clone(e.id)" class="btn-sm-outline">
+              {{ 'events.clone' | translate }}
             </button>
           </div>
         </div>

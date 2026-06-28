@@ -16,7 +16,9 @@
   "events.noUpcoming": "目前沒有即將舉行的活動",
   "events.noPast": "沒有過去的活動",
   "events.view": "查看",
-  "events.duplicate": "複製",
+  "events.clone": "複製活動",
+  "events.clone.confirm": "要複製這個活動嗎？將建立一個包含相同舞台（不含時段）的副本。",
+  "events.clone.success": "活動複製成功",
   "events.genres": "音樂類型（逗號分隔）",
   "events.deleteConfirm": "確定要刪除此活動及所有舞台和時段嗎？",
 

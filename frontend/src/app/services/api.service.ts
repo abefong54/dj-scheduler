@@ -55,7 +55,7 @@ export class ApiService {
   getEvent(id: string) { return this.http.get<Event>(`${this.base}/api/events/${id}`); }
   createEvent(e: Omit<Event, 'id'>) { return this.http.post<Event>(`${this.base}/api/events`, e); }
   deleteEvent(id: string) { return this.http.delete(`${this.base}/api/events/${id}`); }
-  duplicateEvent(id: string) { return this.http.post<Event>(`${this.base}/api/events/${id}/duplicate`, {}); }
+  cloneEvent(id: string) { return this.http.post<Event>(`${this.base}/api/events/${id}/clone`, {}); }
 
   // Stages
   getStages(eventId: string) { return this.http.get<Stage[]>(`${this.base}/api/events/${eventId}/stages`); }

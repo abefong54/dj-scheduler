@@ -79,10 +79,13 @@ func (r *eventRepo) Delete(ctx context.Context, id, organizerID string) error {
 	return err
 }
 
-func (r *eventRepo) Duplicate(ctx context.Context, origID, organizerID string) (model.Event, error) {
+// Clone creates a new event from origID as a template: it copies the name
+// (prefixed with "Copy of "), venue, genres, and stage structure, resets the
+// dates to today, and intentionally does NOT copy slots (US-008).
+func (r *eventRepo) Clone(ctx context.Context, origID, organizerID string) (model.Event, error) {
 	var orig model.Event
-	err := r.pool.QueryRow(ctx, queryEventDuplicateFetch, origID, organizerID).
-		Scan(&orig.Name, &orig.VenueName, &orig.StartDate, &orig.EndDate, &orig.Genres)
+	err := r.pool.QueryRow(ctx, queryEventCloneFetch, origID, organizerID).
+		Scan(&orig.Name, &orig.VenueName, &orig.Genres)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return model.Event{}, apperrors.ErrNotFound
 	}
@@ -91,14 +94,14 @@ func (r *eventRepo) Duplicate(ctx context.Context, origID, organizerID string) (
 	}
 
 	var newEvent model.Event
-	err = r.pool.QueryRow(ctx, queryEventDuplicateInsert,
-		orig.Name, orig.VenueName, orig.StartDate, orig.EndDate, orig.Genres, organizerID).
+	err = r.pool.QueryRow(ctx, queryEventCloneInsert,
+		orig.Name, orig.VenueName, orig.Genres, organizerID).
 		Scan(&newEvent.ID, &newEvent.Name, &newEvent.VenueName, &newEvent.StartDate, &newEvent.EndDate, &newEvent.Genres)
 	if err != nil {
 		return model.Event{}, err
 	}
 
-	rows, err := r.pool.Query(ctx, queryStageListForDuplicate, origID)
+	rows, err := r.pool.Query(ctx, queryStageListForClone, origID)
 	if err != nil {
 		return newEvent, err
 	}
@@ -106,13 +109,13 @@ func (r *eventRepo) Duplicate(ctx context.Context, origID, organizerID string) (
 	for rows.Next() {
 		var s model.Stage
 		rows.Scan(&s.Name, &s.Color, &s.DisplayOrder)
-		if _, execErr := r.pool.Exec(ctx, queryStageInsertForDuplicate,
+		if _, execErr := r.pool.Exec(ctx, queryStageInsertForClone,
 			newEvent.ID, s.Name, s.Color, s.DisplayOrder); execErr != nil {
-			log.Printf("duplicate stage insert: %v", execErr)
+			log.Printf("clone stage insert: %v", execErr)
 		}
 	}
 	if err := rows.Err(); err != nil {
-		log.Printf("duplicate stage rows error: %v", err)
+		log.Printf("clone stage rows error: %v", err)
 	}
 
 	return newEvent, nil
