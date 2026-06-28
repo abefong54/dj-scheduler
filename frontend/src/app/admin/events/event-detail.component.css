@@ -6,6 +6,7 @@
 .detail-hero-actions { @apply flex items-center gap-2 flex-shrink-0 flex-wrap; }
 
 /* Genre pills */
+.genre-pill-row { @apply flex gap-1 flex-wrap mt-2; }
 .genre-pill { @apply px-2 py-0.5 bg-violet-50 text-violet-700 rounded-full text-xs font-medium; }
 
 /* Stage chip strip */
@@ -15,6 +16,19 @@
 .stage-chip-name { @apply font-medium text-gray-800; }
 .stage-chip-delete { @apply ml-1 text-gray-300 hover:text-red-400 text-base leading-none hidden group-hover:inline transition-colors; }
 .stage-chip-add { @apply px-3 py-1.5 border border-dashed border-gray-300 rounded-full text-sm text-gray-500 hover:border-violet-400 hover:text-violet-600 transition-colors; }
+
+/* Slots section layout */
+.slots-section { @apply mt-4; }
+.slots-section-header { @apply flex items-center justify-between mb-3; }
+
+/* Tabs spacing (component override) */
+.tabs { @apply mb-4; }
+
+/* Slots table card */
+.slots-card { @apply overflow-hidden; }
+
+/* Slot thead row */
+.slot-head-row { @apply border-b border-gray-200 bg-gray-50; }
 
 /* Slot table */
 .slot-table { @apply w-full text-sm; }
@@ -48,8 +62,12 @@
 /* Inline add row */
 .add-row { @apply border-b border-violet-100 bg-violet-50; }
 .add-cell { @apply px-2 py-2; }
+.add-cell-actions { @apply text-right whitespace-nowrap; }
 .add-trigger-row { @apply hover:bg-violet-50 cursor-pointer transition-colors; }
 .add-trigger-cell { @apply px-3 py-3 text-sm text-violet-600 font-medium; }
+
+/* Stage modal field wrapper */
+.modal-field { @apply mb-5; }
 
 /* Stage modal color swatches */
 .color-swatches { @apply flex gap-2 flex-wrap; }

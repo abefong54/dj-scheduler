@@ -1,1 +1,4 @@
 .slot-form { @apply bg-white border border-gray-200 rounded-lg p-6 space-y-4; }
+
+/* Component-scoped spacing override */
+.form-actions { @apply pt-2; }

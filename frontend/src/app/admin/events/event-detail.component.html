@@ -7,7 +7,7 @@
         <h1 class="detail-event-name">{{ event()!.name }}</h1>
         <p class="detail-event-meta">{{ dateRange() }} · {{ event()!.venue_name }}</p>
         @if (event()!.genres?.length) {
-          <div class="flex gap-1 flex-wrap mt-2">
+          <div class="genre-pill-row">
             @for (g of event()!.genres; track g) {
               <span class="genre-pill">{{ g }}</span>
             }
@@ -37,8 +37,8 @@
     </div>
 
     <!-- Slots Section -->
-    <div class="mt-4">
-      <div class="flex items-center justify-between mb-3">
+    <div class="slots-section">
+      <div class="slots-section-header">
         <h2 class="section-title">{{ 'slots.title' | translate }}</h2>
         <input
           type="text"
@@ -50,7 +50,7 @@
       </div>
 
       @if (dates().length > 1) {
-        <div class="tabs mb-4">
+        <div class="tabs">
           @for (d of dates(); track d) {
             <button (click)="selectedDate.set(d)"
               class="tab-btn"
@@ -61,10 +61,10 @@
         </div>
       }
 
-      <div class="card overflow-hidden">
+      <div class="card slots-card">
         <table class="slot-table">
           <thead>
-            <tr class="border-b border-gray-200 bg-gray-50">
+            <tr class="slot-head-row">
               <th class="slot-th slot-th-sort" (click)="sortSlots('stage_name')">
                 {{ 'slots.stage' | translate }}{{ sortIndicator('stage_name') }}
               </th>
@@ -222,7 +222,7 @@
                     (keydown.enter)="submitAddRow()"
                     (keydown.escape)="cancelAddRow()" />
                 </td>
-                <td class="add-cell text-right whitespace-nowrap">
+                <td class="add-cell add-cell-actions">
                   <button (click)="submitAddRow()" class="btn-save">{{ 'actions.save' | translate }}</button>
                   <button (click)="cancelAddRow()" class="btn-cancel-edit">{{ 'actions.cancel' | translate }}</button>
                 </td>
@@ -253,7 +253,7 @@
           (keydown.enter)="submitNewStage()"
           (keydown.escape)="cancelStage()" />
       </div>
-      <div class="mb-5">
+      <div class="modal-field">
         <label class="form-label">{{ 'stages.color' | translate }}</label>
         <div class="color-swatches">
           @for (c of stageColors; track c) {

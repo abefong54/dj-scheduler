@@ -7,13 +7,13 @@
           <p class="schedule-venue">{{ event()!.venue_name }}</p>
         </div>
       }
-      <button (click)="close()" class="back-link shrink-0">← Back</button>
+      <button (click)="close()" class="back-link schedule-back-link">← Back</button>
     </div>
   </div>
 
   <div class="schedule-body">
     <button (click)="shareViaLine()"
-      class="btn-green w-full sm:w-auto mb-4 flex items-center justify-center gap-2">
+      class="btn-green share-btn">
       {{ 'schedule.share' | translate }}
     </button>
 

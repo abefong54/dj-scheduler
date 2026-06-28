@@ -9,3 +9,4 @@
 .event-name { @apply font-semibold text-gray-900; }
 .event-meta { @apply text-sm text-gray-500 mt-0.5; }
 .event-actions { @apply flex items-center gap-3 mt-3; }
+.event-delete-btn { @apply ml-auto; }

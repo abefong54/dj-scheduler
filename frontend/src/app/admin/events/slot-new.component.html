@@ -51,7 +51,7 @@
       <textarea [(ngModel)]="notes" name="notes" rows="3" class="form-textarea"></textarea>
     </div>
 
-    <div class="form-actions pt-2">
+    <div class="form-actions">
       <button type="submit" class="btn-primary">{{ 'actions.create' | translate }}</button>
       <a [routerLink]="['/admin/events', eventId]" class="btn-secondary">{{ 'actions.cancel' | translate }}</a>
     </div>

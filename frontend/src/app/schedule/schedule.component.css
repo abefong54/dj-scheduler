@@ -5,6 +5,12 @@
 .schedule-venue { @apply text-sm text-gray-500 mt-0.5; }
 .schedule-body { @apply max-w-5xl mx-auto px-4 py-4; }
 
+/* Share button */
+.share-btn { @apply w-full sm:w-auto mb-4 flex items-center justify-center gap-2; }
+
+/* Back link: flex-shrink override for header layout */
+.schedule-back-link { @apply shrink-0; }
+
 .date-tabs { @apply flex gap-2 flex-wrap mb-4; }
 .date-tab { @apply px-4 py-2 rounded-full text-sm font-medium transition-colors; }
 .date-tab-active { @apply bg-slate-900 text-white; }
