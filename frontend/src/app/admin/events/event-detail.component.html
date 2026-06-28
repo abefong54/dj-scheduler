@@ -49,6 +49,12 @@
         />
       </div>
 
+      <datalist id="durationPresets">
+        @for (d of durationOptions; track d.mins) {
+          <option [value]="d.mins">{{ d.label }}</option>
+        }
+      </datalist>
+
       @if (dates().length > 1) {
         <div class="tabs">
           @for (d of dates(); track d) {
@@ -125,11 +131,6 @@
                       class="edit-dur-input"
                       (keydown.enter)="saveEdit(slot.id)"
                       (keydown.escape)="cancelEdit()" />
-                    <datalist id="durationPresets">
-                      @for (d of durationOptions; track d.mins) {
-                        <option [value]="d.mins">{{ d.label }}</option>
-                      }
-                    </datalist>
                   </td>
                   <td class="edit-cell">
                     <input [(ngModel)]="editSlotNotes" [name]="'es_notes_' + slot.id"
