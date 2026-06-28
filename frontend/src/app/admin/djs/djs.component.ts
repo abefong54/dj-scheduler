@@ -1,79 +1,25 @@
-import { Component, inject, signal, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, computed, inject, signal, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { ApiService, DJ } from '../../services/api.service';
+import { DialogService } from '../../shared/dialog.service';
+import { LanguageService } from '../../services/language.service';
+import { DataTableComponent, TableColumn } from '../../shared/data-table.component';
+import { ColumnDefDirective } from '../../shared/column-def.directive';
 
 @Component({
   selector: 'app-djs',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe],
-  template: `
-    <div class="max-w-4xl mx-auto px-6 py-8">
-      <h1 class="text-2xl font-semibold text-gray-900 mb-6">{{ 'djs.title' | translate }}</h1>
-
-      <!-- Add DJ form -->
-      <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ 'djs.new' | translate }}</h2>
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'djs.name' | translate }}</label>
-            <input [ngModel]="newDJ().name"
-              (ngModelChange)="newDJ.set({name: $event})"
-              name="name" type="text"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="DJ Name" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'djs.genres' | translate }}</label>
-            <input [ngModel]="newDJGenres()"
-              (ngModelChange)="newDJGenres.set($event)"
-              name="genres" type="text"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="genre1, genre2, genre3" />
-          </div>
-          <button (click)="addDJ()"
-            class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-lg transition-colors">
-            + {{ 'actions.add' | translate }}
-          </button>
-        </div>
-      </div>
-
-      <!-- DJ list -->
-      <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-gray-200 bg-gray-50">
-              <th class="text-left px-6 py-3 font-medium text-gray-700">{{ 'djs.name' | translate }}</th>
-              <th class="text-left px-6 py-3 font-medium text-gray-700">{{ 'djs.genres' | translate }}</th>
-              <th class="text-right px-6 py-3 font-medium text-gray-700">{{ 'actions.title' | translate }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let dj of djs()" class="border-b border-gray-100 hover:bg-gray-50">
-              <td class="px-6 py-3 font-medium text-gray-900">{{ dj.name }}</td>
-              <td class="px-6 py-3 text-gray-600">
-                <span *ngFor="let g of dj.genre_tags" class="inline-block bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs mr-2">
-                  {{ g }}
-                </span>
-              </td>
-              <td class="px-6 py-3 text-right">
-                <button (click)="deleteDJ(dj.id)"
-                  class="text-red-500 hover:text-red-700 font-medium">
-                  {{ 'actions.delete' | translate }}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `,
+  imports: [FormsModule, TranslatePipe, DataTableComponent, ColumnDefDirective],
+  templateUrl: './djs.component.html',
+  styleUrl: './djs.component.css',
 })
 export class DjsComponent implements OnDestroy {
   private api = inject(ApiService);
   private translate = inject(TranslateService);
+  private dialog = inject(DialogService);
+  private langService = inject(LanguageService);
 
   djs = signal<DJ[]>([]);
   newDJ = signal({ name: '' });
@@ -86,13 +32,35 @@ export class DjsComponent implements OnDestroy {
   }
 
   private loadDJs() {
-    const sub = this.api.getDJs().subscribe(djs => {
-      this.djs.set(djs);
-    });
-    this.subscriptions.push(sub);
+    this.subscriptions.push(
+      this.api.getDJs().subscribe(djs => this.djs.set(djs))
+    );
   }
 
-  addDJ() {
+  // Convert DJ[] to Record<string, unknown>[] for DataTableComponent
+  djsAsRows = computed((): Record<string, unknown>[] =>
+    this.djs().map(d => ({ id: d.id, name: d.name, genre_tags: d.genre_tags }) as Record<string, unknown>)
+  );
+
+  // Reactive column labels — re-evaluates when language changes
+  djColumns = computed((): TableColumn[] => {
+    this.langService.currentLang(); // register dependency so labels update on language switch
+    return [
+      { key: 'name', label: this.translate.instant('djs.name') },
+      { key: 'genre_tags', label: this.translate.instant('djs.genres'), sortable: false },
+      { key: 'actions', label: this.translate.instant('actions.title'), sortable: false, searchable: false },
+    ];
+  });
+
+  genreTags(row: Record<string, unknown>): string[] {
+    return Array.isArray(row['genre_tags']) ? (row['genre_tags'] as string[]) : [];
+  }
+
+  rowId(row: Record<string, unknown>): string {
+    return String(row['id']);
+  }
+
+  async addDJ() {
     const name = this.newDJ().name;
     const genres = this.newDJGenres()
       .split(',')
@@ -100,7 +68,10 @@ export class DjsComponent implements OnDestroy {
       .filter(g => g.length > 0);
 
     if (!name || genres.length === 0) {
-      alert(this.translate.instant('djs.fillRequired'));
+      await this.dialog.alert({
+        title: this.translate.instant('dialog.validationTitle'),
+        message: this.translate.instant('djs.fillRequired'),
+      });
       return;
     }
 
@@ -111,11 +82,15 @@ export class DjsComponent implements OnDestroy {
     });
   }
 
-  deleteDJ(id: string) {
-    if (!confirm(this.translate.instant('djs.deleteConfirm'))) return;
-    this.api.deleteDJ(id).subscribe(() => {
-      this.loadDJs();
+  async deleteDJ(id: string) {
+    const ok = await this.dialog.confirm({
+      title: this.translate.instant('dialog.deleteTitle'),
+      message: this.translate.instant('djs.deleteConfirm'),
+      confirmLabel: this.translate.instant('actions.delete'),
+      variant: 'danger',
     });
+    if (!ok) return;
+    this.api.deleteDJ(id).subscribe(() => this.loadDJs());
   }
 
   ngOnDestroy() {
