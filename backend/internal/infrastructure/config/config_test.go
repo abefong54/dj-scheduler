@@ -2,6 +2,26 @@ package config
 
 import "testing"
 
+func TestValidateGoogle(t *testing.T) {
+	full := Config{
+		GoogleClientID:     "id",
+		GoogleClientSecret: "secret",
+		GoogleRedirectURL:  "http://localhost:8080/auth/google/callback",
+	}
+	if err := full.ValidateGoogle(); err != nil {
+		t.Fatalf("expected complete Google config to validate, got %v", err)
+	}
+	for _, missing := range []Config{
+		{GoogleClientSecret: "secret", GoogleRedirectURL: "x"},
+		{GoogleClientID: "id", GoogleRedirectURL: "x"},
+		{GoogleClientID: "id", GoogleClientSecret: "secret"},
+	} {
+		if err := missing.ValidateGoogle(); err == nil {
+			t.Fatalf("expected error for incomplete Google config: %+v", missing)
+		}
+	}
+}
+
 func TestLoadReadsJWTSecret(t *testing.T) {
 	t.Setenv("JWT_SECRET", "a-sufficiently-long-jwt-secret-0123456789")
 	cfg := Load()

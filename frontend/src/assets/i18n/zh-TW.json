@@ -1,6 +1,10 @@
 {
   "nav.events": "活動",
   "nav.djs": "DJ",
+  "nav.signOut": "登出",
+
+  "auth.signInTitle": "登入 EventLineup",
+  "auth.signInWithGoogle": "使用 Google 登入",
   "events.title": "活動",
   "events.new": "新增活動",
   "events.name": "活動名稱",

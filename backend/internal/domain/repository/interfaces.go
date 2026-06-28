@@ -31,6 +31,11 @@ type StageRepository interface {
 	Delete(ctx context.Context, id, eventID string) error
 }
 
+type OrganizerRepository interface {
+	FindByGoogleID(ctx context.Context, googleID string) (model.Organizer, error)
+	Create(ctx context.Context, email, name, googleID string) (model.Organizer, error)
+}
+
 type SlotRepository interface {
 	List(ctx context.Context, eventID string) ([]model.Slot, error)
 	Get(ctx context.Context, id, eventID string) (model.Slot, error)
