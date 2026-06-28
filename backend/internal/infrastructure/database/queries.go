@@ -33,6 +33,12 @@ const (
 		VALUES ($1,$2,$3,$4,$5)
 		RETURNING id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}')`
 
+	queryEventUpdate = `
+		UPDATE events
+		SET name = $1, venue_name = $2, start_date = $3, end_date = $4, genres = $5
+		WHERE id = $6
+		RETURNING id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}')`
+
 	queryEventDelete = `DELETE FROM events WHERE id = $1`
 
 	queryEventDuplicateFetch = `

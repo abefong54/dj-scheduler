@@ -13,6 +13,23 @@ definitions:
       name:
         type: string
     type: object
+  model.Event:
+    properties:
+      end_date:
+        type: string
+      genres:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      name:
+        type: string
+      start_date:
+        type: string
+      venue_name:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -169,4 +186,172 @@ paths:
       summary: Patch DJ
       tags:
       - djs
+  /api/events:
+    get:
+      description: Returns all events ordered by start date descending
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Event'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List Events
+      tags:
+      - events
+    post:
+      consumes:
+      - application/json
+      description: Creates a new event
+      parameters:
+      - description: Event
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.Event'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Event'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create Event
+      tags:
+      - events
+  /api/events/{id}:
+    delete:
+      description: Deletes an event and its stages/slots (cascade)
+      parameters:
+      - description: Event ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete Event
+      tags:
+      - events
+    get:
+      description: Returns a single event by ID
+      parameters:
+      - description: Event ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Event'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get Event
+      tags:
+      - events
+    patch:
+      consumes:
+      - application/json
+      description: Updates an event's name, venue, dates, and genres
+      parameters:
+      - description: Event ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.Event'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Event'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Patch Event
+      tags:
+      - events
+  /api/events/{id}/duplicate:
+    post:
+      description: Creates a copy of an event including its stages
+      parameters:
+      - description: Event ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Event'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Duplicate Event
+      tags:
+      - events
 swagger: "2.0"

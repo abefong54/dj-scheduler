@@ -18,6 +18,7 @@ type EventRepository interface {
 	List(ctx context.Context) ([]model.Event, error)
 	Get(ctx context.Context, id string) (model.Event, error)
 	Create(ctx context.Context, e model.Event) (model.Event, error)
+	Update(ctx context.Context, e model.Event) (model.Event, error)
 	Delete(ctx context.Context, id string) error
 	Duplicate(ctx context.Context, id string) (model.Event, error)
 }
