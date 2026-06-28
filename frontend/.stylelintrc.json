@@ -1,0 +1,16 @@
+{
+  "rules": {},
+  "overrides": [
+    {
+      "files": ["**/*.component.css"],
+      "rules": {
+        "at-rule-disallowed-list": [
+          ["apply"],
+          {
+            "message": "Don't use @apply in component stylesheets (EL-032): @apply expands inline and inflates the per-component anyComponentStyle CSS budget, which fails production `ng build`. Put the utilities in the template markup, or add a shared class to src/styles.css (where @apply is fine — it's charged once to the global budget)."
+          }
+        ]
+      }
+    }
+  ]
+}
