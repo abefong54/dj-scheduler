@@ -1,19 +1,6 @@
-.dialog-box {
-  @apply bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4;
-}
-
-.dialog-title {
-  @apply text-base font-semibold text-gray-900 mb-2;
-}
-
-.dialog-message {
-  @apply text-sm text-gray-600 mb-5 leading-relaxed;
-}
-
-.dialog-actions {
-  @apply flex justify-end gap-3;
-}
-
-.btn-confirm-danger {
-  @apply bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-colors;
-}
+/* Styles for this component live in the global components layer in
+   src/styles.css (migrated in EL-032). Do NOT add Tailwind apply-directive
+   rules to this file — they expand inline and inflate the component's compiled
+   stylesheet past Angular's per-component anyComponentStyle budget, failing
+   `ng build`. Put utilities in the template markup, or add a shared class to
+   styles.css. Enforced by stylelint + a pre-commit hook. */

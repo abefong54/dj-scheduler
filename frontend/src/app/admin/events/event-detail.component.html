@@ -56,7 +56,7 @@
       </datalist>
 
       @if (dates().length > 1) {
-        <div class="tabs">
+        <div class="tabs mb-4">
           @for (d of dates(); track d) {
             <button (click)="selectedDate.set(d)"
               class="tab-btn"

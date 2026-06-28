@@ -1,13 +1,6 @@
-.navbar {
-  @apply h-14 flex items-center justify-between px-6 sticky top-0 z-50;
-  background-color: #1a1a2e;
-}
-
-.navbar-brand { @apply text-white font-bold text-lg; }
-.navbar-links { @apply flex items-center gap-8; }
-.navbar-link { @apply text-slate-300 hover:text-white pb-1 transition-colors text-sm font-medium; }
-.lang-switcher { @apply flex gap-1; }
-.lang-btn { @apply px-3 py-1 rounded text-xs font-medium transition-colors; }
-.lang-btn-active { @apply bg-white text-slate-900; }
-.lang-btn-inactive { @apply text-slate-300 hover:text-white; }
-.app-main { @apply min-h-[calc(100dvh-3.5rem)] bg-gray-50; }
+/* Styles for this component live in the global components layer in
+   src/styles.css (migrated in EL-032). Do NOT add Tailwind apply-directive
+   rules to this file — they expand inline and inflate the component's compiled
+   stylesheet past Angular's per-component anyComponentStyle budget, failing
+   `ng build`. Put utilities in the template markup, or add a shared class to
+   styles.css. Enforced by stylelint + a pre-commit hook. */

@@ -150,3 +150,108 @@
   .slot-notes-text { @apply block text-xs text-gray-500 truncate cursor-help; }
   .edit-notes-input { @apply text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-400 w-28; }
 }
+
+/* ── Migrated component styles (EL-032) ───────────────────────────────────
+   Lifted out of per-component stylesheets so each Tailwind utility is written
+   once here (charged to the roomy global `initial` budget) instead of being
+   `@apply`-expanded into every component's stylesheet — which inflated their
+   compiled size and tripped the tight per-component `anyComponentStyle` budget,
+   failing production `ng build`. Class names are unique across the app, so
+   moving them global changes no behavior. Component-local spacing overrides
+   stay inline in their own templates.
+
+   PROJECT RULE: do NOT use @apply in *.component.css — put utilities in markup
+   or add them here. Enforced by stylelint (.stylelintrc.json) + a pre-commit
+   hook. */
+@layer components {
+  /* App shell — app.component */
+  .navbar { @apply h-14 flex items-center justify-between px-6 sticky top-0 z-50; background-color: #1a1a2e; }
+  .navbar-brand { @apply text-white font-bold text-lg; }
+  .navbar-links { @apply flex items-center gap-8; }
+  .navbar-link { @apply text-slate-300 hover:text-white pb-1 transition-colors text-sm font-medium; }
+  .lang-switcher { @apply flex gap-1; }
+  .lang-btn { @apply px-3 py-1 rounded text-xs font-medium transition-colors; }
+  .lang-btn-active { @apply bg-white text-slate-900; }
+  .lang-btn-inactive { @apply text-slate-300 hover:text-white; }
+  .app-main { @apply min-h-[calc(100dvh-3.5rem)] bg-gray-50; }
+
+  /* Events list — events-list.component. Tab classes renamed `events-*` to
+     avoid clashing with the global `.tabs` pattern (different spacing). */
+  .events-tabs { @apply flex gap-4 border-b border-gray-200 mb-6; }
+  .events-tab-btn { @apply pb-3 text-sm font-medium transition-colors; }
+  .events-tab-active { @apply border-b-2 border-violet-600 text-violet-600; }
+  .events-tab-inactive { @apply text-gray-500 hover:text-gray-700; }
+  .event-list { @apply space-y-3; }
+  .event-card { @apply bg-white border border-gray-200 rounded-lg p-4 shadow-sm; }
+  .event-card-past { @apply bg-white border border-gray-200 rounded-lg p-4 shadow-sm opacity-75; }
+  .event-name { @apply font-semibold text-gray-900; }
+  .event-meta { @apply text-sm text-gray-500 mt-0.5; }
+  .event-actions { @apply flex items-center gap-3 mt-3; }
+  .event-delete-btn { @apply ml-auto; }
+
+  /* Event form — event-new.component */
+  .event-form { @apply bg-white border border-gray-200 rounded-lg p-6; }
+
+  /* Slot form — slot-new.component */
+  .slot-form { @apply bg-white border border-gray-200 rounded-lg p-6 space-y-4; }
+
+  /* DJ roster — djs.component */
+  .genre-tag { @apply inline-block bg-violet-50 text-violet-700 px-2 py-0.5 rounded-full text-xs mr-1 mb-1; }
+
+  /* Confirm dialog — dialog.component */
+  .dialog-box { @apply bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4; }
+  .dialog-title { @apply text-base font-semibold text-gray-900 mb-2; }
+  .dialog-message { @apply text-sm text-gray-600 mb-5 leading-relaxed; }
+  .dialog-actions { @apply flex justify-end gap-3; }
+  .btn-confirm-danger { @apply bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-colors; }
+
+  /* Shared data table — data-table.component */
+  .dt-wrap { @apply w-full; }
+  .dt-toolbar { @apply mb-3; }
+  .dt-search { @apply w-full sm:w-72 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400; }
+  .dt-table-scroll { @apply overflow-x-auto rounded-lg border border-gray-200; }
+  .dt-table { @apply w-full text-sm bg-white; }
+  .dt-head-row { @apply border-b border-gray-200 bg-gray-50; }
+  .dt-th { @apply text-left px-4 py-3 font-medium text-gray-700 select-none whitespace-nowrap; }
+  .dt-th-sortable { @apply cursor-pointer hover:bg-gray-100; }
+  .dt-sort-icon { @apply ml-1 text-violet-600; }
+  .dt-row { @apply border-b border-gray-100 last:border-0 hover:bg-gray-50; }
+  .dt-td { @apply px-4 py-3 text-gray-700; }
+  .dt-empty { @apply px-4 py-8 text-center text-gray-400 text-sm; }
+
+  /* Public schedule — schedule.component */
+  .schedule-page { @apply min-h-dvh bg-gray-50; }
+  .schedule-header { @apply bg-white border-b border-gray-200 px-4 py-4 sticky top-0 z-10; }
+  .schedule-header-inner { @apply max-w-5xl mx-auto flex items-start justify-between gap-4; }
+  .schedule-event-name { @apply text-lg font-bold text-gray-900 leading-tight; }
+  .schedule-venue { @apply text-sm text-gray-500 mt-0.5; }
+  .schedule-body { @apply max-w-5xl mx-auto px-4 py-4; }
+  .share-btn { @apply w-full sm:w-auto mb-4 flex items-center justify-center gap-2; }
+  .schedule-back-link { @apply shrink-0; }
+  .date-tabs { @apply flex gap-2 flex-wrap mb-4; }
+  .date-tab { @apply px-4 py-2 rounded-full text-sm font-medium transition-colors; }
+  .date-tab-active { @apply bg-violet-600 text-white; }
+  .date-tab-inactive { @apply bg-gray-100 text-gray-700 hover:bg-gray-200; }
+  .empty-schedule { @apply text-gray-400 text-center py-12 text-sm; }
+  .stage-cards { @apply block lg:hidden space-y-4; }
+  .stage-card { @apply bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm; }
+  .stage-card-header { @apply flex items-center gap-2 px-4 py-2 border-b border-gray-100 bg-gray-50; }
+  .stage-card-dot { @apply w-3 h-3 rounded-full shrink-0; }
+  .stage-card-name { @apply text-sm font-semibold text-gray-800; }
+  .stage-card-slots { @apply divide-y divide-gray-100; }
+  .stage-card-slot { @apply flex items-center gap-3 px-4 py-3; }
+  .slot-time-label { @apply text-xs text-gray-400 w-24 shrink-0; }
+  .slot-dj-label { @apply text-sm font-medium text-gray-900; }
+  .slot-genre-badge { @apply text-xs text-indigo-600 font-medium; }
+  .slot-notes-label { @apply text-xs text-gray-400 ml-auto; }
+  .desktop-grid { @apply hidden lg:block overflow-x-auto; }
+  .grid-table { @apply w-full border-collapse text-sm; }
+  .grid-stage-th { @apply border border-gray-200 bg-gray-50 px-3 py-2 text-left w-36 text-xs font-medium text-gray-600; }
+  .grid-time-th { @apply border border-gray-200 bg-gray-50 px-2 py-2 text-xs font-medium text-gray-500 w-20 text-center; }
+  .grid-stage-td { @apply border border-gray-200 bg-gray-50 px-3 py-2; }
+  .grid-stage-inner { @apply flex items-center gap-2; }
+  .grid-stage-dot { @apply w-2.5 h-2.5 rounded-full shrink-0; }
+  .grid-stage-name { @apply text-xs font-medium text-gray-800; }
+  .grid-cell { @apply border border-gray-200 px-1 py-1 min-w-[5rem] align-top; }
+  .grid-slot-block { @apply rounded px-2 py-1 text-white text-xs font-medium leading-tight; }
+}

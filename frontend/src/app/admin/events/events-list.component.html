@@ -6,15 +6,15 @@
     </a>
   </div>
 
-  <div class="tabs">
+  <div class="events-tabs">
     <button (click)="activeTab.set('upcoming')"
-      class="tab-btn"
-      [class]="activeTab() === 'upcoming' ? 'tab-active' : 'tab-inactive'">
+      class="events-tab-btn"
+      [class]="activeTab() === 'upcoming' ? 'events-tab-active' : 'events-tab-inactive'">
       {{ 'events.upcoming' | translate }}
     </button>
     <button (click)="activeTab.set('past')"
-      class="tab-btn"
-      [class]="activeTab() === 'past' ? 'tab-active' : 'tab-inactive'">
+      class="events-tab-btn"
+      [class]="activeTab() === 'past' ? 'events-tab-active' : 'events-tab-inactive'">
       {{ 'events.past' | translate }}
     </button>
   </div>
