@@ -17,6 +17,9 @@ func Run() {
 	if cfg.DatabaseURL == "" {
 		log.Fatal("DATABASE_URL not set")
 	}
+	if err := cfg.Validate(); err != nil {
+		log.Fatal(err)
+	}
 
 	pool, err := database.InitDB(cfg.DatabaseURL)
 	if err != nil {
@@ -33,8 +36,9 @@ func Run() {
 	eventHandler := httphandler.NewEventHandler(eventuc.New(eventRepo))
 	stageHandler := httphandler.NewStageHandler(stageuc.New(stageRepo))
 	slotHandler := httphandler.NewSlotHandler(slotuc.New(slotRepo))
+	publicHandler := httphandler.NewPublicHandler(eventuc.New(eventRepo), stageuc.New(stageRepo), slotuc.New(slotRepo))
 
-	r := httphandler.NewRouter(cfg.FrontendURL, djHandler, eventHandler, stageHandler, slotHandler)
+	r := httphandler.NewRouter(cfg.FrontendURL, cfg.JWTSecret, publicHandler, djHandler, eventHandler, stageHandler, slotHandler)
 
 	log.Printf("listening on :%s", cfg.Port)
 	log.Fatal(r.Run(":" + cfg.Port))
