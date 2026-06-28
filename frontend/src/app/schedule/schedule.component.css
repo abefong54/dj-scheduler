@@ -13,7 +13,7 @@
 
 .date-tabs { @apply flex gap-2 flex-wrap mb-4; }
 .date-tab { @apply px-4 py-2 rounded-full text-sm font-medium transition-colors; }
-.date-tab-active { @apply bg-slate-900 text-white; }
+.date-tab-active { @apply bg-violet-600 text-white; }
 .date-tab-inactive { @apply bg-gray-100 text-gray-700 hover:bg-gray-200; }
 .empty-schedule { @apply text-gray-400 text-center py-12 text-sm; }
 
