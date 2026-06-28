@@ -124,7 +124,7 @@ export class EventDetailComponent implements OnDestroy {
 
   onAddGenreChange() {
     const djGenres = this.djs().find(d => d.id === this.addDjId)?.genre_tags ?? [];
-    if (this.addDjId && !djGenres.includes(this.addGenre)) {
+    if (this.addDjId && this.addGenre && !djGenres.includes(this.addGenre)) {
       this.addDjId = '';
     }
   }
@@ -343,7 +343,7 @@ export class EventDetailComponent implements OnDestroy {
 
   onEditGenreChange() {
     const djGenres = this.djs().find(d => d.id === this.editSlotDjId)?.genre_tags ?? [];
-    if (this.editSlotDjId && !djGenres.includes(this.editSlotGenre)) {
+    if (this.editSlotDjId && this.editSlotGenre && !djGenres.includes(this.editSlotGenre)) {
       this.editSlotDjId = '';
     }
   }
