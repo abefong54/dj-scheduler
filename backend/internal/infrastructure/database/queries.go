@@ -2,52 +2,58 @@ package database
 
 const (
 	// DJ queries
-	queryDJList = `SELECT id, name, COALESCE(genre_tags, '{}'), created_at::text FROM djs ORDER BY name`
+	queryDJList = `SELECT id, name, COALESCE(genre_tags, '{}'), created_at::text FROM djs WHERE organizer_id = $1 ORDER BY name`
 
 	queryDJInsert = `
-		INSERT INTO djs (name, genre_tags) VALUES ($1, $2)
+		INSERT INTO djs (name, genre_tags, organizer_id) VALUES ($1, $2, $3)
 		RETURNING id, name, COALESCE(genre_tags, '{}'), created_at::text`
 
 	queryDJGet = `
 		SELECT id, name, COALESCE(genre_tags, '{}'), created_at::text
-		FROM djs WHERE id = $1`
+		FROM djs WHERE id = $1 AND organizer_id = $2`
 
 	queryDJUpdate = `
 		UPDATE djs SET name = $1, genre_tags = $2
-		WHERE id = $3
+		WHERE id = $3 AND organizer_id = $4
 		RETURNING id, name, COALESCE(genre_tags, '{}'), created_at::text`
 
-	queryDJDelete = `DELETE FROM djs WHERE id = $1`
+	queryDJDelete = `DELETE FROM djs WHERE id = $1 AND organizer_id = $2`
 
 	// Event queries
 	queryEventList = `
 		SELECT id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}')
-		FROM events ORDER BY start_date DESC`
+		FROM events WHERE organizer_id = $1 ORDER BY start_date DESC`
 
 	queryEventGet = `
+		SELECT id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}')
+		FROM events WHERE id = $1 AND organizer_id = $2`
+
+	// queryEventGetPublic is intentionally NOT scoped by organizer: it backs the
+	// public, shareable schedule endpoint (GET /api/events/:id/public).
+	queryEventGetPublic = `
 		SELECT id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}')
 		FROM events WHERE id = $1`
 
 	queryEventInsert = `
-		INSERT INTO events (name, venue_name, start_date, end_date, genres)
-		VALUES ($1,$2,$3,$4,$5)
+		INSERT INTO events (name, venue_name, start_date, end_date, genres, organizer_id)
+		VALUES ($1,$2,$3,$4,$5,$6)
 		RETURNING id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}')`
 
 	queryEventUpdate = `
 		UPDATE events
 		SET name = $1, venue_name = $2, start_date = $3, end_date = $4, genres = $5
-		WHERE id = $6
+		WHERE id = $6 AND organizer_id = $7
 		RETURNING id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}')`
 
-	queryEventDelete = `DELETE FROM events WHERE id = $1`
+	queryEventDelete = `DELETE FROM events WHERE id = $1 AND organizer_id = $2`
 
 	queryEventDuplicateFetch = `
 		SELECT name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}')
-		FROM events WHERE id = $1`
+		FROM events WHERE id = $1 AND organizer_id = $2`
 
 	queryEventDuplicateInsert = `
-		INSERT INTO events (name, venue_name, start_date, end_date, genres)
-		VALUES ($1||' (copy)', $2, $3, $4, $5)
+		INSERT INTO events (name, venue_name, start_date, end_date, genres, organizer_id)
+		VALUES ($1||' (copy)', $2, $3, $4, $5, $6)
 		RETURNING id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}')`
 
 	// Stage queries

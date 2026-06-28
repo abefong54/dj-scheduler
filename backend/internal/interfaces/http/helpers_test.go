@@ -5,10 +5,38 @@ import (
 	"os"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"eventlineup/internal/infrastructure/database"
+	"eventlineup/internal/interfaces/http/middleware"
 )
+
+// orgContext is test middleware that simulates an authenticated organizer by
+// putting their ID in the gin context, the same way the real auth middleware does.
+func orgContext(organizerID string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set(middleware.OrganizerIDKey, organizerID)
+		c.Next()
+	}
+}
+
+// createTestOrganizer inserts an organizer with unique credentials and returns its ID.
+func createTestOrganizer(t *testing.T, pool *pgxpool.Pool) string {
+	t.Helper()
+	var id string
+	err := pool.QueryRow(context.Background(),
+		`INSERT INTO organizers (email, name, google_id)
+		 VALUES (gen_random_uuid()::text||'@test.local', 'Test Organizer', gen_random_uuid()::text)
+		 RETURNING id`).Scan(&id)
+	if err != nil {
+		t.Fatalf("createTestOrganizer: %v", err)
+	}
+	t.Cleanup(func() {
+		pool.Exec(context.Background(), "DELETE FROM organizers WHERE id = $1", id)
+	})
+	return id
+}
 
 func setupTestDB(t *testing.T) *pgxpool.Pool {
 	t.Helper()
@@ -24,13 +52,21 @@ func setupTestDB(t *testing.T) *pgxpool.Pool {
 	return pool
 }
 
+// createTestEvent creates an event owned by a freshly created organizer. Callers
+// that don't care about scoping (stage/slot/public tests) can use this as before.
 func createTestEvent(t *testing.T, pool *pgxpool.Pool) string {
+	t.Helper()
+	return createTestEventForOrg(t, pool, createTestOrganizer(t, pool))
+}
+
+// createTestEventForOrg creates an event owned by the given organizer.
+func createTestEventForOrg(t *testing.T, pool *pgxpool.Pool, organizerID string) string {
 	t.Helper()
 	var id string
 	err := pool.QueryRow(context.Background(),
-		`INSERT INTO events (name, venue_name, start_date, end_date)
-		 VALUES ('test-event', 'Test Venue', '2026-07-25', '2026-07-26')
-		 RETURNING id`).Scan(&id)
+		`INSERT INTO events (name, venue_name, start_date, end_date, organizer_id)
+		 VALUES ('test-event', 'Test Venue', '2026-07-25', '2026-07-26', $1)
+		 RETURNING id`, organizerID).Scan(&id)
 	if err != nil {
 		t.Fatalf("createTestEvent: %v", err)
 	}

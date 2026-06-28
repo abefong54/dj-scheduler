@@ -18,8 +18,8 @@ func NewEventRepository(pool *pgxpool.Pool) *eventRepo {
 	return &eventRepo{pool: pool}
 }
 
-func (r *eventRepo) List(ctx context.Context) ([]model.Event, error) {
-	rows, err := r.pool.Query(ctx, queryEventList)
+func (r *eventRepo) List(ctx context.Context, organizerID string) ([]model.Event, error) {
+	rows, err := r.pool.Query(ctx, queryEventList, organizerID)
 	if err != nil {
 		return nil, err
 	}
@@ -35,25 +35,38 @@ func (r *eventRepo) List(ctx context.Context) ([]model.Event, error) {
 	return events, rows.Err()
 }
 
-func (r *eventRepo) Get(ctx context.Context, id string) (model.Event, error) {
+func (r *eventRepo) Get(ctx context.Context, id, organizerID string) (model.Event, error) {
 	var e model.Event
-	err := r.pool.QueryRow(ctx, queryEventGet, id).
+	err := r.pool.QueryRow(ctx, queryEventGet, id, organizerID).
 		Scan(&e.ID, &e.Name, &e.VenueName, &e.StartDate, &e.EndDate, &e.Genres)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return model.Event{}, apperrors.ErrNotFound
+	}
 	return e, err
 }
 
-func (r *eventRepo) Create(ctx context.Context, e model.Event) (model.Event, error) {
+func (r *eventRepo) GetPublic(ctx context.Context, id string) (model.Event, error) {
+	var e model.Event
+	err := r.pool.QueryRow(ctx, queryEventGetPublic, id).
+		Scan(&e.ID, &e.Name, &e.VenueName, &e.StartDate, &e.EndDate, &e.Genres)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return model.Event{}, apperrors.ErrNotFound
+	}
+	return e, err
+}
+
+func (r *eventRepo) Create(ctx context.Context, e model.Event, organizerID string) (model.Event, error) {
 	var out model.Event
 	err := r.pool.QueryRow(ctx, queryEventInsert,
-		e.Name, e.VenueName, e.StartDate, e.EndDate, e.Genres).
+		e.Name, e.VenueName, e.StartDate, e.EndDate, e.Genres, organizerID).
 		Scan(&out.ID, &out.Name, &out.VenueName, &out.StartDate, &out.EndDate, &out.Genres)
 	return out, err
 }
 
-func (r *eventRepo) Update(ctx context.Context, e model.Event) (model.Event, error) {
+func (r *eventRepo) Update(ctx context.Context, e model.Event, organizerID string) (model.Event, error) {
 	var out model.Event
 	err := r.pool.QueryRow(ctx, queryEventUpdate,
-		e.Name, e.VenueName, e.StartDate, e.EndDate, e.Genres, e.ID).
+		e.Name, e.VenueName, e.StartDate, e.EndDate, e.Genres, e.ID, organizerID).
 		Scan(&out.ID, &out.Name, &out.VenueName, &out.StartDate, &out.EndDate, &out.Genres)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return model.Event{}, apperrors.ErrNotFound
@@ -61,22 +74,25 @@ func (r *eventRepo) Update(ctx context.Context, e model.Event) (model.Event, err
 	return out, err
 }
 
-func (r *eventRepo) Delete(ctx context.Context, id string) error {
-	_, err := r.pool.Exec(ctx, queryEventDelete, id)
+func (r *eventRepo) Delete(ctx context.Context, id, organizerID string) error {
+	_, err := r.pool.Exec(ctx, queryEventDelete, id, organizerID)
 	return err
 }
 
-func (r *eventRepo) Duplicate(ctx context.Context, origID string) (model.Event, error) {
+func (r *eventRepo) Duplicate(ctx context.Context, origID, organizerID string) (model.Event, error) {
 	var orig model.Event
-	err := r.pool.QueryRow(ctx, queryEventDuplicateFetch, origID).
+	err := r.pool.QueryRow(ctx, queryEventDuplicateFetch, origID, organizerID).
 		Scan(&orig.Name, &orig.VenueName, &orig.StartDate, &orig.EndDate, &orig.Genres)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return model.Event{}, apperrors.ErrNotFound
+	}
 	if err != nil {
 		return model.Event{}, err
 	}
 
 	var newEvent model.Event
 	err = r.pool.QueryRow(ctx, queryEventDuplicateInsert,
-		orig.Name, orig.VenueName, orig.StartDate, orig.EndDate, orig.Genres).
+		orig.Name, orig.VenueName, orig.StartDate, orig.EndDate, orig.Genres, organizerID).
 		Scan(&newEvent.ID, &newEvent.Name, &newEvent.VenueName, &newEvent.StartDate, &newEvent.EndDate, &newEvent.Genres)
 	if err != nil {
 		return model.Event{}, err

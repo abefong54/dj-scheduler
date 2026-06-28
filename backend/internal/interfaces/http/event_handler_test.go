@@ -9,26 +9,29 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 
-	"eventlineup/internal/infrastructure/database"
 	"eventlineup/internal/domain/model"
+	"eventlineup/internal/infrastructure/database"
 	httphandler "eventlineup/internal/interfaces/http"
 	eventuc "eventlineup/internal/usecase/event"
 )
 
-func eventRouter(t *testing.T) *gin.Engine {
+// eventRouterForOrg builds an event router whose requests run as the given organizer.
+func eventRouterForOrg(t *testing.T, pool *pgxpool.Pool, organizerID string) *gin.Engine {
 	t.Helper()
-	pool := setupTestDB(t)
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	repo := database.NewEventRepository(pool)
-	h := httphandler.NewEventHandler(eventuc.New(repo))
-	h.Register(r.Group("/api"))
+	r.Use(orgContext(organizerID))
+	httphandler.NewEventHandler(eventuc.New(database.NewEventRepository(pool))).Register(r.Group("/api"))
 	return r
 }
 
 func TestListEvents(t *testing.T) {
-	r := eventRouter(t)
+	pool := setupTestDB(t)
+	org := createTestOrganizer(t, pool)
+	r := eventRouterForOrg(t, pool, org)
+
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/api/events", nil)
 	r.ServeHTTP(w, req)
@@ -42,17 +45,42 @@ func TestListEvents(t *testing.T) {
 	}
 }
 
+// US-002: a list returns only the caller's events, never another organizer's.
+func TestListEventsScopedToOrganizer(t *testing.T) {
+	pool := setupTestDB(t)
+	orgA := createTestOrganizer(t, pool)
+	orgB := createTestOrganizer(t, pool)
+	eventA := createTestEventForOrg(t, pool, orgA)
+	eventB := createTestEventForOrg(t, pool, orgB)
+
+	r := eventRouterForOrg(t, pool, orgA)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/events", nil))
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+	var events []model.Event
+	json.NewDecoder(w.Body).Decode(&events)
+
+	ids := map[string]bool{}
+	for _, e := range events {
+		ids[e.ID] = true
+	}
+	if !ids[eventA] {
+		t.Fatal("organizer A should see their own event")
+	}
+	if ids[eventB] {
+		t.Fatal("organizer A must NOT see organizer B's event")
+	}
+}
+
 func TestCreateEvent(t *testing.T) {
 	pool := setupTestDB(t)
+	org := createTestOrganizer(t, pool)
 	t.Cleanup(func() {
 		pool.Exec(context.Background(), "DELETE FROM events WHERE name = 'test-create-event'")
 	})
-
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	repo := database.NewEventRepository(pool)
-	h := httphandler.NewEventHandler(eventuc.New(repo))
-	h.Register(r.Group("/api"))
+	r := eventRouterForOrg(t, pool, org)
 
 	body, _ := json.Marshal(map[string]string{
 		"name":       "test-create-event",
@@ -73,50 +101,63 @@ func TestCreateEvent(t *testing.T) {
 	if e.ID == "" {
 		t.Fatal("expected ID in response")
 	}
+
+	// US-002: the new row is owned by the authenticated organizer.
+	var ownerID string
+	if err := pool.QueryRow(context.Background(),
+		"SELECT organizer_id FROM events WHERE id = $1", e.ID).Scan(&ownerID); err != nil {
+		t.Fatalf("read organizer_id: %v", err)
+	}
+	if ownerID != org {
+		t.Fatalf("expected organizer_id %s, got %s", org, ownerID)
+	}
 }
 
 func TestGetEvent(t *testing.T) {
 	pool := setupTestDB(t)
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	repo := database.NewEventRepository(pool)
-	h := httphandler.NewEventHandler(eventuc.New(repo))
-	h.Register(r.Group("/api"))
+	orgA := createTestOrganizer(t, pool)
+	orgB := createTestOrganizer(t, pool)
+	eventA := createTestEventForOrg(t, pool, orgA)
 
-	id := createTestEvent(t, pool)
-	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/api/events/"+id, nil)
-	r.ServeHTTP(w, req)
+	t.Run("owner gets 200", func(t *testing.T) {
+		r := eventRouterForOrg(t, pool, orgA)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/events/"+eventA, nil))
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected 200, got %d", w.Code)
+		}
+		var e model.Event
+		json.NewDecoder(w.Body).Decode(&e)
+		if e.ID != eventA {
+			t.Fatalf("expected id %s, got %s", eventA, e.ID)
+		}
+	})
 
-	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d", w.Code)
-	}
-	var e model.Event
-	json.NewDecoder(w.Body).Decode(&e)
-	if e.ID != id {
-		t.Fatalf("expected id %s, got %s", id, e.ID)
-	}
+	// US-002: cross-organizer access returns 404 (not 403 — don't leak existence).
+	t.Run("other organizer gets 404", func(t *testing.T) {
+		r := eventRouterForOrg(t, pool, orgB)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/events/"+eventA, nil))
+		if w.Code != http.StatusNotFound {
+			t.Fatalf("expected 404 for cross-organizer access, got %d", w.Code)
+		}
+	})
 }
 
 func TestDeleteEvent(t *testing.T) {
 	pool := setupTestDB(t)
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	repo := database.NewEventRepository(pool)
-	h := httphandler.NewEventHandler(eventuc.New(repo))
-	h.Register(r.Group("/api"))
+	org := createTestOrganizer(t, pool)
+	r := eventRouterForOrg(t, pool, org)
 
-	id := createTestEvent(t, pool)
+	id := createTestEventForOrg(t, pool, org)
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodDelete, "/api/events/"+id, nil)
-	r.ServeHTTP(w, req)
-
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodDelete, "/api/events/"+id, nil))
 	if w.Code != http.StatusNoContent {
 		t.Fatalf("expected 204, got %d: %s", w.Code, w.Body.String())
 	}
+
 	w2 := httptest.NewRecorder()
-	req2 := httptest.NewRequest(http.MethodGet, "/api/events/"+id, nil)
-	r.ServeHTTP(w2, req2)
+	r.ServeHTTP(w2, httptest.NewRequest(http.MethodGet, "/api/events/"+id, nil))
 	if w2.Code != http.StatusNotFound {
 		t.Fatalf("expected 404 after delete, got %d", w2.Code)
 	}
@@ -124,13 +165,9 @@ func TestDeleteEvent(t *testing.T) {
 
 func TestPatchEvent(t *testing.T) {
 	pool := setupTestDB(t)
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	repo := database.NewEventRepository(pool)
-	h := httphandler.NewEventHandler(eventuc.New(repo))
-	h.Register(r.Group("/api"))
-
-	eventID := createTestEvent(t, pool)
+	org := createTestOrganizer(t, pool)
+	r := eventRouterForOrg(t, pool, org)
+	eventID := createTestEventForOrg(t, pool, org)
 
 	t.Run("updates all mutable fields", func(t *testing.T) {
 		body, _ := json.Marshal(map[string]interface{}{
@@ -173,16 +210,12 @@ func TestPatchEvent(t *testing.T) {
 
 func TestDuplicateEvent(t *testing.T) {
 	pool := setupTestDB(t)
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	repo := database.NewEventRepository(pool)
-	h := httphandler.NewEventHandler(eventuc.New(repo))
-	h.Register(r.Group("/api"))
+	org := createTestOrganizer(t, pool)
+	r := eventRouterForOrg(t, pool, org)
 
-	id := createTestEvent(t, pool)
+	id := createTestEventForOrg(t, pool, org)
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/api/events/"+id+"/duplicate", nil)
-	r.ServeHTTP(w, req)
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/api/events/"+id+"/duplicate", nil))
 
 	if w.Code != http.StatusCreated {
 		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())

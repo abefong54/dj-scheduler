@@ -40,7 +40,7 @@ func (h *PublicHandler) get(c *gin.Context) {
 	ctx := c.Request.Context()
 	id := c.Param("id")
 
-	event, err := h.events.Get(ctx, id)
+	event, err := h.events.GetPublic(ctx, id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return
