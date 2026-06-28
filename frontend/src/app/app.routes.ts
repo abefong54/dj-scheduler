@@ -12,6 +12,11 @@ export const routes: Routes = [
       .then(m => m.EventNewComponent),
   },
   {
+    path: 'admin/events/:id/slots/new',
+    loadComponent: () => import('./admin/events/slot-new.component')
+      .then(m => m.SlotNewComponent),
+  },
+  {
     path: 'admin/events/:id',
     loadComponent: () => import('./admin/events/event-detail.component')
       .then(m => m.EventDetailComponent),

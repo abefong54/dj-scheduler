@@ -1,0 +1,26 @@
+@if (dialog.state()) {
+  <div class="modal-overlay" (click)="dialog.state()!.type === 'alert' && dialog.respond(true)">
+    <div class="dialog-box" (click)="$event.stopPropagation()">
+
+      <h2 class="dialog-title">{{ dialog.state()!.title }}</h2>
+      <p class="dialog-message">{{ dialog.state()!.message }}</p>
+
+      <div class="dialog-actions">
+        @if (dialog.state()!.type === 'confirm') {
+          <button (click)="dialog.respond(false)" class="btn-secondary">
+            {{ dialog.state()!.cancelLabel ?? ('actions.cancel' | translate) }}
+          </button>
+          <button (click)="dialog.respond(true)"
+            [class]="dialog.state()!.variant === 'danger' ? 'btn-confirm-danger' : 'btn-primary'">
+            {{ dialog.state()!.confirmLabel ?? ('actions.confirm' | translate) }}
+          </button>
+        } @else {
+          <button (click)="dialog.respond(true)" class="btn-primary">
+            {{ dialog.state()!.confirmLabel ?? ('actions.ok' | translate) }}
+          </button>
+        }
+      </div>
+
+    </div>
+  </div>
+}

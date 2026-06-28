@@ -1,0 +1,97 @@
+<div class="schedule-page">
+  <div class="schedule-header">
+    <div class="schedule-header-inner">
+      @if (event()) {
+        <div>
+          <h1 class="schedule-event-name">{{ event()!.name }}</h1>
+          <p class="schedule-venue">{{ event()!.venue_name }}</p>
+        </div>
+      }
+      <button (click)="close()" class="back-link shrink-0">← Back</button>
+    </div>
+  </div>
+
+  <div class="schedule-body">
+    <button (click)="shareViaLine()"
+      class="btn-green w-full sm:w-auto mb-4 flex items-center justify-center gap-2">
+      {{ 'schedule.share' | translate }}
+    </button>
+
+    @if (dates().length > 1) {
+      <div class="date-tabs">
+        @for (d of dates(); track d) {
+          <button (click)="selectedDate.set(d)"
+            class="date-tab"
+            [class]="selectedDate() === d ? 'date-tab-active' : 'date-tab-inactive'">
+            {{ d }}
+          </button>
+        }
+      </div>
+    }
+
+    @if (slotsForDate().length === 0) {
+      <p class="empty-schedule">{{ 'schedule.noSlots' | translate }}</p>
+    }
+
+    @if (slotsForDate().length > 0) {
+      <div class="stage-cards">
+        @for (stage of stagesForDate(); track stage.id) {
+          <div class="stage-card">
+            <div class="stage-card-header">
+              <span class="stage-card-dot" [style.background]="stageColor(stage.id)"></span>
+              <span class="stage-card-name">{{ stage.name }}</span>
+            </div>
+            <div class="stage-card-slots">
+              @for (slot of slotsForStage(stage.id); track slot.id) {
+                <div class="stage-card-slot">
+                  <span class="slot-time-label">{{ slot.start_time }}–{{ slot.end_time }}</span>
+                  <span class="slot-dj-label">{{ slot.dj_name || '—' }}</span>
+                  @if (slot.genre) {
+                    <span class="slot-genre-badge">{{ slot.genre }}</span>
+                  }
+                  @if (slot.notes) {
+                    <span class="slot-notes-label">{{ slot.notes }}</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="desktop-grid">
+        <table class="grid-table">
+          <thead>
+            <tr>
+              <th class="grid-stage-th">{{ 'slots.stage' | translate }}</th>
+              @for (t of timeHeaders(); track t) {
+                <th class="grid-time-th">{{ t }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (stage of stagesForDate(); track stage.id) {
+              <tr>
+                <td class="grid-stage-td">
+                  <div class="grid-stage-inner">
+                    <span class="grid-stage-dot" [style.background]="stageColor(stage.id)"></span>
+                    <span class="grid-stage-name">{{ stage.name }}</span>
+                  </div>
+                </td>
+                @for (t of timeHeaders(); track t) {
+                  <td class="grid-cell">
+                    @for (slot of slotsAt(stage.id, t); track slot.id) {
+                      <div class="grid-slot-block" [style.background]="stageColor(stage.id)">
+                        {{ slot.dj_name || '—' }}
+                      </div>
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
