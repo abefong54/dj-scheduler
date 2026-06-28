@@ -24,6 +24,26 @@ export class EventDetailComponent implements OnDestroy {
   slots = signal<Slot[]>([]);
   djs = signal<DJ[]>([]);
 
+  selectedDate = signal('');
+
+  dates = computed(() => {
+    const slotDates = [...new Set(this.slots().map(s => s.slot_date))].sort();
+    const start = this.event()?.start_date;
+    if (start && !slotDates.includes(start)) slotDates.unshift(start);
+    return slotDates.sort();
+  });
+
+  slotsForSelectedDate = computed(() =>
+    this.slots()
+      .filter(s => s.slot_date === this.selectedDate())
+      .sort((a, b) => a.start_time.localeCompare(b.start_time))
+  );
+
+  tabDate(d: string): string {
+    const [, month, day] = d.split('-');
+    return `${parseInt(month)}/${parseInt(day)}`;
+  }
+
   private subscriptions: Subscription[] = [];
 
   constructor() {
@@ -34,7 +54,10 @@ export class EventDetailComponent implements OnDestroy {
     const eventId = this.route.snapshot.paramMap.get('id')!;
 
     this.subscriptions.push(
-      this.api.getEvent(eventId).subscribe(e => this.event.set(e)),
+      this.api.getEvent(eventId).subscribe(e => {
+        this.event.set(e);
+        if (this.selectedDate() === '') this.selectedDate.set(e.start_date);
+      }),
       this.api.getStages(eventId).subscribe(s => this.stages.set(s)),
       this.api.getSlots(eventId).subscribe(s => this.slots.set(s)),
       this.api.getDJs().subscribe(d => this.djs.set(d)),
@@ -108,6 +131,8 @@ export class EventDetailComponent implements OnDestroy {
     const url = encodeURIComponent(`${window.location.origin}/events/${this.event()!.id}`);
     window.open(`https://line.me/R/msg/text/?${url}`, '_blank');
   }
+
+  exportXlsx() { /* implemented in Task 6 */ }
 
   showStageModal = signal(false);
   newStageName = '';

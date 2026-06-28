@@ -1,0 +1,50 @@
+/* Hero header */
+.detail-hero { @apply flex items-start justify-between mb-4 gap-4 flex-wrap; }
+.detail-hero-info { @apply flex-1 min-w-0; }
+.detail-event-name { @apply text-3xl font-bold text-gray-900 leading-tight; }
+.detail-event-meta { @apply text-sm text-gray-500 mt-1; }
+.detail-hero-actions { @apply flex items-center gap-2 flex-shrink-0 flex-wrap; }
+
+/* Genre pills */
+.genre-pill { @apply px-2 py-0.5 bg-violet-50 text-violet-700 rounded-full text-xs font-medium; }
+
+/* Stage chip strip */
+.stage-strip { @apply flex items-center gap-2 flex-wrap py-2 mb-2; }
+.stage-chip { @apply flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm; }
+.stage-chip-dot { @apply w-2.5 h-2.5 rounded-full flex-shrink-0; }
+.stage-chip-name { @apply font-medium text-gray-800; }
+.stage-chip-delete { @apply ml-1 text-gray-300 hover:text-red-400 text-base leading-none hidden group-hover:inline transition-colors; }
+.stage-chip-add { @apply px-3 py-1.5 border border-dashed border-gray-300 rounded-full text-sm text-gray-500 hover:border-violet-400 hover:text-violet-600 transition-colors; }
+
+/* Slot table */
+.slot-table { @apply w-full text-sm; }
+.slot-th { @apply text-left px-3 py-2 font-medium text-gray-700; }
+.slot-row { @apply border-b border-gray-100 last:border-0 hover:bg-gray-50; }
+.slot-stage-cell { @apply px-3 py-3; }
+.slot-stage-inner { @apply flex items-center gap-2; }
+.slot-stage-dot { @apply w-2.5 h-2.5 rounded-full flex-shrink-0; }
+.slot-dj-cell { @apply px-3 py-3 font-medium text-gray-900; }
+.slot-genre-cell { @apply px-3 py-3 text-gray-500; }
+.slot-time-cell { @apply px-3 py-3 text-gray-700 whitespace-nowrap; }
+.slot-actions-cell { @apply px-3 py-3 text-right whitespace-nowrap; }
+.slot-edit-btn { @apply text-gray-500 hover:text-gray-800 text-sm font-medium mr-3; }
+
+/* Inline edit row */
+.edit-row { @apply border-b border-gray-100 bg-violet-50; }
+.edit-cell { @apply px-2 py-2; }
+.edit-select { @apply w-full text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-400 disabled:bg-gray-50 disabled:text-gray-400; }
+.edit-time-input { @apply text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-400 w-24; }
+.edit-dur-input { @apply text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-400 w-16; }
+.edit-actions-cell { @apply px-2 py-2 text-right whitespace-nowrap; }
+.btn-save { @apply bg-violet-600 hover:bg-violet-700 text-white text-xs font-medium px-3 py-1 rounded mr-1 transition-colors; }
+.btn-cancel-edit { @apply border border-gray-300 text-gray-600 hover:bg-gray-50 text-xs font-medium px-3 py-1 rounded transition-colors; }
+
+/* Add row (placeholder — wired up in Task 5) */
+.add-trigger-row { @apply hover:bg-gray-50 cursor-pointer; }
+.add-trigger-cell { @apply px-3 py-3 text-sm text-violet-600 font-medium; }
+
+/* Stage modal color swatches */
+.color-swatches { @apply flex gap-2 flex-wrap; }
+.color-swatch { @apply w-7 h-7 rounded-full border-2 transition-all; }
+.swatch-active { @apply border-gray-900; }
+.swatch-inactive { @apply border-transparent; }

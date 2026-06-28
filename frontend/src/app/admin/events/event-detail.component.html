@@ -1,0 +1,183 @@
+@if (event()) {
+  <div class="page">
+
+    <!-- Hero Header -->
+    <div class="detail-hero">
+      <div class="detail-hero-info">
+        <h1 class="detail-event-name">{{ event()!.name }}</h1>
+        <p class="detail-event-meta">{{ dateRange() }} · {{ event()!.venue_name }}</p>
+        @if (event()!.genres?.length) {
+          <div class="flex gap-1 flex-wrap mt-2">
+            @for (g of event()!.genres; track g) {
+              <span class="genre-pill">{{ g }}</span>
+            }
+          </div>
+        }
+      </div>
+      <div class="detail-hero-actions">
+        <a routerLink="/admin/events" class="back-link">← {{ 'actions.back' | translate }}</a>
+        <button (click)="viewPublic()" class="btn-sm-outline">{{ 'eventDetail.viewPublic' | translate }}</button>
+        <button (click)="shareViaLine()" class="btn-green">{{ 'schedule.share' | translate }}</button>
+        <button (click)="exportXlsx()" class="btn-sm-outline">{{ 'eventDetail.export' | translate }}</button>
+      </div>
+    </div>
+
+    <!-- Stage Chips Strip -->
+    <div class="stage-strip">
+      @for (s of stages(); track s.id) {
+        <div class="stage-chip group">
+          <span class="stage-chip-dot" [style.background]="s.color"></span>
+          <span class="stage-chip-name">{{ s.name }}</span>
+          <button (click)="deleteStage(s.id)" class="stage-chip-delete" title="Delete">×</button>
+        </div>
+      }
+      <button (click)="addStage()" class="stage-chip-add">
+        + {{ 'stages.new' | translate }}
+      </button>
+    </div>
+
+    <!-- Slots Section -->
+    <div class="mt-4">
+      <h2 class="section-title mb-3">{{ 'slots.title' | translate }}</h2>
+
+      <!-- Date Tabs (only shown for multi-day events) -->
+      @if (dates().length > 1) {
+        <div class="tabs mb-4">
+          @for (d of dates(); track d) {
+            <button (click)="selectedDate.set(d)"
+              class="tab-btn"
+              [class]="selectedDate() === d ? 'tab-active' : 'tab-inactive'">
+              {{ tabDate(d) }}
+            </button>
+          }
+        </div>
+      }
+
+      <div class="card overflow-hidden">
+        <table class="slot-table">
+          <thead>
+            <tr class="border-b border-gray-200 bg-gray-50">
+              <th class="slot-th">{{ 'slots.stage' | translate }}</th>
+              <th class="slot-th">{{ 'slots.dj' | translate }}</th>
+              <th class="slot-th">{{ 'slots.genre' | translate }}</th>
+              <th class="slot-th">{{ 'slots.start' | translate }}</th>
+              <th class="slot-th">{{ 'slots.duration' | translate }}</th>
+              <th class="slot-th"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (slot of slotsForSelectedDate(); track slot.id) {
+              @if (editingSlotId() === slot.id) {
+                <tr class="edit-row">
+                  <td class="edit-cell">
+                    <select [(ngModel)]="editSlotStageId" [name]="'es_stage_' + slot.id" class="edit-select">
+                      @for (s of stages(); track s.id) {
+                        <option [value]="s.id">{{ s.name }}</option>
+                      }
+                    </select>
+                  </td>
+                  <td class="edit-cell">
+                    <select [(ngModel)]="editSlotDjId" [name]="'es_dj_' + slot.id"
+                      (ngModelChange)="editSlotGenre = ''" class="edit-select">
+                      <option value="">—</option>
+                      @for (d of djs(); track d.id) {
+                        <option [value]="d.id">{{ d.name }}</option>
+                      }
+                    </select>
+                  </td>
+                  <td class="edit-cell">
+                    <select [(ngModel)]="editSlotGenre" [name]="'es_genre_' + slot.id"
+                      [disabled]="!editSlotDjId || djGenresForEdit().length === 0"
+                      class="edit-select">
+                      <option value="">{{ djGenresForEdit().length ? '— select —' : '—' }}</option>
+                      @for (g of djGenresForEdit(); track g) {
+                        <option [value]="g">{{ g }}</option>
+                      }
+                    </select>
+                  </td>
+                  <td class="edit-cell">
+                    <input [(ngModel)]="editSlotStart" [name]="'es_start_' + slot.id"
+                      type="time" class="edit-time-input" />
+                  </td>
+                  <td class="edit-cell">
+                    <input [(ngModel)]="editSlotDuration" [name]="'es_dur_' + slot.id"
+                      type="number" min="5" step="5" list="durationPresets"
+                      class="edit-dur-input" />
+                    <datalist id="durationPresets">
+                      @for (d of durationOptions; track d.mins) {
+                        <option [value]="d.mins">{{ d.label }}</option>
+                      }
+                    </datalist>
+                  </td>
+                  <td class="edit-actions-cell">
+                    <button (click)="saveEdit(slot.id)" class="btn-save">Save</button>
+                    <button (click)="cancelEdit()" class="btn-cancel-edit">Cancel</button>
+                  </td>
+                </tr>
+              } @else {
+                <tr class="slot-row">
+                  <td class="slot-stage-cell">
+                    <span class="slot-stage-inner">
+                      <span class="slot-stage-dot" [style.background]="stageColor(slot.stage_id)"></span>
+                      {{ slot.stage_name }}
+                    </span>
+                  </td>
+                  <td class="slot-dj-cell">{{ slot.dj_name || '—' }}</td>
+                  <td class="slot-genre-cell">{{ slot.genre || '—' }}</td>
+                  <td class="slot-time-cell">{{ slot.start_time }}</td>
+                  <td class="slot-time-cell">{{ duration(slot.start_time, slot.end_time) }}</td>
+                  <td class="slot-actions-cell">
+                    <button (click)="startEdit(slot)" class="slot-edit-btn">Edit</button>
+                    <button (click)="deleteSlot(slot.id)" class="btn-danger">
+                      {{ 'actions.delete' | translate }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            }
+            <!-- Add row placeholder — replaced in Task 5 -->
+            <tr class="add-trigger-row">
+              <td colspan="6" class="add-trigger-cell">+ {{ 'slots.new' | translate }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Add Stage Modal -->
+@if (showStageModal()) {
+  <div class="modal-overlay" (click)="cancelStage()">
+    <div class="modal-box-sm" (click)="$event.stopPropagation()">
+      <h2 class="modal-title">{{ 'stages.new' | translate }}</h2>
+      <div class="form-group">
+        <label class="form-label">{{ 'stages.name' | translate }}</label>
+        <input [(ngModel)]="newStageName" name="newStageName" type="text" autofocus
+          class="form-input"
+          (keydown.enter)="submitNewStage()"
+          (keydown.escape)="cancelStage()" />
+      </div>
+      <div class="mb-5">
+        <label class="form-label">Color</label>
+        <div class="color-swatches">
+          @for (c of stageColors; track c) {
+            <button type="button" (click)="newStageColor = c"
+              class="color-swatch"
+              [style.background]="c"
+              [class]="newStageColor === c ? 'swatch-active' : 'swatch-inactive'">
+            </button>
+          }
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" (click)="submitNewStage()" class="btn-primary">
+          {{ 'actions.create' | translate }}
+        </button>
+        <button type="button" (click)="cancelStage()" class="btn-secondary">
+          {{ 'actions.cancel' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
