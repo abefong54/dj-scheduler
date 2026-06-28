@@ -1,6 +1,8 @@
 # Go binaries
 backend/eventlineup
 backend/server
+backend/app
+backend/migrate
 
 # Node
 frontend/node_modules/
