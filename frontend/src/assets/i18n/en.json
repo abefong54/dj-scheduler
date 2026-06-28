@@ -1,6 +1,10 @@
 {
   "nav.events": "Events",
   "nav.djs": "DJs",
+  "nav.signOut": "Sign out",
+
+  "auth.signInTitle": "Sign in to EventLineup",
+  "auth.signInWithGoogle": "Sign in with Google",
 
   "events.title": "Events",
   "events.new": "New Event",

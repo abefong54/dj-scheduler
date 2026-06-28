@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { LanguageService } from './services/language.service';
+import { AuthService } from './services/auth.service';
 import { DialogComponent } from './shared/dialog.component';
 
 @Component({
@@ -13,4 +14,5 @@ import { DialogComponent } from './shared/dialog.component';
 })
 export class AppComponent {
   langService = inject(LanguageService);
+  auth = inject(AuthService);
 }
