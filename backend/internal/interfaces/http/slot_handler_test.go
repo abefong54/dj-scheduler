@@ -73,6 +73,76 @@ func TestCreateSlot(t *testing.T) {
 	}
 }
 
+func TestCreateSlot_StageOverlapReturns409(t *testing.T) {
+	pool := setupTestDB(t)
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	repo := database.NewSlotRepository(pool)
+	h := httphandler.NewSlotHandler(slotuc.New(repo))
+	h.Register(r.Group("/api"))
+
+	eventID := createTestEvent(t, pool)
+	stageID := createTestStage(t, pool, eventID)
+	existingID := createTestSlot(t, pool, eventID, stageID) // 16:00–17:30 on stageID
+
+	// New slot on the same stage and date overlapping 16:00–17:30.
+	body, _ := json.Marshal(map[string]string{
+		"stage_id":   stageID,
+		"slot_date":  "2026-07-25",
+		"start_time": "17:00",
+		"end_time":   "18:00",
+	})
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/events/"+eventID+"/slots", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusConflict {
+		t.Fatalf("expected 409, got %d: %s", w.Code, w.Body.String())
+	}
+	var resp struct {
+		Error             string `json:"error"`
+		Type              string `json:"type"`
+		ConflictingSlotID string `json:"conflicting_slot_id"`
+	}
+	json.NewDecoder(w.Body).Decode(&resp)
+	if resp.Error != "conflict" || resp.Type != "stage_overlap" {
+		t.Fatalf("unexpected body: %+v", resp)
+	}
+	if resp.ConflictingSlotID != existingID {
+		t.Fatalf("conflicting_slot_id = %s, want %s", resp.ConflictingSlotID, existingID)
+	}
+}
+
+func TestCreateSlot_AdjacentReturns201(t *testing.T) {
+	pool := setupTestDB(t)
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	repo := database.NewSlotRepository(pool)
+	h := httphandler.NewSlotHandler(slotuc.New(repo))
+	h.Register(r.Group("/api"))
+
+	eventID := createTestEvent(t, pool)
+	stageID := createTestStage(t, pool, eventID)
+	createTestSlot(t, pool, eventID, stageID) // 16:00–17:30 on stageID
+
+	// Starts exactly when the existing slot ends — no overlap.
+	body, _ := json.Marshal(map[string]string{
+		"stage_id":   stageID,
+		"slot_date":  "2026-07-25",
+		"start_time": "17:30",
+		"end_time":   "18:30",
+	})
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/events/"+eventID+"/slots", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
 func TestGetSlot(t *testing.T) {
 	pool := setupTestDB(t)
 	gin.SetMode(gin.TestMode)

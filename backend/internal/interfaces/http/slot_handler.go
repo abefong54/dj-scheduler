@@ -38,6 +38,24 @@ func (r slotWriteRequest) validate() bool {
 	return r.StageID != "" && r.SlotDate != "" && r.StartTime != "" && r.EndTime != ""
 }
 
+// writeSlotError maps a usecase error to its HTTP response: 404 for a missing
+// slot, 409 with structured details for a scheduling conflict, 500 otherwise.
+func writeSlotError(c *gin.Context, err error) {
+	var conflict *apperrors.ConflictError
+	switch {
+	case errors.Is(err, apperrors.ErrNotFound):
+		c.JSON(http.StatusNotFound, gin.H{"error": "slot not found"})
+	case errors.As(err, &conflict):
+		c.JSON(http.StatusConflict, gin.H{
+			"error":               "conflict",
+			"type":                conflict.Type,
+			"conflicting_slot_id": conflict.ConflictingSlotID,
+		})
+	default:
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+}
+
 // @Summary     List Slots
 // @Description Returns all slots for an event ordered by date and start time
 // @Tags        slots
@@ -87,6 +105,7 @@ func (h *SlotHandler) get(c *gin.Context) {
 // @Param       body  body      slotWriteRequest  true  "Slot"
 // @Success     201   {object}  model.Slot
 // @Failure     400   {object}  map[string]string
+// @Failure     409   {object}  map[string]string
 // @Failure     500   {object}  map[string]string
 // @Router      /api/events/{id}/slots [post]
 func (h *SlotHandler) create(c *gin.Context) {
@@ -110,7 +129,7 @@ func (h *SlotHandler) create(c *gin.Context) {
 		Notes:     req.Notes,
 	}, c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		writeSlotError(c, err)
 		return
 	}
 	c.JSON(http.StatusCreated, s)
@@ -127,6 +146,7 @@ func (h *SlotHandler) create(c *gin.Context) {
 // @Success     200      {object}  model.Slot
 // @Failure     400      {object}  map[string]string
 // @Failure     404      {object}  map[string]string
+// @Failure     409      {object}  map[string]string
 // @Failure     500      {object}  map[string]string
 // @Router      /api/events/{id}/slots/{slot_id} [patch]
 func (h *SlotHandler) update(c *gin.Context) {
@@ -150,12 +170,8 @@ func (h *SlotHandler) update(c *gin.Context) {
 		EndTime:   req.EndTime,
 		Notes:     req.Notes,
 	}, c.Param("id"))
-	if errors.Is(err, apperrors.ErrNotFound) {
-		c.JSON(http.StatusNotFound, gin.H{"error": "slot not found"})
-		return
-	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		writeSlotError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, s)
