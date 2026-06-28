@@ -233,9 +233,9 @@ export class EventDetailComponent implements OnDestroy {
       lastDate = slot.slot_date;
 
       const [, month, day] = slot.slot_date.split('-');
-      const dateStr = `${parseInt(month)}/${parseInt(day)}`;
+      const dateStr = `${parseInt(month, 10)}/${parseInt(day, 10)}`;
       const mins = this.toMins(slot.end_time) - this.toMins(slot.start_time);
-      const hrs = mins / 60;
+      const hrs = Math.round((mins / 60) * 10) / 10;  // one decimal place
       const timeSlot = `${slot.start_time} - ${slot.end_time} (${hrs}hr)`;
 
       rows.push([
@@ -252,6 +252,7 @@ export class EventDetailComponent implements OnDestroy {
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     if (!ws['!merges']) ws['!merges'] = [];
     ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } });
+    if (ws['A1']) { ws['A1'].s = { font: { bold: true } }; }
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Schedule');
