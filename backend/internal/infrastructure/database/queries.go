@@ -118,4 +118,14 @@ const (
 		WHERE sl.id = $1 AND sl.event_id = $2`
 
 	querySlotDelete = `DELETE FROM slots WHERE id = $1 AND event_id = $2`
+
+	// Organizer queries
+	queryOrganizerFindByGoogleID = `
+		SELECT id, email, name, google_id, created_at::text
+		FROM organizers WHERE google_id = $1`
+
+	queryOrganizerInsert = `
+		INSERT INTO organizers (email, name, google_id)
+		VALUES ($1, $2, $3)
+		RETURNING id, email, name, google_id, created_at::text`
 )
