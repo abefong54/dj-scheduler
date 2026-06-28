@@ -1,5 +1,22 @@
 basePath: /
 definitions:
+  handler.slotWriteRequest:
+    properties:
+      dj_id:
+        type: string
+      end_time:
+        type: string
+      genre:
+        type: string
+      notes:
+        type: string
+      slot_date:
+        type: string
+      stage_id:
+        type: string
+      start_time:
+        type: string
+    type: object
   model.DJ:
     properties:
       created_at:
@@ -28,6 +45,31 @@ definitions:
       start_date:
         type: string
       venue_name:
+        type: string
+    type: object
+  model.Slot:
+    properties:
+      dj_id:
+        type: string
+      dj_name:
+        type: string
+      end_time:
+        type: string
+      event_id:
+        type: string
+      genre:
+        type: string
+      id:
+        type: string
+      notes:
+        type: string
+      slot_date:
+        type: string
+      stage_id:
+        type: string
+      stage_name:
+        type: string
+      start_time:
         type: string
     type: object
   model.Stage:
@@ -367,6 +409,187 @@ paths:
       summary: Duplicate Event
       tags:
       - events
+  /api/events/{id}/slots:
+    get:
+      description: Returns all slots for an event ordered by date and start time
+      parameters:
+      - description: Event ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Slot'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List Slots
+      tags:
+      - slots
+    post:
+      consumes:
+      - application/json
+      description: Creates a new slot within an event
+      parameters:
+      - description: Event ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Slot
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.slotWriteRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Slot'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create Slot
+      tags:
+      - slots
+  /api/events/{id}/slots/{slot_id}:
+    delete:
+      description: Deletes a slot from an event
+      parameters:
+      - description: Event ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Slot ID (UUID)
+        in: path
+        name: slot_id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete Slot
+      tags:
+      - slots
+    get:
+      description: Returns a single slot by ID within an event
+      parameters:
+      - description: Event ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Slot ID (UUID)
+        in: path
+        name: slot_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Slot'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get Slot
+      tags:
+      - slots
+    patch:
+      consumes:
+      - application/json
+      description: Updates a slot's fields within an event
+      parameters:
+      - description: Event ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Slot ID (UUID)
+        in: path
+        name: slot_id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.slotWriteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Slot'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Patch Slot
+      tags:
+      - slots
   /api/events/{id}/stages:
     get:
       description: Returns all stages for an event ordered by display_order

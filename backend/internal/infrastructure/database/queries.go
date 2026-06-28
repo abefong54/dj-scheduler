@@ -107,5 +107,15 @@ const (
 		JOIN stages st ON st.id = u.stage_id
 		LEFT JOIN djs d ON d.id = u.dj_id`
 
+	querySlotGet = `
+		SELECT sl.id, sl.event_id, sl.stage_id, st.name,
+		       COALESCE(sl.dj_id::text,''), COALESCE(d.name,''),
+		       COALESCE(sl.genre,''),
+		       sl.slot_date::text, to_char(sl.start_time,'HH24:MI'), to_char(sl.end_time,'HH24:MI'), COALESCE(sl.notes,'')
+		FROM slots sl
+		JOIN stages st ON st.id = sl.stage_id
+		LEFT JOIN djs d ON d.id = sl.dj_id
+		WHERE sl.id = $1 AND sl.event_id = $2`
+
 	querySlotDelete = `DELETE FROM slots WHERE id = $1 AND event_id = $2`
 )

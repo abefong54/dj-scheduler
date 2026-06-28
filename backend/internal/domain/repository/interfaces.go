@@ -33,6 +33,7 @@ type StageRepository interface {
 
 type SlotRepository interface {
 	List(ctx context.Context, eventID string) ([]model.Slot, error)
+	Get(ctx context.Context, id, eventID string) (model.Slot, error)
 	Create(ctx context.Context, s model.Slot, eventID string) (model.Slot, error)
 	Update(ctx context.Context, s model.Slot, eventID string) (model.Slot, error)
 	Delete(ctx context.Context, id, eventID string) error
