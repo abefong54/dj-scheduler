@@ -39,8 +39,16 @@
 .btn-save { @apply bg-violet-600 hover:bg-violet-700 text-white text-xs font-medium px-3 py-1 rounded mr-1 transition-colors; }
 .btn-cancel-edit { @apply border border-gray-300 text-gray-600 hover:bg-gray-50 text-xs font-medium px-3 py-1 rounded transition-colors; }
 
-/* Add row (placeholder — wired up in Task 5) */
-.add-trigger-row { @apply hover:bg-gray-50 cursor-pointer; }
+/* Sortable slot headers */
+.slot-th-sort { @apply cursor-pointer hover:bg-gray-100 select-none; }
+
+/* Slot search */
+.slot-search-input { @apply w-52 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400; }
+
+/* Inline add row */
+.add-row { @apply border-b border-violet-100 bg-violet-50; }
+.add-cell { @apply px-2 py-2; }
+.add-trigger-row { @apply hover:bg-violet-50 cursor-pointer transition-colors; }
 .add-trigger-cell { @apply px-3 py-3 text-sm text-violet-600 font-medium; }
 
 /* Stage modal color swatches */

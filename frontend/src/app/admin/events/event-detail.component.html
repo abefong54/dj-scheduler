@@ -38,9 +38,17 @@
 
     <!-- Slots Section -->
     <div class="mt-4">
-      <h2 class="section-title mb-3">{{ 'slots.title' | translate }}</h2>
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="section-title">{{ 'slots.title' | translate }}</h2>
+        <input
+          type="text"
+          [ngModel]="slotSearch()"
+          (ngModelChange)="slotSearch.set($event)"
+          class="slot-search-input"
+          [placeholder]="'table.search' | translate"
+        />
+      </div>
 
-      <!-- Date Tabs (only shown for multi-day events) -->
       @if (dates().length > 1) {
         <div class="tabs mb-4">
           @for (d of dates(); track d) {
@@ -57,20 +65,27 @@
         <table class="slot-table">
           <thead>
             <tr class="border-b border-gray-200 bg-gray-50">
-              <th class="slot-th">{{ 'slots.stage' | translate }}</th>
-              <th class="slot-th">{{ 'slots.dj' | translate }}</th>
+              <th class="slot-th slot-th-sort" (click)="sortSlots('stage_name')">
+                {{ 'slots.stage' | translate }}{{ sortIndicator('stage_name') }}
+              </th>
+              <th class="slot-th slot-th-sort" (click)="sortSlots('dj_name')">
+                {{ 'slots.dj' | translate }}{{ sortIndicator('dj_name') }}
+              </th>
               <th class="slot-th">{{ 'slots.genre' | translate }}</th>
-              <th class="slot-th">{{ 'slots.start' | translate }}</th>
+              <th class="slot-th slot-th-sort" (click)="sortSlots('start_time')">
+                {{ 'slots.start' | translate }}{{ sortIndicator('start_time') }}
+              </th>
               <th class="slot-th">{{ 'slots.duration' | translate }}</th>
               <th class="slot-th"></th>
             </tr>
           </thead>
           <tbody>
-            @for (slot of slotsForSelectedDate(); track slot.id) {
+            @for (slot of sortedFilteredSlots(); track slot.id) {
               @if (editingSlotId() === slot.id) {
                 <tr class="edit-row">
                   <td class="edit-cell">
-                    <select [(ngModel)]="editSlotStageId" [name]="'es_stage_' + slot.id" class="edit-select">
+                    <select [(ngModel)]="editSlotStageId" [name]="'es_stage_' + slot.id" class="edit-select"
+                      (keydown.escape)="cancelEdit()">
                       @for (s of stages(); track s.id) {
                         <option [value]="s.id">{{ s.name }}</option>
                       }
@@ -78,7 +93,8 @@
                   </td>
                   <td class="edit-cell">
                     <select [(ngModel)]="editSlotDjId" [name]="'es_dj_' + slot.id"
-                      (ngModelChange)="editSlotGenre = ''" class="edit-select">
+                      (ngModelChange)="editSlotGenre = ''" class="edit-select"
+                      (keydown.escape)="cancelEdit()">
                       <option value="">—</option>
                       @for (d of djs(); track d.id) {
                         <option [value]="d.id">{{ d.name }}</option>
@@ -88,7 +104,8 @@
                   <td class="edit-cell">
                     <select [(ngModel)]="editSlotGenre" [name]="'es_genre_' + slot.id"
                       [disabled]="!editSlotDjId || djGenresForEdit().length === 0"
-                      class="edit-select">
+                      class="edit-select"
+                      (keydown.escape)="cancelEdit()">
                       <option value="">{{ djGenresForEdit().length ? ('slots.selectOption' | translate) : '—' }}</option>
                       @for (g of djGenresForEdit(); track g) {
                         <option [value]="g">{{ g }}</option>
@@ -97,12 +114,16 @@
                   </td>
                   <td class="edit-cell">
                     <input [(ngModel)]="editSlotStart" [name]="'es_start_' + slot.id"
-                      type="time" class="edit-time-input" />
+                      type="time" class="edit-time-input"
+                      (keydown.enter)="saveEdit(slot.id)"
+                      (keydown.escape)="cancelEdit()" />
                   </td>
                   <td class="edit-cell">
                     <input [(ngModel)]="editSlotDuration" [name]="'es_dur_' + slot.id"
                       type="number" min="5" step="5" list="durationPresets"
-                      class="edit-dur-input" />
+                      class="edit-dur-input"
+                      (keydown.enter)="saveEdit(slot.id)"
+                      (keydown.escape)="cancelEdit()" />
                     <datalist id="durationPresets">
                       @for (d of durationOptions; track d.mins) {
                         <option [value]="d.mins">{{ d.label }}</option>
@@ -135,10 +156,66 @@
                 </tr>
               }
             }
-            <!-- Add row placeholder — replaced in Task 5 -->
-            <tr class="add-trigger-row">
-              <td colspan="6" class="add-trigger-cell">+ {{ 'slots.new' | translate }}</td>
-            </tr>
+
+            <!-- Inline Add Row -->
+            @if (addRowActive()) {
+              <tr class="add-row">
+                <td class="add-cell">
+                  <select [(ngModel)]="addStageId" name="addStageId" class="edit-select"
+                    (keydown.escape)="cancelAddRow()">
+                    <option value="">— stage —</option>
+                    @for (s of stages(); track s.id) {
+                      <option [value]="s.id">{{ s.name }}</option>
+                    }
+                  </select>
+                </td>
+                <td class="add-cell">
+                  <select [(ngModel)]="addDjId" name="addDjId"
+                    (ngModelChange)="addGenre = ''" class="edit-select"
+                    (keydown.escape)="cancelAddRow()">
+                    <option value="">{{ 'slots.unassigned' | translate }}</option>
+                    @for (d of djs(); track d.id) {
+                      <option [value]="d.id">{{ d.name }}</option>
+                    }
+                  </select>
+                </td>
+                <td class="add-cell">
+                  <select [(ngModel)]="addGenre" name="addGenre"
+                    [disabled]="!addDjId || djGenresForAdd().length === 0"
+                    class="edit-select"
+                    (keydown.escape)="cancelAddRow()">
+                    <option value="">
+                      {{ addDjId ? (djGenresForAdd().length ? ('slots.selectOption' | translate) : '—') : '— DJ first —' }}
+                    </option>
+                    @for (g of djGenresForAdd(); track g) {
+                      <option [value]="g">{{ g }}</option>
+                    }
+                  </select>
+                </td>
+                <td class="add-cell">
+                  <input [(ngModel)]="addStart" name="addStart" type="time" class="edit-time-input"
+                    (keydown.enter)="submitAddRow()"
+                    (keydown.escape)="cancelAddRow()" />
+                </td>
+                <td class="add-cell">
+                  <input [(ngModel)]="addDuration" name="addDuration"
+                    type="number" min="5" step="5" list="durationPresets"
+                    class="edit-dur-input"
+                    (keydown.enter)="submitAddRow()"
+                    (keydown.escape)="cancelAddRow()" />
+                </td>
+                <td class="add-cell text-right whitespace-nowrap">
+                  <button (click)="submitAddRow()" class="btn-save">{{ 'actions.save' | translate }}</button>
+                  <button (click)="cancelAddRow()" class="btn-cancel-edit">{{ 'actions.cancel' | translate }}</button>
+                </td>
+              </tr>
+            } @else {
+              <tr class="add-trigger-row" (click)="activateAddRow()">
+                <td colspan="6" class="add-trigger-cell">
+                  + {{ 'slots.new' | translate }}
+                </td>
+              </tr>
+            }
           </tbody>
         </table>
       </div>
