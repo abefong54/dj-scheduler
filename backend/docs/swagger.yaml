@@ -92,6 +92,33 @@ info:
   title: EventLineup API
   version: "1.0"
 paths:
+  /api/dj/portal:
+    get:
+      description: Returns the DJ and their slots across all events for a valid portal
+        token. No auth required.
+      parameters:
+      - description: Raw portal token
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: DJ portal view
+      tags:
+      - public
   /api/djs:
     get:
       description: Returns all DJs ordered by name
@@ -239,6 +266,39 @@ paths:
               type: string
             type: object
       summary: Patch DJ
+      tags:
+      - djs
+  /api/djs/{id}/token:
+    post:
+      description: Issues a personal, expiring portal link for a DJ. Regenerating
+        revokes the previous token.
+      parameters:
+      - description: DJ ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Generate DJ portal token
       tags:
       - djs
   /api/events:
@@ -409,6 +469,39 @@ paths:
       summary: Duplicate Event
       tags:
       - events
+  /api/events/{id}/public:
+    get:
+      description: Returns an event with its stages and slots in a single payload.
+        No auth required.
+      parameters:
+      - description: Event ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Public Event Schedule
+      tags:
+      - public
   /api/events/{id}/slots:
     get:
       description: Returns all slots for an event ordered by date and start time
@@ -461,6 +554,12 @@ paths:
             $ref: '#/definitions/model.Slot'
         "400":
           description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
           schema:
             additionalProperties:
               type: string
@@ -577,6 +676,12 @@ paths:
             type: object
         "404":
           description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
           schema:
             additionalProperties:
               type: string

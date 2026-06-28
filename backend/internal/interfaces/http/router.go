@@ -9,7 +9,7 @@ import (
 	"eventlineup/internal/interfaces/http/middleware"
 )
 
-func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, dj *DJHandler, ev *EventHandler, st *StageHandler, sl *SlotHandler) *gin.Engine {
+func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, djPortal *DJPortalHandler, dj *DJHandler, ev *EventHandler, st *StageHandler, sl *SlotHandler) *gin.Engine {
 	r := gin.Default()
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{frontendURL},
@@ -17,13 +17,15 @@ func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, dj *DJHandl
 		AllowHeaders: []string{"Content-Type", "Authorization"},
 	}))
 
-	// Public routes — no auth required (shareable schedule link).
+	// Public routes — no auth required (shareable schedule link, DJ portal token).
 	publicAPI := r.Group("/api")
 	public.Register(publicAPI)
+	djPortal.RegisterPublic(publicAPI)
 
 	// Protected routes — every request must carry a valid organizer JWT.
 	api := r.Group("/api")
 	api.Use(middleware.Auth(jwtSecret))
+	djPortal.RegisterProtected(api)
 	dj.Register(api)
 	ev.Register(api)
 	st.Register(api)

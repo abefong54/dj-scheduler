@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"eventlineup/internal/domain/model"
 )
@@ -12,6 +13,11 @@ type DJRepository interface {
 	Create(ctx context.Context, name string, tags []string, organizerID string) (model.DJ, error)
 	Update(ctx context.Context, dj model.DJ, organizerID string) (model.DJ, error)
 	Delete(ctx context.Context, id, organizerID string) error
+
+	// DJ portal tokens (US-009).
+	SetPortalToken(ctx context.Context, djID, organizerID, tokenHash string, expiresAt time.Time) error
+	GetByPortalToken(ctx context.Context, tokenHash string) (model.DJ, error)
+	ListSlotsForDJ(ctx context.Context, djID string) ([]model.PortalSlot, error)
 }
 
 type EventRepository interface {
