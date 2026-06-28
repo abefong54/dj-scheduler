@@ -20,6 +20,7 @@
   "stages.name": "舞台名稱",
   "stages.new": "新增舞台",
   "stages.newName": "舞台名稱",
+  "stages.color": "顏色",
   "stages.deleteConfirm": "確定要刪除此舞台及所有時段嗎？",
 
   "slots.title": "時段",
@@ -34,6 +35,8 @@
   "slots.noSlots": "尚未新增時段。",
   "slots.duration": "時長（分鐘）",
   "slots.unassigned": "— 未指定 —",
+  "slots.selectOption": "— 請選擇 —",
+  "slots.djFirst": "— 請先選擇 DJ —",
   "slots.deleteConfirm": "確定要刪除此時段嗎？",
 
   "djs.title": "DJ 名單",
@@ -58,6 +61,8 @@
   "actions.create": "建立",
   "actions.cancel": "取消",
   "actions.delete": "刪除",
+  "actions.save": "儲存",
+  "actions.edit": "編輯",
   "actions.title": "操作",
 
   "eventDetail.viewPublic": "查看",

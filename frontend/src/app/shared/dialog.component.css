@@ -1,0 +1,19 @@
+.dialog-box {
+  @apply bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4;
+}
+
+.dialog-title {
+  @apply text-base font-semibold text-gray-900 mb-2;
+}
+
+.dialog-message {
+  @apply text-sm text-gray-600 mb-5 leading-relaxed;
+}
+
+.dialog-actions {
+  @apply flex justify-end gap-3;
+}
+
+.btn-confirm-danger {
+  @apply bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-colors;
+}

@@ -1,4 +1,4 @@
-package main
+package model
 
 type DJ struct {
 	ID        string   `json:"id"`
@@ -8,11 +8,12 @@ type DJ struct {
 }
 
 type Event struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	VenueName string `json:"venue_name"`
-	StartDate string `json:"start_date"`
-	EndDate   string `json:"end_date"`
+	ID        string   `json:"id"`
+	Name      string   `json:"name"`
+	VenueName string   `json:"venue_name"`
+	StartDate string   `json:"start_date"`
+	EndDate   string   `json:"end_date"`
+	Genres    []string `json:"genres"`
 }
 
 type Stage struct {
@@ -30,6 +31,7 @@ type Slot struct {
 	StageName string `json:"stage_name"`
 	DjID      string `json:"dj_id"`
 	DjName    string `json:"dj_name"`
+	Genre     string `json:"genre"`
 	SlotDate  string `json:"slot_date"`
 	StartTime string `json:"start_time"`
 	EndTime   string `json:"end_time"`

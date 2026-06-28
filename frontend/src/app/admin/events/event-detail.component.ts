@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
+import * as XLSX from 'xlsx';
 import { ApiService, Event, Stage, Slot, DJ } from '../../services/api.service';
 import { DialogService } from '../../shared/dialog.service';
 
@@ -24,6 +25,149 @@ export class EventDetailComponent implements OnDestroy {
   slots = signal<Slot[]>([]);
   djs = signal<DJ[]>([]);
 
+  selectedDate = signal('');
+
+  dates = computed(() => {
+    const slotDates = [...new Set(this.slots().map(s => s.slot_date))].sort();
+    const start = this.event()?.start_date;
+    if (start && !slotDates.includes(start)) slotDates.unshift(start);
+    return slotDates.sort();
+  });
+
+  slotsForSelectedDate = computed(() =>
+    this.slots()
+      .filter(s => s.slot_date === this.selectedDate())
+      .sort((a, b) => a.start_time.localeCompare(b.start_time))
+  );
+
+  // ── Slot search + sort ──────────────────────────────────────────────
+  slotSearch = signal('');
+  slotSortKey = signal<'stage_name' | 'start_time' | 'dj_name'>('start_time');
+  slotSortDir = signal<'asc' | 'desc'>('asc');
+
+  sortedFilteredSlots = computed(() => {
+    const q = this.slotSearch().toLowerCase().trim();
+    const key = this.slotSortKey();
+    const dir = this.slotSortDir();
+
+    let rows = this.slotsForSelectedDate();
+    if (q) {
+      rows = rows.filter(s =>
+        s.dj_name?.toLowerCase().includes(q) ||
+        s.stage_name?.toLowerCase().includes(q) ||
+        s.genre?.toLowerCase().includes(q)
+      );
+    }
+    return [...rows].sort((a, b) => {
+      const av = String(a[key] ?? '');
+      const bv = String(b[key] ?? '');
+      return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+    });
+  });
+
+  sortSlots(key: 'stage_name' | 'start_time' | 'dj_name') {
+    if (this.slotSortKey() === key) {
+      this.slotSortDir.set(this.slotSortDir() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.slotSortKey.set(key);
+      this.slotSortDir.set('asc');
+    }
+  }
+
+  sortIndicator(key: 'stage_name' | 'start_time' | 'dj_name'): string {
+    if (this.slotSortKey() !== key) return '';
+    return this.slotSortDir() === 'asc' ? ' ↑' : ' ↓';
+  }
+
+  // ── Inline add row ──────────────────────────────────────────────────
+  addRowActive = signal(false);
+  addStageId = '';
+  addDjId = '';
+  addGenre = '';
+  addDate = '';
+  addStart = '';
+  addDuration = 60;
+  addNotes = '';
+
+  defaultStageId = computed(() => this.stages().length === 1 ? this.stages()[0].id : '');
+
+  defaultStartTime = computed(() => {
+    const slots = this.slotsForSelectedDate();
+    return slots.length > 0 ? slots[slots.length - 1].end_time : '18:00';
+  });
+
+  // ── Genre ↔ DJ bidirectional filtering (add row) ──────────────────
+  private allGenres(): string[] {
+    const all = new Set<string>();
+    this.djs().forEach(d => d.genre_tags.forEach(g => all.add(g)));
+    return [...all].sort();
+  }
+
+  genreOptionsForAdd(): string[] {
+    return this.addDjId
+      ? (this.djs().find(d => d.id === this.addDjId)?.genre_tags ?? [])
+      : this.allGenres();
+  }
+
+  filteredDjsForAdd(): DJ[] {
+    return this.addGenre
+      ? this.djs().filter(d => d.genre_tags.includes(this.addGenre))
+      : this.djs();
+  }
+
+  onAddDjChange() {
+    const djGenres = this.djs().find(d => d.id === this.addDjId)?.genre_tags ?? [];
+    if (this.addGenre && this.addDjId && !djGenres.includes(this.addGenre)) {
+      this.addGenre = '';
+    }
+  }
+
+  onAddGenreChange() {
+    const djGenres = this.djs().find(d => d.id === this.addDjId)?.genre_tags ?? [];
+    if (this.addDjId && this.addGenre && !djGenres.includes(this.addGenre)) {
+      this.addDjId = '';
+    }
+  }
+
+  activateAddRow() {
+    this.addStageId = this.defaultStageId();
+    this.addDjId = '';
+    this.addGenre = '';
+    this.addDate = this.selectedDate();
+    this.addStart = this.defaultStartTime();
+    this.addDuration = 60;
+    this.addNotes = '';
+    this.addRowActive.set(true);
+  }
+
+  cancelAddRow() {
+    this.addRowActive.set(false);
+  }
+
+  submitAddRow() {
+    if (!this.addStageId || !this.addDate || !this.addStart) return;
+    const eventId = this.event()!.id;
+    this.api.createSlot(eventId, {
+      stage_id: this.addStageId,
+      dj_id: this.addDjId,
+      genre: this.addGenre,
+      slot_date: this.addDate,
+      start_time: this.addStart,
+      end_time: this.addMinutes(this.addStart, this.addDuration),
+      notes: this.addNotes,
+    }).subscribe(() => {
+      this.api.getSlots(eventId).subscribe(s => {
+        this.slots.set(s);
+        this.activateAddRow(); // reset with fresh pre-fills for the next slot
+      });
+    });
+  }
+
+  tabDate(d: string): string {
+    const [, month, day] = d.split('-');
+    return `${parseInt(month)}/${parseInt(day)}`;
+  }
+
   private subscriptions: Subscription[] = [];
 
   constructor() {
@@ -34,7 +178,10 @@ export class EventDetailComponent implements OnDestroy {
     const eventId = this.route.snapshot.paramMap.get('id')!;
 
     this.subscriptions.push(
-      this.api.getEvent(eventId).subscribe(e => this.event.set(e)),
+      this.api.getEvent(eventId).subscribe(e => {
+        this.event.set(e);
+        if (this.selectedDate() === '') this.selectedDate.set(e.start_date);
+      }),
       this.api.getStages(eventId).subscribe(s => this.stages.set(s)),
       this.api.getSlots(eventId).subscribe(s => this.slots.set(s)),
       this.api.getDJs().subscribe(d => this.djs.set(d)),
@@ -44,21 +191,6 @@ export class EventDetailComponent implements OnDestroy {
   private stageMap = computed(() =>
     new Map(this.stages().map(s => [s.id, s]))
   );
-
-  slotsByDate = computed(() => {
-    const map = new Map<string, Slot[]>();
-    for (const slot of this.slots()) {
-      const arr = map.get(slot.slot_date) ?? [];
-      arr.push(slot);
-      map.set(slot.slot_date, arr);
-    }
-    return [...map.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, slots]) => ({
-        date,
-        slots: [...slots].sort((a, b) => a.start_time.localeCompare(b.start_time)),
-      }));
-  });
 
   dateRange(): string {
     const e = this.event();
@@ -109,6 +241,53 @@ export class EventDetailComponent implements OnDestroy {
     window.open(`https://line.me/R/msg/text/?${url}`, '_blank');
   }
 
+  exportXlsx() {
+    const event = this.event()!;
+    const t = (key: string) => this.translate.instant(key);
+
+    const headers = [t('slots.date'), t('slots.stage'), t('export.timeSlot'), 'DJ', t('export.genre'), t('slots.notes')];
+
+    const sorted = [...this.slots()].sort((a, b) => {
+      if (a.slot_date !== b.slot_date) return a.slot_date.localeCompare(b.slot_date);
+      if ((a.stage_name ?? '') !== (b.stage_name ?? '')) {
+        return (a.stage_name ?? '').localeCompare(b.stage_name ?? '');
+      }
+      return a.start_time.localeCompare(b.start_time);
+    });
+
+    const rows: (string | number)[][] = [];
+    let lastDate = '';
+    for (const slot of sorted) {
+      if (lastDate && slot.slot_date !== lastDate) rows.push([]);
+      lastDate = slot.slot_date;
+
+      const [, month, day] = slot.slot_date.split('-');
+      const dateStr = `${parseInt(month, 10)}/${parseInt(day, 10)}`;
+      const mins = this.toMins(slot.end_time) - this.toMins(slot.start_time);
+      const hrs = Math.round((mins / 60) * 10) / 10;  // one decimal place
+      const timeSlot = `${slot.start_time} - ${slot.end_time} (${hrs}hr)`;
+
+      rows.push([
+        dateStr,
+        slot.stage_name ?? '',
+        timeSlot,
+        slot.dj_name ?? '',
+        slot.genre ?? '',
+        slot.notes ?? '',
+      ]);
+    }
+
+    const wsData: (string | number)[][] = [[event.name], headers, ...rows];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    if (!ws['!merges']) ws['!merges'] = [];
+    ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } });
+    if (ws['A1']) { ws['A1'].s = { font: { bold: true } }; }
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Schedule');
+    XLSX.writeFile(wb, `${event.name.replace(/\s+/g, '-')}-schedule.xlsx`);
+  }
+
   showStageModal = signal(false);
   newStageName = '';
   newStageColor = '#06b6d4';
@@ -142,12 +321,31 @@ export class EventDetailComponent implements OnDestroy {
     this.showStageModal.set(false);
   }
 
-  djGenresForSlot(): string[] {
-    return this.djs().find(d => d.id === this.newSlotDjId)?.genre_tags ?? [];
+  // ── Genre ↔ DJ bidirectional filtering (edit row) ─────────────────
+  genreOptionsForEdit(): string[] {
+    return this.editSlotDjId
+      ? (this.djs().find(d => d.id === this.editSlotDjId)?.genre_tags ?? [])
+      : this.allGenres();
   }
 
-  djGenresForEdit(): string[] {
-    return this.djs().find(d => d.id === this.editSlotDjId)?.genre_tags ?? [];
+  filteredDjsForEdit(): DJ[] {
+    return this.editSlotGenre
+      ? this.djs().filter(d => d.genre_tags.includes(this.editSlotGenre))
+      : this.djs();
+  }
+
+  onEditDjChange() {
+    const djGenres = this.djs().find(d => d.id === this.editSlotDjId)?.genre_tags ?? [];
+    if (this.editSlotGenre && this.editSlotDjId && !djGenres.includes(this.editSlotGenre)) {
+      this.editSlotGenre = '';
+    }
+  }
+
+  onEditGenreChange() {
+    const djGenres = this.djs().find(d => d.id === this.editSlotDjId)?.genre_tags ?? [];
+    if (this.editSlotDjId && this.editSlotGenre && !djGenres.includes(this.editSlotGenre)) {
+      this.editSlotDjId = '';
+    }
   }
 
   readonly durationOptions = [
@@ -160,52 +358,11 @@ export class EventDetailComponent implements OnDestroy {
     { mins: 180, label: '3h' },
   ];
 
-  showSlotModal = signal(false);
-  newSlotStageId = '';
-  newSlotDjId = '';
-  newSlotGenre = '';
-  newSlotDate = '';
-  newSlotStart = '';
-  newSlotDuration = 60;
-  newSlotNotes = '';
-
-  addSlot() {
-    this.newSlotStageId = '';
-    this.newSlotDjId = '';
-    this.newSlotGenre = '';
-    this.newSlotDate = '';
-    this.newSlotStart = '';
-    this.newSlotDuration = 60;
-    this.newSlotNotes = '';
-    this.showSlotModal.set(true);
-  }
-
-  submitNewSlot() {
-    if (!this.newSlotStageId || !this.newSlotDate || !this.newSlotStart) return;
-    const eventId = this.event()!.id;
-    this.api.createSlot(eventId, {
-      stage_id: this.newSlotStageId,
-      dj_id: this.newSlotDjId,
-      genre: this.newSlotGenre,
-      slot_date: this.newSlotDate,
-      start_time: this.newSlotStart,
-      end_time: this.addMinutes(this.newSlotStart, this.newSlotDuration),
-      notes: this.newSlotNotes,
-    }).subscribe(() => {
-      this.api.getSlots(eventId).subscribe(s => this.slots.set(s));
-      this.showSlotModal.set(false);
-    });
-  }
-
   private addMinutes(time: string, mins: number): string {
     const total = this.toMins(time) + mins;
     const h = Math.floor(total / 60) % 24;
     const m = total % 60;
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-  }
-
-  cancelSlot() {
-    this.showSlotModal.set(false);
   }
 
   editingSlotId = signal<string | null>(null);
