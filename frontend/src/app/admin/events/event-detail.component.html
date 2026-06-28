@@ -94,21 +94,21 @@
                   </td>
                   <td class="edit-cell">
                     <select [(ngModel)]="editSlotDjId" [name]="'es_dj_' + slot.id"
-                      (ngModelChange)="editSlotGenre = ''" class="edit-select"
+                      (ngModelChange)="onEditDjChange()" class="edit-select"
                       (keydown.escape)="cancelEdit()">
                       <option value="">—</option>
-                      @for (d of djs(); track d.id) {
+                      @for (d of filteredDjsForEdit(); track d.id) {
                         <option [value]="d.id">{{ d.name }}</option>
                       }
                     </select>
                   </td>
                   <td class="edit-cell">
                     <select [(ngModel)]="editSlotGenre" [name]="'es_genre_' + slot.id"
-                      [disabled]="!editSlotDjId || djGenresForEdit().length === 0"
+                      (ngModelChange)="onEditGenreChange()"
                       class="edit-select"
                       (keydown.escape)="cancelEdit()">
-                      <option value="">{{ djGenresForEdit().length ? ('slots.selectOption' | translate) : '—' }}</option>
-                      @for (g of djGenresForEdit(); track g) {
+                      <option value="">—</option>
+                      @for (g of genreOptionsForEdit(); track g) {
                         <option [value]="g">{{ g }}</option>
                       }
                     </select>
@@ -184,23 +184,21 @@
                 </td>
                 <td class="add-cell">
                   <select [(ngModel)]="addDjId" name="addDjId"
-                    (ngModelChange)="addGenre = ''" class="edit-select"
+                    (ngModelChange)="onAddDjChange()" class="edit-select"
                     (keydown.escape)="cancelAddRow()">
                     <option value="">{{ 'slots.unassigned' | translate }}</option>
-                    @for (d of djs(); track d.id) {
+                    @for (d of filteredDjsForAdd(); track d.id) {
                       <option [value]="d.id">{{ d.name }}</option>
                     }
                   </select>
                 </td>
                 <td class="add-cell">
                   <select [(ngModel)]="addGenre" name="addGenre"
-                    [disabled]="!addDjId || djGenresForAdd().length === 0"
+                    (ngModelChange)="onAddGenreChange()"
                     class="edit-select"
                     (keydown.escape)="cancelAddRow()">
-                    <option value="">
-                      {{ addDjId ? (djGenresForAdd().length ? ('slots.selectOption' | translate) : '—') : ('slots.djFirst' | translate) }}
-                    </option>
-                    @for (g of djGenresForAdd(); track g) {
+                    <option value="">—</option>
+                    @for (g of genreOptionsForAdd(); track g) {
                       <option [value]="g">{{ g }}</option>
                     }
                   </select>

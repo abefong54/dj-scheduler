@@ -96,8 +96,37 @@ export class EventDetailComponent implements OnDestroy {
     return slots.length > 0 ? slots[slots.length - 1].end_time : '18:00';
   });
 
-  djGenresForAdd(): string[] {
-    return this.djs().find(d => d.id === this.addDjId)?.genre_tags ?? [];
+  // ── Genre ↔ DJ bidirectional filtering (add row) ──────────────────
+  private allGenres(): string[] {
+    const all = new Set<string>();
+    this.djs().forEach(d => d.genre_tags.forEach(g => all.add(g)));
+    return [...all].sort();
+  }
+
+  genreOptionsForAdd(): string[] {
+    return this.addDjId
+      ? (this.djs().find(d => d.id === this.addDjId)?.genre_tags ?? [])
+      : this.allGenres();
+  }
+
+  filteredDjsForAdd(): DJ[] {
+    return this.addGenre
+      ? this.djs().filter(d => d.genre_tags.includes(this.addGenre))
+      : this.djs();
+  }
+
+  onAddDjChange() {
+    const djGenres = this.djs().find(d => d.id === this.addDjId)?.genre_tags ?? [];
+    if (this.addGenre && this.addDjId && !djGenres.includes(this.addGenre)) {
+      this.addGenre = '';
+    }
+  }
+
+  onAddGenreChange() {
+    const djGenres = this.djs().find(d => d.id === this.addDjId)?.genre_tags ?? [];
+    if (this.addDjId && !djGenres.includes(this.addGenre)) {
+      this.addDjId = '';
+    }
   }
 
   activateAddRow() {
@@ -292,8 +321,31 @@ export class EventDetailComponent implements OnDestroy {
     this.showStageModal.set(false);
   }
 
-  djGenresForEdit(): string[] {
-    return this.djs().find(d => d.id === this.editSlotDjId)?.genre_tags ?? [];
+  // ── Genre ↔ DJ bidirectional filtering (edit row) ─────────────────
+  genreOptionsForEdit(): string[] {
+    return this.editSlotDjId
+      ? (this.djs().find(d => d.id === this.editSlotDjId)?.genre_tags ?? [])
+      : this.allGenres();
+  }
+
+  filteredDjsForEdit(): DJ[] {
+    return this.editSlotGenre
+      ? this.djs().filter(d => d.genre_tags.includes(this.editSlotGenre))
+      : this.djs();
+  }
+
+  onEditDjChange() {
+    const djGenres = this.djs().find(d => d.id === this.editSlotDjId)?.genre_tags ?? [];
+    if (this.editSlotGenre && this.editSlotDjId && !djGenres.includes(this.editSlotGenre)) {
+      this.editSlotGenre = '';
+    }
+  }
+
+  onEditGenreChange() {
+    const djGenres = this.djs().find(d => d.id === this.editSlotDjId)?.genre_tags ?? [];
+    if (this.editSlotDjId && !djGenres.includes(this.editSlotGenre)) {
+      this.editSlotDjId = '';
+    }
   }
 
   readonly durationOptions = [
