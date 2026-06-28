@@ -71,6 +71,10 @@
   "table.search": "Search...",
   "table.empty": "No results.",
   "eventDetail.export": "Export .xlsx",
+  "export.date": "Date",
+  "export.stage": "Stage",
   "export.timeSlot": "Time Slot",
-  "export.genre": "Genre"
+  "export.dj": "DJ",
+  "export.genre": "Genre",
+  "export.notes": "Notes"
 }

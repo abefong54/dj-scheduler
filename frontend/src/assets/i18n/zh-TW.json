@@ -70,6 +70,10 @@
   "table.search": "搜尋...",
   "table.empty": "無結果。",
   "eventDetail.export": "匯出 .xlsx",
+  "export.date": "日期",
+  "export.stage": "舞台",
   "export.timeSlot": "時段",
-  "export.genre": "風格"
+  "export.dj": "DJ",
+  "export.genre": "風格",
+  "export.notes": "備註"
 }
