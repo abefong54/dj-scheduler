@@ -21,6 +21,7 @@
   "stages.name": "Stage name",
   "stages.new": "New Stage",
   "stages.newName": "Stage name",
+  "stages.color": "Color",
   "stages.deleteConfirm": "Delete this stage and all its slots?",
 
   "slots.title": "Slots",
@@ -35,6 +36,7 @@
   "slots.noSlots": "No slots yet.",
   "slots.duration": "Duration (mins)",
   "slots.unassigned": "— unassigned —",
+  "slots.selectOption": "— select —",
   "slots.deleteConfirm": "Delete this slot?",
 
   "djs.title": "DJs",
@@ -59,6 +61,8 @@
   "actions.create": "Create",
   "actions.cancel": "Cancel",
   "actions.delete": "Delete",
+  "actions.save": "Save",
+  "actions.edit": "Edit",
   "actions.title": "Actions",
 
   "eventDetail.viewPublic": "View",

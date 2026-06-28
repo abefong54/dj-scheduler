@@ -89,7 +89,7 @@
                     <select [(ngModel)]="editSlotGenre" [name]="'es_genre_' + slot.id"
                       [disabled]="!editSlotDjId || djGenresForEdit().length === 0"
                       class="edit-select">
-                      <option value="">{{ djGenresForEdit().length ? '— select —' : '—' }}</option>
+                      <option value="">{{ djGenresForEdit().length ? ('slots.selectOption' | translate) : '—' }}</option>
                       @for (g of djGenresForEdit(); track g) {
                         <option [value]="g">{{ g }}</option>
                       }
@@ -110,8 +110,8 @@
                     </datalist>
                   </td>
                   <td class="edit-actions-cell">
-                    <button (click)="saveEdit(slot.id)" class="btn-save">Save</button>
-                    <button (click)="cancelEdit()" class="btn-cancel-edit">Cancel</button>
+                    <button (click)="saveEdit(slot.id)" class="btn-save">{{ 'actions.save' | translate }}</button>
+                    <button (click)="cancelEdit()" class="btn-cancel-edit">{{ 'actions.cancel' | translate }}</button>
                   </td>
                 </tr>
               } @else {
@@ -127,7 +127,7 @@
                   <td class="slot-time-cell">{{ slot.start_time }}</td>
                   <td class="slot-time-cell">{{ duration(slot.start_time, slot.end_time) }}</td>
                   <td class="slot-actions-cell">
-                    <button (click)="startEdit(slot)" class="slot-edit-btn">Edit</button>
+                    <button (click)="startEdit(slot)" class="slot-edit-btn">{{ 'actions.edit' | translate }}</button>
                     <button (click)="deleteSlot(slot.id)" class="btn-danger">
                       {{ 'actions.delete' | translate }}
                     </button>
@@ -159,7 +159,7 @@
           (keydown.escape)="cancelStage()" />
       </div>
       <div class="mb-5">
-        <label class="form-label">Color</label>
+        <label class="form-label">{{ 'stages.color' | translate }}</label>
         <div class="color-swatches">
           @for (c of stageColors; track c) {
             <button type="button" (click)="newStageColor = c"

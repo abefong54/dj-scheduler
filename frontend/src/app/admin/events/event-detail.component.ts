@@ -68,21 +68,6 @@ export class EventDetailComponent implements OnDestroy {
     new Map(this.stages().map(s => [s.id, s]))
   );
 
-  slotsByDate = computed(() => {
-    const map = new Map<string, Slot[]>();
-    for (const slot of this.slots()) {
-      const arr = map.get(slot.slot_date) ?? [];
-      arr.push(slot);
-      map.set(slot.slot_date, arr);
-    }
-    return [...map.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, slots]) => ({
-        date,
-        slots: [...slots].sort((a, b) => a.start_time.localeCompare(b.start_time)),
-      }));
-  });
-
   dateRange(): string {
     const e = this.event();
     if (!e) return '';
