@@ -14,6 +14,7 @@ export interface Event {
   venue_name: string;
   start_date: string; // 'YYYY-MM-DD'
   end_date: string;   // 'YYYY-MM-DD'
+  genres: string[];
 }
 
 export interface Stage {
@@ -31,6 +32,7 @@ export interface Slot {
   stage_name: string;
   dj_id: string;
   dj_name: string;
+  genre: string;
   slot_date: string;   // 'YYYY-MM-DD'
   start_time: string;  // 'HH:MM'
   end_time: string;    // 'HH:MM'
@@ -66,8 +68,11 @@ export class ApiService {
 
   // Slots
   getSlots(eventId: string) { return this.http.get<Slot[]>(`${this.base}/api/events/${eventId}/slots`); }
-  createSlot(eventId: string, s: Pick<Slot, 'stage_id' | 'dj_id' | 'slot_date' | 'start_time' | 'end_time' | 'notes'>) {
+  createSlot(eventId: string, s: Pick<Slot, 'stage_id' | 'dj_id' | 'genre' | 'slot_date' | 'start_time' | 'end_time' | 'notes'>) {
     return this.http.post<Slot>(`${this.base}/api/events/${eventId}/slots`, s);
+  }
+  updateSlot(eventId: string, slotId: string, s: Pick<Slot, 'stage_id' | 'dj_id' | 'genre' | 'slot_date' | 'start_time' | 'end_time' | 'notes'>) {
+    return this.http.put<Slot>(`${this.base}/api/events/${eventId}/slots/${slotId}`, s);
   }
   deleteSlot(eventId: string, slotId: string) {
     return this.http.delete(`${this.base}/api/events/${eventId}/slots/${slotId}`);

@@ -1,0 +1,30 @@
+<nav class="navbar">
+  <div class="navbar-links">
+    <span class="navbar-brand">EventLineup</span>
+    <a routerLink="/admin/events" routerLinkActive="border-b-2 border-amber-400 text-white"
+       class="navbar-link">
+      {{ 'nav.events' | translate }}
+    </a>
+    <a routerLink="/admin/djs" routerLinkActive="border-b-2 border-amber-400 text-white"
+       class="navbar-link">
+      {{ 'nav.djs' | translate }}
+    </a>
+  </div>
+  <div class="lang-switcher">
+    <button (click)="langService.setLanguage('en')"
+      class="lang-btn"
+      [class]="langService.currentLang() === 'en' ? 'lang-btn-active' : 'lang-btn-inactive'">
+      EN
+    </button>
+    <button (click)="langService.setLanguage('zh-TW')"
+      class="lang-btn"
+      [class]="langService.currentLang() === 'zh-TW' ? 'lang-btn-active' : 'lang-btn-inactive'">
+      中文
+    </button>
+  </div>
+</nav>
+<main class="app-main">
+  <router-outlet />
+</main>
+
+<app-dialog />

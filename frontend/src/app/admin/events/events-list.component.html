@@ -1,0 +1,66 @@
+<div class="page">
+  <div class="page-header">
+    <h1 class="page-title">{{ 'events.title' | translate }}</h1>
+    <a routerLink="/admin/events/new" class="btn-sm">
+      + {{ 'events.new' | translate }}
+    </a>
+  </div>
+
+  <div class="tabs">
+    <button (click)="activeTab.set('upcoming')"
+      class="tab-btn"
+      [class]="activeTab() === 'upcoming' ? 'tab-active' : 'tab-inactive'">
+      {{ 'events.upcoming' | translate }}
+    </button>
+    <button (click)="activeTab.set('past')"
+      class="tab-btn"
+      [class]="activeTab() === 'past' ? 'tab-active' : 'tab-inactive'">
+      {{ 'events.past' | translate }}
+    </button>
+  </div>
+
+  <div class="event-list">
+    @if (activeTab() === 'upcoming') {
+      @if (upcoming().length === 0) {
+        <p class="empty-state">{{ 'events.noUpcoming' | translate }}</p>
+      }
+      @for (e of upcoming(); track e.id) {
+        <div class="event-card">
+          <p class="event-name">{{ e.name }}</p>
+          <p class="event-meta">{{ e.venue_name }} · {{ formatDates(e) }}</p>
+          <div class="event-actions">
+            <a [routerLink]="['/admin/events', e.id]" class="btn-sm-outline">
+              {{ 'events.view' | translate }}
+            </a>
+            <button (click)="duplicate(e.id)" class="btn-sm-outline">
+              {{ 'events.duplicate' | translate }}
+            </button>
+            <button (click)="delete(e.id)" class="btn-danger event-delete-btn">
+              {{ 'actions.delete' | translate }}
+            </button>
+          </div>
+        </div>
+      }
+    }
+
+    @if (activeTab() === 'past') {
+      @if (past().length === 0) {
+        <p class="empty-state">{{ 'events.noPast' | translate }}</p>
+      }
+      @for (e of past(); track e.id) {
+        <div class="event-card-past">
+          <p class="event-name">{{ e.name }}</p>
+          <p class="event-meta">{{ e.venue_name }} · {{ formatDates(e) }}</p>
+          <div class="event-actions">
+            <a [routerLink]="['/admin/events', e.id]" class="btn-sm-outline">
+              {{ 'events.view' | translate }}
+            </a>
+            <button (click)="duplicate(e.id)" class="btn-sm-outline">
+              {{ 'events.duplicate' | translate }}
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>
