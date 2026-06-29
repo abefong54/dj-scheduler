@@ -5,13 +5,30 @@ import (
 	"encoding/hex"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
 	authuc "eventlineup/internal/usecase/auth"
 )
 
-const oauthStateCookie = "oauth_state"
+const (
+	// oauthStateCookie is the name of the short-lived CSRF cookie that pins the
+	// OAuth state value across the Google consent round-trip.
+	oauthStateCookie = "oauth_state"
+
+	// oauthStateTTL is how long that cookie stays valid — long enough to finish
+	// the Google consent flow, short enough to limit replay of a leaked state.
+	oauthStateTTL = 5 * time.Minute
+
+	// deleteCookieMaxAge is the Max-Age that tells the browser to drop a cookie
+	// immediately (Gin/`net/http` convention: any negative value expires it).
+	deleteCookieMaxAge = -1
+
+	// stateEntropyBytes is the amount of cryptographic randomness behind each
+	// CSRF state token (256 bits, hex-encoded to 64 chars).
+	stateEntropyBytes = 32
+)
 
 type AuthHandler struct {
 	uc            *authuc.UseCase
@@ -38,10 +55,10 @@ func (h *AuthHandler) redirect(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 		return
 	}
-	// 5 min, path=/, HttpOnly, SameSite=Lax (survives the Google redirect back).
+	// path=/, HttpOnly, SameSite=Lax (survives the Google redirect back).
 	// Secure is config-driven: true in production, off for local http dev.
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie(oauthStateCookie, state, 300, "/", "", h.secureCookies, true)
+	c.SetCookie(oauthStateCookie, state, int(oauthStateTTL.Seconds()), "/", "", h.secureCookies, true)
 	c.Redirect(http.StatusFound, h.uc.AuthCodeURL(state))
 }
 
@@ -58,7 +75,7 @@ func (h *AuthHandler) callback(c *gin.Context) {
 	}
 	// One-time use: clear the state cookie (same attributes as when it was set).
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie(oauthStateCookie, "", -1, "/", "", h.secureCookies, true)
+	c.SetCookie(oauthStateCookie, "", deleteCookieMaxAge, "/", "", h.secureCookies, true)
 
 	jwt, err := h.uc.HandleCallback(c.Request.Context(), code)
 	if err != nil {
@@ -69,7 +86,7 @@ func (h *AuthHandler) callback(c *gin.Context) {
 }
 
 func randomState() (string, error) {
-	b := make([]byte, 32)
+	b := make([]byte, stateEntropyBytes)
 	if _, err := rand.Read(b); err != nil {
 		return "", err
 	}
