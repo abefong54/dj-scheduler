@@ -43,11 +43,13 @@ const (
 
 	// Event queries
 	queryEventList = `
-		SELECT id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}')
+		SELECT id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}'),
+		       (line_notify_token_enc IS NOT NULL)
 		FROM events WHERE organizer_id = $1 ORDER BY start_date DESC`
 
 	queryEventGet = `
-		SELECT id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}')
+		SELECT id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}'),
+		       (line_notify_token_enc IS NOT NULL)
 		FROM events WHERE id = $1 AND organizer_id = $2`
 
 	// queryEventGetPublic is intentionally NOT scoped by organizer: it backs the
@@ -59,15 +61,25 @@ const (
 	queryEventInsert = `
 		INSERT INTO events (name, venue_name, start_date, end_date, genres, organizer_id)
 		VALUES ($1,$2,$3,$4,$5,$6)
-		RETURNING id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}')`
+		RETURNING id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}'),
+		          (line_notify_token_enc IS NOT NULL)`
 
 	queryEventUpdate = `
 		UPDATE events
 		SET name = $1, venue_name = $2, start_date = $3, end_date = $4, genres = $5
 		WHERE id = $6 AND organizer_id = $7
-		RETURNING id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}')`
+		RETURNING id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}'),
+		          (line_notify_token_enc IS NOT NULL)`
 
 	queryEventDelete = `DELETE FROM events WHERE id = $1 AND organizer_id = $2`
+
+	// querySetLineToken stores (or clears, when $1 is NULL) the encrypted LINE
+	// Notify token for the organizer's event, returning whether it is now
+	// enabled. No row → the event isn't the organizer's (US-006).
+	querySetLineToken = `
+		UPDATE events SET line_notify_token_enc = $1
+		WHERE id = $2 AND organizer_id = $3
+		RETURNING (line_notify_token_enc IS NOT NULL)`
 
 	// queryEventOwned reports whether an event exists AND belongs to the organizer.
 	// Used to disambiguate an empty stage/slot list (event owned but empty → 200)
@@ -84,7 +96,8 @@ const (
 	queryEventCloneInsert = `
 		INSERT INTO events (name, venue_name, start_date, end_date, genres, organizer_id)
 		VALUES ('Copy of '||$1, $2, CURRENT_DATE, CURRENT_DATE, $3, $4)
-		RETURNING id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}')`
+		RETURNING id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}'),
+		          (line_notify_token_enc IS NOT NULL)`
 
 	// Stage queries. Every stage is reachable only through its parent event, so
 	// each query joins events and filters on organizer_id: a stage is invisible

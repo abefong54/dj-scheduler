@@ -25,6 +25,10 @@ services:
       DATABASE_URL: postgresql://eventlineup:eventlineup@db:5432/eventlineup
       PORT: "8080"
       FRONTEND_URL: "http://localhost:4200"
+      # Local-dev only — 32-byte (64 hex char) AES-256 key for encrypting LINE
+      # Notify tokens at rest. Generate a real key per environment in production
+      # (e.g. `openssl rand -hex 32`); never reuse this placeholder.
+      LINE_NOTIFY_ENCRYPTION_KEY: "1111111111111111111111111111111111111111111111111111111111111111"
     depends_on:
       db:
         condition: service_healthy

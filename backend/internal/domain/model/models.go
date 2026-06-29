@@ -14,6 +14,9 @@ type Event struct {
 	StartDate string   `json:"start_date"`
 	EndDate   string   `json:"end_date"`
 	Genres    []string `json:"genres"`
+	// LineNotifyEnabled reports whether a LINE Notify token is stored for the
+	// event (US-006). The raw token is never exposed through the model.
+	LineNotifyEnabled bool `json:"line_notify_enabled"`
 }
 
 type Stage struct {

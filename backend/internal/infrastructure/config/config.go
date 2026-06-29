@@ -1,12 +1,17 @@
 package config
 
 import (
+	"encoding/hex"
 	"errors"
 	"os"
 )
 
 // minJWTSecretLen is the minimum acceptable length for the JWT signing secret.
 const minJWTSecretLen = 32
+
+// lineNotifyKeyLen is the required AES key length for encrypting LINE Notify
+// tokens at rest (256-bit AES-GCM).
+const lineNotifyKeyLen = 32
 
 type Config struct {
 	DatabaseURL string
@@ -21,6 +26,11 @@ type Config struct {
 	GoogleClientID     string
 	GoogleClientSecret string
 	GoogleRedirectURL  string
+
+	// LineNotifyEncryptionKey is the AES-256 key (decoded from the hex env var
+	// LINE_NOTIFY_ENCRYPTION_KEY) used to encrypt per-event LINE Notify tokens
+	// at rest. nil if unset or not valid hex; ValidateLineNotify rejects that.
+	LineNotifyEncryptionKey []byte
 }
 
 func Load() Config {
@@ -43,7 +53,23 @@ func Load() Config {
 		GoogleClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		GoogleClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
 		GoogleRedirectURL:  os.Getenv("GOOGLE_REDIRECT_URL"),
+
+		// Invalid hex decodes to nil here; ValidateLineNotify reports it.
+		LineNotifyEncryptionKey: decodeHexKey(os.Getenv("LINE_NOTIFY_ENCRYPTION_KEY")),
 	}
+}
+
+// decodeHexKey decodes a hex string to bytes, returning nil on empty or invalid
+// input so the caller fails validation rather than starting with a bad key.
+func decodeHexKey(s string) []byte {
+	if s == "" {
+		return nil
+	}
+	b, err := hex.DecodeString(s)
+	if err != nil {
+		return nil
+	}
+	return b
 }
 
 // Validate checks that required configuration is present and well-formed.
@@ -51,6 +77,16 @@ func Load() Config {
 func (c Config) Validate() error {
 	if len(c.JWTSecret) < minJWTSecretLen {
 		return errors.New("JWT_SECRET must be set and at least 32 characters")
+	}
+	return nil
+}
+
+// ValidateLineNotify checks that the LINE Notify token-encryption key is a
+// well-formed AES-256 key. Called at startup so the server refuses to run with
+// a missing or malformed LINE_NOTIFY_ENCRYPTION_KEY.
+func (c Config) ValidateLineNotify() error {
+	if len(c.LineNotifyEncryptionKey) != lineNotifyKeyLen {
+		return errors.New("LINE_NOTIFY_ENCRYPTION_KEY must be a 64-char hex string (32-byte AES-256 key)")
 	}
 	return nil
 }

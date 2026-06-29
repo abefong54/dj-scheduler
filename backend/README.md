@@ -90,6 +90,7 @@ go run ./cmd/app
 | `PORT`         | No       | `8080`                   | Port the API listens on            |
 | `FRONTEND_URL` | No       | `http://localhost:4200`  | Allowed CORS origin                |
 | `COOKIE_SECURE`| No       | `false`                  | Set to `true` in production so the OAuth state cookie is HTTPS-only |
+| `LINE_NOTIFY_ENCRYPTION_KEY` | Yes | — | 64-char hex (32-byte AES-256) key for encrypting per-event LINE Notify tokens at rest. Server refuses to start if missing/malformed. Generate with `openssl rand -hex 32` |
 
 ---
 
@@ -105,6 +106,7 @@ All routes are prefixed with `/api`.
 | GET    | `/api/events`                     | List all events               |
 | POST   | `/api/events`                     | Create an event               |
 | GET    | `/api/events/:id`                 | Get a single event            |
+| PUT    | `/api/events/:id/line-token`      | Set/clear the event's LINE Notify token (encrypted) |
 | DELETE | `/api/events/:id`                 | Delete an event               |
 | POST   | `/api/events/:id/duplicate`       | Duplicate an event (+ stages) |
 | GET    | `/api/events/:id/stages`          | List stages for an event      |

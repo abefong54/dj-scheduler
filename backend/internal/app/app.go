@@ -11,8 +11,9 @@ import (
 	authuc "eventlineup/internal/usecase/auth"
 	djuc "eventlineup/internal/usecase/dj"
 	eventuc "eventlineup/internal/usecase/event"
-	stageuc "eventlineup/internal/usecase/stage"
+	linenotifyuc "eventlineup/internal/usecase/linenotify"
 	slotuc "eventlineup/internal/usecase/slot"
+	stageuc "eventlineup/internal/usecase/stage"
 )
 
 // tokenTTL is how long an issued organizer JWT stays valid.
@@ -27,6 +28,9 @@ func Run() {
 		log.Fatal(err)
 	}
 	if err := cfg.ValidateGoogle(); err != nil {
+		log.Fatal(err)
+	}
+	if err := cfg.ValidateLineNotify(); err != nil {
 		log.Fatal(err)
 	}
 
@@ -48,13 +52,14 @@ func Run() {
 	eventHandler := httphandler.NewEventHandler(eventuc.New(eventRepo))
 	stageHandler := httphandler.NewStageHandler(stageuc.New(stageRepo))
 	slotHandler := httphandler.NewSlotHandler(slotUC)
+	lineHandler := httphandler.NewLineHandler(linenotifyuc.New(eventRepo, cfg.LineNotifyEncryptionKey))
 	publicHandler := httphandler.NewPublicHandler(eventuc.New(eventRepo), stageuc.New(stageRepo), slotuc.New(slotRepo))
 
 	organizerRepo := database.NewOrganizerRepository(pool)
 	googleAuth := googleauth.New(cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL)
 	authHandler := httphandler.NewAuthHandler(authuc.New(googleAuth, organizerRepo, cfg.JWTSecret, tokenTTL), cfg.FrontendURL, cfg.SecureCookies)
 
-	r := httphandler.NewRouter(cfg.FrontendURL, cfg.JWTSecret, publicHandler, djPortalHandler, djHandler, eventHandler, stageHandler, slotHandler)
+	r := httphandler.NewRouter(cfg.FrontendURL, cfg.JWTSecret, publicHandler, djPortalHandler, djHandler, eventHandler, stageHandler, slotHandler, lineHandler)
 	authHandler.Register(r) // unauthenticated auth routes
 
 	log.Printf("listening on :%s", cfg.Port)
