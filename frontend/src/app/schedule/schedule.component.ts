@@ -4,6 +4,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService, Event, Stage, Slot } from '../services/api.service';
 import { LanguageService } from '../services/language.service';
 import { slotDurationMins, toMinutes } from '../shared/slot-time.util';
+import { addDays } from '../shared/date.util';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -124,12 +125,13 @@ export class ScheduleComponent implements OnDestroy {
   }
 
   private dateRange(start: string, end: string): string[] {
+    // Lexicographic comparison is correct for zero-padded YYYY-MM-DD, and addDays
+    // steps the date without ever touching the local timezone (see date.util).
     const dates: string[] = [];
-    const cur = new Date(start);
-    const last = new Date(end);
-    while (cur <= last) {
-      dates.push(cur.toISOString().slice(0, 10));
-      cur.setDate(cur.getDate() + 1);
+    let cur = start;
+    while (cur <= end) {
+      dates.push(cur);
+      cur = addDays(cur, 1);
     }
     return dates;
   }

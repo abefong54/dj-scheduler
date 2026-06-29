@@ -7,6 +7,7 @@ import { ApiService, Event, Stage, Slot, DJ } from '../../services/api.service';
 import { DialogService } from '../../shared/dialog.service';
 import { ScheduleExportService } from '../../services/schedule-export.service';
 import { slotDurationMins } from '../../shared/slot-time.util';
+import { parseLocalDate } from '../../shared/date.util';
 
 @Component({
   selector: 'app-event-detail',
@@ -254,7 +255,7 @@ export class EventDetailComponent implements OnDestroy {
   }
 
   private parseDate(d: string): Date {
-    return new Date(d + 'T00:00:00');
+    return parseLocalDate(d);
   }
 
   viewPublic() {
