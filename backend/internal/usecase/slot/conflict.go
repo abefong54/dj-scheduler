@@ -14,7 +14,7 @@ const minutesPerDay = 24 * 60
 
 // slotLister is the slice of the slot repository that conflict checking needs.
 type slotLister interface {
-	List(ctx context.Context, eventID string) ([]model.Slot, error)
+	List(ctx context.Context, eventID, organizerID string) ([]model.Slot, error)
 }
 
 // CheckConflicts returns an *apperrors.ConflictError if candidate would
@@ -28,8 +28,8 @@ type slotLister interface {
 //
 // DJ double-booking is checked first to match the API contract, so a candidate
 // that clashes both by DJ and by stage reports "dj_double_booked".
-func CheckConflicts(ctx context.Context, repo slotLister, candidate model.Slot, excludeSlotID string) error {
-	stored, err := repo.List(ctx, candidate.EventID)
+func CheckConflicts(ctx context.Context, repo slotLister, candidate model.Slot, excludeSlotID, organizerID string) error {
+	stored, err := repo.List(ctx, candidate.EventID, organizerID)
 	if err != nil {
 		return err
 	}

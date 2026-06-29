@@ -7,23 +7,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gin-gonic/gin"
-
-	"eventlineup/internal/infrastructure/database"
 	"eventlineup/internal/domain/model"
-	httphandler "eventlineup/internal/interfaces/http"
-	stageuc "eventlineup/internal/usecase/stage"
 )
 
 func TestListStages(t *testing.T) {
 	pool := setupTestDB(t)
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	repo := database.NewStageRepository(pool)
-	h := httphandler.NewStageHandler(stageuc.New(repo))
-	h.Register(r.Group("/api"))
-
-	eventID := createTestEvent(t, pool)
+	org := createTestOrganizer(t, pool)
+	eventID := createTestEventForOrg(t, pool, org)
+	r := stageRouterForOrg(t, pool, org)
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/api/events/"+eventID+"/stages", nil)
 	r.ServeHTTP(w, req)
@@ -39,13 +30,9 @@ func TestListStages(t *testing.T) {
 
 func TestGetStage(t *testing.T) {
 	pool := setupTestDB(t)
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	repo := database.NewStageRepository(pool)
-	h := httphandler.NewStageHandler(stageuc.New(repo))
-	h.Register(r.Group("/api"))
-
-	eventID := createTestEvent(t, pool)
+	org := createTestOrganizer(t, pool)
+	eventID := createTestEventForOrg(t, pool, org)
+	r := stageRouterForOrg(t, pool, org)
 	stageID := createTestStage(t, pool, eventID)
 
 	t.Run("returns 200 with valid IDs", func(t *testing.T) {
@@ -74,13 +61,9 @@ func TestGetStage(t *testing.T) {
 
 func TestPatchStage(t *testing.T) {
 	pool := setupTestDB(t)
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	repo := database.NewStageRepository(pool)
-	h := httphandler.NewStageHandler(stageuc.New(repo))
-	h.Register(r.Group("/api"))
-
-	eventID := createTestEvent(t, pool)
+	org := createTestOrganizer(t, pool)
+	eventID := createTestEventForOrg(t, pool, org)
+	r := stageRouterForOrg(t, pool, org)
 	stageID := createTestStage(t, pool, eventID)
 
 	t.Run("updates name and color", func(t *testing.T) {
@@ -116,13 +99,9 @@ func TestPatchStage(t *testing.T) {
 
 func TestCreateStage(t *testing.T) {
 	pool := setupTestDB(t)
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	repo := database.NewStageRepository(pool)
-	h := httphandler.NewStageHandler(stageuc.New(repo))
-	h.Register(r.Group("/api"))
-
-	eventID := createTestEvent(t, pool)
+	org := createTestOrganizer(t, pool)
+	eventID := createTestEventForOrg(t, pool, org)
+	r := stageRouterForOrg(t, pool, org)
 	body, _ := json.Marshal(map[string]string{"name": "A 主舞台", "color": "#6366F1"})
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, "/api/events/"+eventID+"/stages", bytes.NewReader(body))

@@ -69,6 +69,11 @@ const (
 
 	queryEventDelete = `DELETE FROM events WHERE id = $1 AND organizer_id = $2`
 
+	// queryEventOwned reports whether an event exists AND belongs to the organizer.
+	// Used to disambiguate an empty stage/slot list (event owned but empty → 200)
+	// from a forbidden one (event not the organizer's → 404). See EL-036.
+	queryEventOwned = `SELECT EXISTS (SELECT 1 FROM events WHERE id = $1 AND organizer_id = $2)`
+
 	// Clone (US-008): copy an event's name/venue/genres as a template. Dates are
 	// reset to today on insert (the organizer sets the real dates afterwards), so
 	// the source dates are not fetched.
@@ -81,31 +86,54 @@ const (
 		VALUES ('Copy of '||$1, $2, CURRENT_DATE, CURRENT_DATE, $3, $4)
 		RETURNING id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}')`
 
-	// Stage queries
+	// Stage queries. Every stage is reachable only through its parent event, so
+	// each query joins events and filters on organizer_id: a stage is invisible
+	// (404) to anyone but its event's owner, even though event UUIDs are public
+	// (handed out via the shareable schedule link). See EL-036.
 	queryStageList = `
-		SELECT id, event_id, name, color, display_order
-		FROM stages WHERE event_id = $1 ORDER BY display_order, name`
+		SELECT st.id, st.event_id, st.name, st.color, st.display_order
+		FROM stages st
+		JOIN events e ON e.id = st.event_id
+		WHERE st.event_id = $1 AND e.organizer_id = $2
+		ORDER BY st.display_order, st.name`
 
 	queryStageInsert = `
 		INSERT INTO stages (event_id, name, color)
-		VALUES ($1,$2,$3)
+		SELECT $1, $2, $3
+		WHERE EXISTS (SELECT 1 FROM events WHERE id = $1 AND organizer_id = $4)
 		RETURNING id, event_id, name, color, display_order`
 
-	queryStageDelete = `DELETE FROM stages WHERE id = $1 AND event_id = $2`
+	queryStageDelete = `
+		DELETE FROM stages st
+		USING events e
+		WHERE st.id = $1 AND st.event_id = $2
+		  AND e.id = st.event_id AND e.organizer_id = $3`
 
 	queryStageGet = `
-		SELECT id, event_id, name, color, display_order
-		FROM stages WHERE id = $1 AND event_id = $2`
+		SELECT st.id, st.event_id, st.name, st.color, st.display_order
+		FROM stages st
+		JOIN events e ON e.id = st.event_id
+		WHERE st.id = $1 AND st.event_id = $2 AND e.organizer_id = $3`
 
 	queryStageUpdate = `
-		UPDATE stages SET name = $1, color = $2
-		WHERE id = $3 AND event_id = $4
-		RETURNING id, event_id, name, color, display_order`
+		UPDATE stages st SET name = $1, color = $2
+		FROM events e
+		WHERE st.id = $3 AND st.event_id = $4
+		  AND e.id = st.event_id AND e.organizer_id = $5
+		RETURNING st.id, st.event_id, st.name, st.color, st.display_order`
+
+	// queryStagePublicList is intentionally NOT organizer-scoped: it backs the
+	// public, shareable schedule endpoint (GET /api/events/:id/public), the same
+	// way queryEventGetPublic does for the event itself.
+	queryStagePublicList = `
+		SELECT id, event_id, name, color, display_order
+		FROM stages WHERE event_id = $1 ORDER BY display_order, name`
 
 	queryStageListForClone   = `SELECT name, color, display_order FROM stages WHERE event_id = $1 ORDER BY display_order`
 	queryStageInsertForClone = `INSERT INTO stages (event_id, name, color, display_order) VALUES ($1,$2,$3,$4)`
 
-	// Slot queries
+	// Slot queries. Like stages, slots are organizer-scoped through their parent
+	// event (EL-036): every read/write joins events and filters on organizer_id.
 	querySlotList = `
 		SELECT sl.id, sl.event_id, sl.stage_id, st.name,
 		       COALESCE(sl.dj_id::text,''), COALESCE(d.name,''),
@@ -113,23 +141,28 @@ const (
 		       sl.slot_date::text, to_char(sl.start_time,'HH24:MI'), to_char(sl.end_time,'HH24:MI'), COALESCE(sl.notes,''),
 		       sl.dj_confirmation
 		FROM slots sl
+		JOIN events e ON e.id = sl.event_id
 		JOIN stages st ON st.id = sl.stage_id
 		LEFT JOIN djs d ON d.id = sl.dj_id
-		WHERE sl.event_id = $1
+		WHERE sl.event_id = $1 AND e.organizer_id = $2
 		ORDER BY sl.slot_date, sl.start_time`
 
 	querySlotInsert = `
 		INSERT INTO slots (event_id, stage_id, dj_id, genre, slot_date, start_time, end_time, notes)
-		VALUES ($1,$2,NULLIF($3,'')::uuid,$4,$5,$6,$7,$8)
+		SELECT $1,$2,NULLIF($3,'')::uuid,$4,$5,$6,$7,$8
+		WHERE EXISTS (SELECT 1 FROM events WHERE id = $1 AND organizer_id = $9)
 		RETURNING id`
 
 	querySlotUpdate = `
 		WITH updated AS (
-			UPDATE slots
+			UPDATE slots sl
 			SET stage_id=$1, dj_id=NULLIF($2,'')::uuid, genre=$3,
 			    slot_date=$4, start_time=$5, end_time=$6, notes=$7
-			WHERE id=$8 AND event_id=$9
-			RETURNING *
+			FROM events e
+			WHERE sl.id=$8 AND sl.event_id=$9
+			  AND e.id = sl.event_id AND e.organizer_id=$10
+			RETURNING sl.id, sl.event_id, sl.stage_id, sl.dj_id, sl.genre,
+			          sl.slot_date, sl.start_time, sl.end_time, sl.notes, sl.dj_confirmation
 		)
 		SELECT u.id, u.event_id, u.stage_id, st.name,
 		       COALESCE(u.dj_id::text,''), COALESCE(d.name,''),
@@ -147,16 +180,35 @@ const (
 		       sl.slot_date::text, to_char(sl.start_time,'HH24:MI'), to_char(sl.end_time,'HH24:MI'), COALESCE(sl.notes,''),
 		       sl.dj_confirmation
 		FROM slots sl
+		JOIN events e ON e.id = sl.event_id
 		JOIN stages st ON st.id = sl.stage_id
 		LEFT JOIN djs d ON d.id = sl.dj_id
-		WHERE sl.id = $1 AND sl.event_id = $2`
+		WHERE sl.id = $1 AND sl.event_id = $2 AND e.organizer_id = $3`
+
+	// querySlotPublicList is intentionally NOT organizer-scoped: it backs the
+	// public, shareable schedule endpoint (GET /api/events/:id/public).
+	querySlotPublicList = `
+		SELECT sl.id, sl.event_id, sl.stage_id, st.name,
+		       COALESCE(sl.dj_id::text,''), COALESCE(d.name,''),
+		       COALESCE(sl.genre,''),
+		       sl.slot_date::text, to_char(sl.start_time,'HH24:MI'), to_char(sl.end_time,'HH24:MI'), COALESCE(sl.notes,''),
+		       sl.dj_confirmation
+		FROM slots sl
+		JOIN stages st ON st.id = sl.stage_id
+		LEFT JOIN djs d ON d.id = sl.dj_id
+		WHERE sl.event_id = $1
+		ORDER BY sl.slot_date, sl.start_time`
 
 	// Set a DJ's confirmation on a slot the token's DJ actually owns (US-011).
 	querySlotSetDJConfirmation = `
 		UPDATE slots SET dj_confirmation = $1
 		WHERE id = $2 AND dj_id = $3`
 
-	querySlotDelete = `DELETE FROM slots WHERE id = $1 AND event_id = $2`
+	querySlotDelete = `
+		DELETE FROM slots sl
+		USING events e
+		WHERE sl.id = $1 AND sl.event_id = $2
+		  AND e.id = sl.event_id AND e.organizer_id = $3`
 
 	// Organizer queries
 	queryOrganizerFindByGoogleID = `

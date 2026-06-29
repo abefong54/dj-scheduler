@@ -19,21 +19,24 @@ type fakeRepo struct {
 	getErr    error
 }
 
-func (f *fakeRepo) List(_ context.Context, _ string) ([]model.Slot, error) {
+func (f *fakeRepo) List(_ context.Context, _, _ string) ([]model.Slot, error) {
 	return f.stored, nil
 }
-func (f *fakeRepo) Get(_ context.Context, _, _ string) (model.Slot, error) {
+func (f *fakeRepo) ListPublic(_ context.Context, _ string) ([]model.Slot, error) {
+	return f.stored, nil
+}
+func (f *fakeRepo) Get(_ context.Context, _, _, _ string) (model.Slot, error) {
 	return model.Slot{}, f.getErr
 }
-func (f *fakeRepo) Create(_ context.Context, s model.Slot, _ string) (model.Slot, error) {
+func (f *fakeRepo) Create(_ context.Context, s model.Slot, _, _ string) (model.Slot, error) {
 	f.created = true
 	return s, f.createErr
 }
-func (f *fakeRepo) Update(_ context.Context, s model.Slot, _ string) (model.Slot, error) {
+func (f *fakeRepo) Update(_ context.Context, s model.Slot, _, _ string) (model.Slot, error) {
 	f.updated = true
 	return s, nil
 }
-func (f *fakeRepo) Delete(_ context.Context, _, _ string) error { return nil }
+func (f *fakeRepo) Delete(_ context.Context, _, _, _ string) error            { return nil }
 func (f *fakeRepo) SetDJConfirmation(_ context.Context, _, _, _ string) error { return nil }
 
 func bookedSlot() model.Slot {
@@ -50,7 +53,7 @@ func TestCreate_RejectsConflictWithoutWriting(t *testing.T) {
 	_, err := uc.Create(context.Background(), model.Slot{
 		StageID: "stage-b", DjID: "dj-sasha", SlotDate: "2026-08-15",
 		StartTime: "22:30", EndTime: "23:30",
-	}, "evt-1")
+	}, "evt-1", "")
 
 	if !errors.Is(err, apperrors.ErrConflict) {
 		t.Fatalf("expected ErrConflict, got %v", err)
@@ -67,7 +70,7 @@ func TestCreate_AllowsNonConflicting(t *testing.T) {
 	_, err := uc.Create(context.Background(), model.Slot{
 		StageID: "stage-a", DjID: "dj-sasha", SlotDate: "2026-08-15",
 		StartTime: "23:00", EndTime: "23:30", // adjacent
-	}, "evt-1")
+	}, "evt-1", "")
 
 	if err != nil {
 		t.Fatalf("non-conflicting create should succeed, got %v", err)
@@ -84,7 +87,7 @@ func TestUpdate_ExcludesSelfFromConflict(t *testing.T) {
 	_, err := uc.Update(context.Background(), model.Slot{
 		ID: "slot-a", StageID: "stage-a", DjID: "dj-sasha", SlotDate: "2026-08-15",
 		StartTime: "22:00", EndTime: "23:00", // unchanged
-	}, "evt-1")
+	}, "evt-1", "")
 
 	if err != nil {
 		t.Fatalf("updating a slot to its own time should succeed, got %v", err)
@@ -106,7 +109,7 @@ func TestUpdate_MissingSlotReturnsNotFoundNotConflict(t *testing.T) {
 	_, err := uc.Update(context.Background(), model.Slot{
 		ID: "missing", StageID: "stage-a", DjID: "dj-sasha", SlotDate: "2026-08-15",
 		StartTime: "22:30", EndTime: "23:30",
-	}, "evt-1")
+	}, "evt-1", "")
 
 	if !errors.Is(err, apperrors.ErrNotFound) {
 		t.Fatalf("expected ErrNotFound, got %v", err)
@@ -127,7 +130,7 @@ func TestUpdate_RejectsConflictWithoutWriting(t *testing.T) {
 	_, err := uc.Update(context.Background(), model.Slot{
 		ID: "slot-b", StageID: "stage-a", DjID: "dj-other", SlotDate: "2026-08-15",
 		StartTime: "22:30", EndTime: "23:30",
-	}, "evt-1")
+	}, "evt-1", "")
 
 	if !errors.Is(err, apperrors.ErrConflict) {
 		t.Fatalf("expected ErrConflict, got %v", err)

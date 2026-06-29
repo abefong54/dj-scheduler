@@ -14,12 +14,11 @@ import (
 	slotuc "eventlineup/internal/usecase/slot"
 )
 
-// seedEventStage inserts an organizer, event, and stage, returning the event and
-// stage IDs and registering cleanup.
-func seedEventStage(t *testing.T, pool *pgxpool.Pool) (eventID, stageID string) {
+// seedEventStage inserts an organizer, event, and stage, returning the event,
+// stage, and organizer IDs and registering cleanup.
+func seedEventStage(t *testing.T, pool *pgxpool.Pool) (eventID, stageID, orgID string) {
 	t.Helper()
 	ctx := context.Background()
-	var orgID string
 	if err := pool.QueryRow(ctx,
 		`INSERT INTO organizers (email, name, google_id)
 		 VALUES (gen_random_uuid()::text||'@t.local', 't', gen_random_uuid()::text)
@@ -40,19 +39,19 @@ func seedEventStage(t *testing.T, pool *pgxpool.Pool) (eventID, stageID string) 
 		eventID).Scan(&stageID); err != nil {
 		t.Fatalf("insert stage: %v", err)
 	}
-	return eventID, stageID
+	return eventID, stageID, orgID
 }
 
 func TestSlotRepo_RejectsOverlapAtDatabaseLevel(t *testing.T) {
 	pool := orgTestPool(t)
 	ctx := context.Background()
 	repo := database.NewSlotRepository(pool)
-	eventID, stageID := seedEventStage(t, pool)
+	eventID, stageID, orgID := seedEventStage(t, pool)
 
 	// First slot: 16:00–17:30.
 	if _, err := repo.Create(ctx, model.Slot{
 		StageID: stageID, SlotDate: "2026-07-25", StartTime: "16:00", EndTime: "17:30",
-	}, eventID); err != nil {
+	}, eventID, orgID); err != nil {
 		t.Fatalf("first create: %v", err)
 	}
 
@@ -62,7 +61,7 @@ func TestSlotRepo_RejectsOverlapAtDatabaseLevel(t *testing.T) {
 	// race.
 	_, err := repo.Create(ctx, model.Slot{
 		StageID: stageID, SlotDate: "2026-07-25", StartTime: "17:00", EndTime: "18:00",
-	}, eventID)
+	}, eventID, orgID)
 	if !errors.Is(err, apperrors.ErrConflict) {
 		t.Fatalf("expected ErrConflict from the DB overlap constraint, got %v", err)
 	}
@@ -76,7 +75,7 @@ func TestSlotUseCase_ConcurrentOverlapsOnlyOneWins(t *testing.T) {
 	pool := orgTestPool(t)
 	ctx := context.Background()
 	uc := slotuc.New(database.NewSlotRepository(pool))
-	eventID, stageID := seedEventStage(t, pool)
+	eventID, stageID, orgID := seedEventStage(t, pool)
 
 	const n = 2
 	var wg sync.WaitGroup
@@ -87,7 +86,7 @@ func TestSlotUseCase_ConcurrentOverlapsOnlyOneWins(t *testing.T) {
 			defer wg.Done()
 			_, results[i] = uc.Create(ctx, model.Slot{
 				StageID: stageID, SlotDate: "2026-07-25", StartTime: "20:00", EndTime: "21:00",
-			}, eventID)
+			}, eventID, orgID)
 		}(i)
 	}
 	wg.Wait()
