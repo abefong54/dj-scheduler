@@ -15,8 +15,8 @@ func New(repo repository.DJRepository) *UseCase {
 	return &UseCase{repo: repo}
 }
 
-func (uc *UseCase) List(ctx context.Context, organizerID string) ([]model.DJ, error) {
-	return uc.repo.List(ctx, organizerID)
+func (uc *UseCase) List(ctx context.Context, organizerID string, filter repository.DJListFilter) ([]model.DJ, error) {
+	return uc.repo.List(ctx, organizerID, filter)
 }
 
 func (uc *UseCase) Get(ctx context.Context, id, organizerID string) (model.DJ, error) {

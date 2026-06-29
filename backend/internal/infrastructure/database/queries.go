@@ -1,21 +1,29 @@
 package database
 
 const (
-	// DJ queries
-	queryDJList = `SELECT id, name, COALESCE(genre_tags, '{}'), created_at::text FROM djs WHERE organizer_id = $1 ORDER BY name`
+	// DJ queries. EL-019 adds certifications + is_student; the list supports two
+	// optional filters via params: $2 certified_for (case-insensitive genre, ''
+	// = no filter) and $3 ready_only (true = only DJs with ≥1 certification).
+	queryDJList = `
+		SELECT id, name, COALESCE(genre_tags, '{}'), COALESCE(certifications, '{}'), is_student, created_at::text
+		FROM djs
+		WHERE organizer_id = $1
+		  AND ($2 = '' OR EXISTS (SELECT 1 FROM unnest(certifications) c WHERE LOWER(c) = LOWER($2)))
+		  AND (NOT $3 OR cardinality(certifications) > 0)
+		ORDER BY name`
 
 	queryDJInsert = `
 		INSERT INTO djs (name, genre_tags, organizer_id) VALUES ($1, $2, $3)
-		RETURNING id, name, COALESCE(genre_tags, '{}'), created_at::text`
+		RETURNING id, name, COALESCE(genre_tags, '{}'), COALESCE(certifications, '{}'), is_student, created_at::text`
 
 	queryDJGet = `
-		SELECT id, name, COALESCE(genre_tags, '{}'), created_at::text
+		SELECT id, name, COALESCE(genre_tags, '{}'), COALESCE(certifications, '{}'), is_student, created_at::text
 		FROM djs WHERE id = $1 AND organizer_id = $2`
 
 	queryDJUpdate = `
-		UPDATE djs SET name = $1, genre_tags = $2
-		WHERE id = $3 AND organizer_id = $4
-		RETURNING id, name, COALESCE(genre_tags, '{}'), created_at::text`
+		UPDATE djs SET name = $1, genre_tags = $2, certifications = $3, is_student = $4
+		WHERE id = $5 AND organizer_id = $6
+		RETURNING id, name, COALESCE(genre_tags, '{}'), COALESCE(certifications, '{}'), is_student, created_at::text`
 
 	queryDJDelete = `DELETE FROM djs WHERE id = $1 AND organizer_id = $2`
 
