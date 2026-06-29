@@ -1,0 +1,100 @@
+name: Backend CI
+
+# Gates Go backend changes: build, vet, race-tested suite against a real Postgres
+# (so DB tests run, never silently skip), lint, and a known-CVE scan. Make this a
+# REQUIRED status check on `main` alongside `e2e` so nothing merges — or deploys —
+# without it passing.
+on:
+  pull_request:
+    branches: [main]
+    paths: ['backend/**', '.github/workflows/backend-ci.yml']
+  push:
+    branches: [main]
+    paths: ['backend/**', '.github/workflows/backend-ci.yml']
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: eventlineup
+          POSTGRES_PASSWORD: eventlineup
+          POSTGRES_DB: eventlineup
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U eventlineup"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://eventlineup:eventlineup@localhost:5432/eventlineup
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+
+      - name: go mod tidy is clean
+        run: go mod tidy && git diff --exit-code
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Apply migrations
+        run: go run ./cmd/migrate
+
+      # -race catches data races (BUG-006 was one); -shuffle catches order
+      # coupling; -count=1 avoids cached integration results; -coverpkg measures
+      # true cross-layer coverage (handlers exercise usecases/repos).
+      - name: Test
+        run: go test -race -shuffle=on -count=1 -coverpkg=./internal/... -covermode=atomic -coverprofile=coverage.out ./...
+
+      # Floor is set just below current (~75.6%) for headroom against run-to-run
+      # noise, while still catching real erosion. Ratchet it up deliberately.
+      - name: Coverage floor (>= 73%)
+        run: |
+          total=$(go tool cover -func=coverage.out | awk '/^total:/ {sub(/%/,"",$3); print $3}')
+          echo "total coverage: ${total}%"
+          awk -v t="$total" 'BEGIN { if (t+0 < 73) { printf "coverage %.1f%% is below floor 73%%\n", t; exit 1 } }'
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      # Pin the exact golangci-lint v2 binary via the official installer — robust
+      # to golangci-lint-action major-version churn around the v1→v2 transition.
+      - name: golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b "$(go env GOPATH)/bin" v2.12.2
+          "$(go env GOPATH)/bin/golangci-lint" run ./...
+
+  vuln:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - name: govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
