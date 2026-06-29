@@ -7,33 +7,33 @@
   <form (ngSubmit)="submit()" class="event-form">
     <div class="form-group">
       <label class="form-label">{{ 'events.name' | translate }}</label>
-      <input [(ngModel)]="name" name="name" type="text" class="form-input" required />
+      <input [(ngModel)]="name" name="name" type="text" class="form-input" required data-testid="event-name-input" />
     </div>
 
     <div class="form-group">
       <label class="form-label">{{ 'events.venue' | translate }}</label>
-      <input [(ngModel)]="venue_name" name="venue_name" type="text" class="form-input" required />
+      <input [(ngModel)]="venue_name" name="venue_name" type="text" class="form-input" required data-testid="event-venue-input" />
     </div>
 
     <div class="form-grid-2 form-group">
       <div>
         <label class="form-label">{{ 'events.startDate' | translate }}</label>
-        <input [(ngModel)]="start_date" name="start_date" type="date" class="form-input" required />
+        <input [(ngModel)]="start_date" name="start_date" type="date" class="form-input" required data-testid="event-start-date" />
       </div>
       <div>
         <label class="form-label">{{ 'events.endDate' | translate }}</label>
-        <input [(ngModel)]="end_date" name="end_date" type="date" class="form-input" required />
+        <input [(ngModel)]="end_date" name="end_date" type="date" class="form-input" required data-testid="event-end-date" />
       </div>
     </div>
 
     <div class="form-group">
       <label class="form-label">{{ 'events.genres' | translate }}</label>
       <input [(ngModel)]="genres_input" name="genres_input" type="text"
-        class="form-input" placeholder="e.g. Hip Hop, R&B, Trap" />
+        class="form-input" placeholder="e.g. Hip Hop, R&B, Trap" data-testid="event-genres-input" />
     </div>
 
     <div class="form-actions">
-      <button type="submit" class="btn-primary">{{ 'actions.create' | translate }}</button>
+      <button type="submit" class="btn-primary" data-testid="event-create-btn">{{ 'actions.create' | translate }}</button>
       <a routerLink="/admin/events" class="btn-secondary">{{ 'actions.cancel' | translate }}</a>
     </div>
   </form>

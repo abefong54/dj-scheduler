@@ -7,15 +7,16 @@
 
       <div class="dialog-actions">
         @if (dialog.state()!.type === 'confirm') {
-          <button (click)="dialog.respond(false)" class="btn-secondary">
+          <button (click)="dialog.respond(false)" class="btn-secondary" data-testid="dialog-cancel-btn">
             {{ dialog.state()!.cancelLabel ?? ('actions.cancel' | translate) }}
           </button>
           <button (click)="dialog.respond(true)"
-            [class]="dialog.state()!.variant === 'danger' ? 'btn-confirm-danger' : 'btn-primary'">
+            [class]="dialog.state()!.variant === 'danger' ? 'btn-confirm-danger' : 'btn-primary'"
+            data-testid="dialog-confirm-btn">
             {{ dialog.state()!.confirmLabel ?? ('actions.confirm' | translate) }}
           </button>
         } @else {
-          <button (click)="dialog.respond(true)" class="btn-primary">
+          <button (click)="dialog.respond(true)" class="btn-primary" data-testid="dialog-ok-btn">
             {{ dialog.state()!.confirmLabel ?? ('actions.ok' | translate) }}
           </button>
         }
