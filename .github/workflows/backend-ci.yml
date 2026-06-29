@@ -5,9 +5,11 @@ name: Backend CI
 # REQUIRED status check on `main` alongside `e2e` so nothing merges — or deploys —
 # without it passing.
 on:
+  # No paths filter on pull_request: a required check behind a paths filter
+  # deadlocks PRs that don't touch those paths (the check never reports, so
+  # "Require status checks" waits forever). Runs on every PR, like e2e/frontend.
   pull_request:
     branches: [main]
-    paths: ['backend/**', '.github/workflows/backend-ci.yml']
   push:
     branches: [main]
     paths: ['backend/**', '.github/workflows/backend-ci.yml']
