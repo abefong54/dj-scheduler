@@ -25,13 +25,14 @@
     <!-- Stage Chips Strip -->
     <div class="stage-strip">
       @for (s of stages(); track s.id) {
-        <div class="stage-chip group">
+        <div class="stage-chip group" [attr.data-testid]="'stage-chip-' + s.id">
           <span class="stage-chip-dot" [style.background]="s.color"></span>
           <span class="stage-chip-name">{{ s.name }}</span>
-          <button (click)="deleteStage(s.id)" class="stage-chip-delete" title="Delete">×</button>
+          <button (click)="deleteStage(s.id)" class="stage-chip-delete" title="Delete"
+            [attr.data-testid]="'stage-delete-' + s.id">×</button>
         </div>
       }
-      <button (click)="addStage()" class="stage-chip-add">
+      <button (click)="addStage()" class="stage-chip-add" data-testid="add-stage-btn">
         + {{ 'stages.new' | translate }}
       </button>
     </div>
@@ -122,6 +123,7 @@
                   <td class="edit-cell">
                     <input [(ngModel)]="editSlotStart" [name]="'es_start_' + slot.id"
                       type="time" class="edit-time-input"
+                      [attr.data-testid]="'edit-start-' + slot.id"
                       (keydown.enter)="saveEdit(slot.id)"
                       (keydown.escape)="cancelEdit()" />
                   </td>
@@ -140,19 +142,20 @@
                       (keydown.escape)="cancelEdit()" />
                   </td>
                   <td class="edit-actions-cell">
-                    <button (click)="saveEdit(slot.id)" class="btn-save">{{ 'actions.save' | translate }}</button>
+                    <button (click)="saveEdit(slot.id)" class="btn-save"
+                      [attr.data-testid]="'edit-save-' + slot.id">{{ 'actions.save' | translate }}</button>
                     <button (click)="cancelEdit()" class="btn-cancel-edit">{{ 'actions.cancel' | translate }}</button>
                   </td>
                 </tr>
                 @if (editConflictError()) {
                   <tr>
                     <td colspan="7" class="conflict-cell">
-                      <span class="conflict-text"><span aria-hidden="true">⚠</span> {{ editConflictError() }}</span>
+                      <span class="conflict-text" data-testid="edit-conflict-error"><span aria-hidden="true">⚠</span> {{ editConflictError() }}</span>
                     </td>
                   </tr>
                 }
               } @else {
-                <tr class="slot-row">
+                <tr class="slot-row" [attr.data-testid]="'slot-row-' + slot.id">
                   <td class="slot-stage-cell">
                     <span class="slot-stage-inner">
                       <span class="slot-stage-dot" [style.background]="stageColor(slot.stage_id)"></span>
@@ -161,7 +164,7 @@
                   </td>
                   <td class="slot-dj-cell">{{ slot.dj_name || '—' }}</td>
                   <td class="slot-genre-cell">{{ slot.genre || '—' }}</td>
-                  <td class="slot-time-cell">{{ slot.start_time }}</td>
+                  <td class="slot-time-cell" [attr.data-testid]="'slot-start-' + slot.id">{{ slot.start_time }}</td>
                   <td class="slot-time-cell">{{ duration(slot.start_time, slot.end_time) }}</td>
                   <td class="slot-notes-cell">
                     @if (slot.notes) {
@@ -169,8 +172,10 @@
                     }
                   </td>
                   <td class="slot-actions-cell">
-                    <button (click)="startEdit(slot)" class="slot-edit-btn">{{ 'actions.edit' | translate }}</button>
-                    <button (click)="deleteSlot(slot.id)" class="btn-danger">
+                    <button (click)="startEdit(slot)" class="slot-edit-btn"
+                      [attr.data-testid]="'slot-edit-' + slot.id">{{ 'actions.edit' | translate }}</button>
+                    <button (click)="deleteSlot(slot.id)" class="btn-danger"
+                      [attr.data-testid]="'slot-delete-' + slot.id">
                       {{ 'actions.delete' | translate }}
                     </button>
                   </td>
@@ -183,6 +188,7 @@
               <tr class="add-row">
                 <td class="add-cell">
                   <select [(ngModel)]="addStageId" name="addStageId" class="edit-select"
+                    data-testid="add-stage-select"
                     (keydown.escape)="cancelAddRow()">
                     <option value="">{{ 'slots.selectOption' | translate }}</option>
                     @for (s of stages(); track s.id) {
@@ -193,6 +199,7 @@
                 <td class="add-cell">
                   <select [(ngModel)]="addDjId" name="addDjId"
                     (ngModelChange)="onAddDjChange()" class="edit-select"
+                    data-testid="add-dj-select"
                     (keydown.escape)="cancelAddRow()">
                     <option value="">{{ 'slots.unassigned' | translate }}</option>
                     @for (d of filteredDjsForAdd(); track d.id) {
@@ -213,6 +220,7 @@
                 </td>
                 <td class="add-cell">
                   <input [(ngModel)]="addStart" name="addStart" type="time" class="edit-time-input"
+                    data-testid="add-start"
                     (keydown.enter)="submitAddRow()"
                     (keydown.escape)="cancelAddRow()" />
                 </td>
@@ -220,6 +228,7 @@
                   <input [(ngModel)]="addDuration" name="addDuration"
                     type="number" min="5" step="5" list="durationPresets"
                     class="edit-dur-input"
+                    data-testid="add-duration"
                     (keydown.enter)="submitAddRow()"
                     (keydown.escape)="cancelAddRow()" />
                 </td>
@@ -231,19 +240,19 @@
                     (keydown.escape)="cancelAddRow()" />
                 </td>
                 <td class="add-cell add-cell-actions">
-                  <button (click)="submitAddRow()" class="btn-save">{{ 'actions.save' | translate }}</button>
+                  <button (click)="submitAddRow()" class="btn-save" data-testid="add-slot-save">{{ 'actions.save' | translate }}</button>
                   <button (click)="cancelAddRow()" class="btn-cancel-edit">{{ 'actions.cancel' | translate }}</button>
                 </td>
               </tr>
               @if (addConflictError()) {
                 <tr>
                   <td colspan="7" class="conflict-cell">
-                    <span class="conflict-text"><span aria-hidden="true">⚠</span> {{ addConflictError() }}</span>
+                    <span class="conflict-text" data-testid="add-conflict-error"><span aria-hidden="true">⚠</span> {{ addConflictError() }}</span>
                   </td>
                 </tr>
               }
             } @else {
-              <tr class="add-trigger-row" (click)="activateAddRow()">
+              <tr class="add-trigger-row" (click)="activateAddRow()" data-testid="add-slot-trigger">
                 <td colspan="7" class="add-trigger-cell">
                   + {{ 'slots.new' | translate }}
                 </td>
@@ -260,11 +269,11 @@
 @if (showStageModal()) {
   <div class="modal-overlay" (click)="cancelStage()">
     <div class="modal-box-sm" (click)="$event.stopPropagation()">
-      <h2 class="modal-title">{{ 'stages.new' | translate }}</h2>
+      <h2 class="modal-title" data-testid="add-stage-modal">{{ 'stages.new' | translate }}</h2>
       <div class="form-group">
         <label class="form-label">{{ 'stages.name' | translate }}</label>
         <input [(ngModel)]="newStageName" name="newStageName" type="text" autofocus
-          class="form-input"
+          class="form-input" data-testid="stage-name-input"
           (keydown.enter)="submitNewStage()"
           (keydown.escape)="cancelStage()" />
       </div>
@@ -281,7 +290,7 @@
         </div>
       </div>
       <div class="form-actions">
-        <button type="button" (click)="submitNewStage()" class="btn-primary">
+        <button type="button" (click)="submitNewStage()" class="btn-primary" data-testid="stage-create-btn">
           {{ 'actions.create' | translate }}
         </button>
         <button type="button" (click)="cancelStage()" class="btn-secondary">

@@ -80,6 +80,17 @@ func TestRouterProtectedRouteAcceptsValidToken(t *testing.T) {
 	}
 }
 
+func TestRouterHealthzBypassesAuth(t *testing.T) {
+	r := fullRouter(t)
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	// No Authorization header — liveness must answer before anything is set up.
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200 from /healthz, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
 func TestRouterPublicRouteBypassesAuth(t *testing.T) {
 	pool := setupTestDB(t)
 	r := fullRouter(t)
