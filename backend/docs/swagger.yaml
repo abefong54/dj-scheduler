@@ -92,6 +92,33 @@ info:
   title: EventLineup API
   version: "1.0"
 paths:
+  /api/dj/portal:
+    get:
+      description: Returns the DJ and their slots across all events for a valid portal
+        token. No auth required.
+      parameters:
+      - description: Raw portal token
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: DJ portal view
+      tags:
+      - public
   /api/djs:
     get:
       description: Returns all DJs ordered by name
@@ -239,6 +266,39 @@ paths:
               type: string
             type: object
       summary: Patch DJ
+      tags:
+      - djs
+  /api/djs/{id}/token:
+    post:
+      description: Issues a personal, expiring portal link for a DJ. Regenerating
+        revokes the previous token.
+      parameters:
+      - description: DJ ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Generate DJ portal token
       tags:
       - djs
   /api/events:

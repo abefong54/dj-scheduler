@@ -37,3 +37,16 @@ type Slot struct {
 	EndTime   string `json:"end_time"`
 	Notes     string `json:"notes"`
 }
+
+// PortalSlot is a single booking as seen from a DJ's self-service portal: it
+// spans events, so it carries the event and stage names directly (US-009).
+type PortalSlot struct {
+	EventID   string `json:"event_id"`
+	EventName string `json:"event_name"`
+	StageName string `json:"stage_name"`
+	Genre     string `json:"genre"`
+	SlotDate  string `json:"slot_date"`
+	StartTime string `json:"start_time"`
+	EndTime   string `json:"end_time"`
+	Notes     string `json:"notes"`
+}

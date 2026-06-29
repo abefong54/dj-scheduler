@@ -19,6 +19,27 @@ const (
 
 	queryDJDelete = `DELETE FROM djs WHERE id = $1 AND organizer_id = $2`
 
+	// DJ portal token queries (US-009). Only the token hash is stored.
+	queryDJSetPortalToken = `
+		UPDATE djs SET portal_token_hash = $1, portal_token_expires_at = $2
+		WHERE id = $3 AND organizer_id = $4`
+
+	queryDJGetByPortalToken = `
+		SELECT id, name, COALESCE(genre_tags, '{}'), created_at::text
+		FROM djs
+		WHERE portal_token_hash = $1 AND portal_token_expires_at > now()`
+
+	queryDJPortalSlots = `
+		SELECT sl.event_id, e.name, st.name,
+		       COALESCE(sl.genre,''),
+		       sl.slot_date::text, to_char(sl.start_time,'HH24:MI'), to_char(sl.end_time,'HH24:MI'),
+		       COALESCE(sl.notes,'')
+		FROM slots sl
+		JOIN events e ON e.id = sl.event_id
+		JOIN stages st ON st.id = sl.stage_id
+		WHERE sl.dj_id = $1
+		ORDER BY sl.slot_date, sl.start_time`
+
 	// Event queries
 	queryEventList = `
 		SELECT id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}')
