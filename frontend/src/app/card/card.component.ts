@@ -1,12 +1,17 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { toPng } from 'html-to-image';
 import { ApiService, PublicSlot } from '../services/api.service';
 import { environment } from '../../environments/environment';
+import { genreTheme } from './genre-theme';
 
 // Pilot brand for the card lockup. IMDJ is the beachhead school; this becomes
 // per-school config when EL-045 (configurable curriculum/branding) lands.
 const BRAND = 'IMDJ';
+
+// The card's intrinsic export size — matches the approved 4:5 artifact (EL-053).
+const EXPORT_WIDTH = 1080;
 
 const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
@@ -31,11 +36,15 @@ export class CardComponent {
 
   private slotId = this.route.snapshot.paramMap.get('slotId') ?? '';
 
+  // The rendered card element, captured for client-side PNG export (EL-053).
+  private cardRef = viewChild<ElementRef<HTMLElement>>('cardEl');
+
   readonly brand = BRAND;
   data = signal<PublicSlot | null>(null);
   loading = signal(true);
   notFound = signal(false);
   copied = signal(false);
+  exporting = signal(false);
 
   djName = computed(() => this.data()?.slot.dj_name ?? '');
   genre = computed(() => this.data()?.slot.genre ?? '');
@@ -68,11 +77,12 @@ export class CardComponent {
     return 10;
   });
 
-  // Genre-derived theme hook. EL-049 ships the violet/lime default; EL-052 adds
-  // the per-genre palette rules keyed off this class.
+  // Genre-derived theme (EL-052): maps the slot's genre to a card palette, with
+  // the brand violet/lime default applied by the base .card rule. The matching
+  // CSS-variable overrides live under `.card.theme-<key>` in card.component.css.
   themeClass = computed(() => {
-    const g = this.genre().toLowerCase().replace(/[^a-z]/g, '');
-    return g ? `theme-${g}` : '';
+    const theme = genreTheme(this.genre());
+    return theme === 'default' ? '' : `theme-${theme}`;
   });
 
   // A white vinyl spiral (Archimedean) drawn as a polyline so it exports crisply.
@@ -127,6 +137,36 @@ export class CardComponent {
     } catch {
       // Clipboard unavailable (e.g. insecure context) — silently no-op; the LINE
       // share remains the primary action.
+    }
+  }
+
+  // Download filename, slugged from the DJ + event so saved cards are findable.
+  fileName(): string {
+    const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return `${slug(this.djName()) || 'set'}-${slug(this.eventName()) || 'eventlineup'}.png`;
+  }
+
+  // Export the card to a PNG for Instagram/feed, where you need an image, not a
+  // link (EL-053). Renders the live card DOM client-side and scales it up to the
+  // intrinsic export width so the output is crisp regardless of on-screen size.
+  async saveImage() {
+    const node = this.cardRef()?.nativeElement;
+    if (!node || this.exporting()) return;
+    this.exporting.set(true);
+    try {
+      // Wait for the brand web fonts so glyphs aren't swapped mid-capture.
+      await document.fonts?.ready;
+      const pixelRatio = node.offsetWidth ? EXPORT_WIDTH / node.offsetWidth : 2;
+      const dataUrl = await toPng(node, { pixelRatio, cacheBust: true });
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = this.fileName();
+      link.click();
+    } catch {
+      // Export can fail (e.g. cross-origin font embedding) — keep the page intact;
+      // Share-to-LINE remains the primary path.
+    } finally {
+      this.exporting.set(false);
     }
   }
 }

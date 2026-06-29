@@ -99,5 +99,7 @@
   "card.shareLine": "分享到 LINE",
   "card.copyLink": "複製連結",
   "card.copied": "已複製！",
-  "card.viewLineup": "查看完整陣容"
+  "card.viewLineup": "查看完整陣容",
+  "card.saveImage": "儲存圖片",
+  "card.saving": "儲存中…"
 }
