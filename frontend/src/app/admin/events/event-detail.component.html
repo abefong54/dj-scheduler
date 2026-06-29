@@ -104,8 +104,8 @@
                       (ngModelChange)="onEditDjChange()" class="edit-select"
                       (keydown.escape)="cancelEdit()">
                       <option value="">—</option>
-                      @for (d of filteredDjsForEdit(); track d.id) {
-                        <option [value]="d.id">{{ d.name }}</option>
+                      @for (o of djOptionsForEdit(); track o.dj.id) {
+                        <option [value]="o.dj.id">{{ o.dj.name }}{{ o.certified ? '' : ' ⚠' }}</option>
                       }
                     </select>
                   </td>
@@ -151,6 +151,13 @@
                   <tr>
                     <td colspan="7" class="conflict-cell">
                       <span class="conflict-text" data-testid="edit-conflict-error"><span aria-hidden="true">⚠</span> {{ editConflictError() }}</span>
+                    </td>
+                  </tr>
+                }
+                @if (editCertWarning()) {
+                  <tr>
+                    <td colspan="7" class="conflict-cell">
+                      <span class="conflict-text" data-testid="edit-cert-warning"><span aria-hidden="true">⚠</span> {{ editCertWarning() }}</span>
                     </td>
                   </tr>
                 }
@@ -217,8 +224,8 @@
                     data-testid="add-dj-select"
                     (keydown.escape)="cancelAddRow()">
                     <option value="">{{ 'slots.unassigned' | translate }}</option>
-                    @for (d of filteredDjsForAdd(); track d.id) {
-                      <option [value]="d.id">{{ d.name }}</option>
+                    @for (o of djOptionsForAdd(); track o.dj.id) {
+                      <option [value]="o.dj.id">{{ o.dj.name }}{{ o.certified ? '' : ' ⚠' }}</option>
                     }
                   </select>
                 </td>
@@ -226,6 +233,7 @@
                   <select [(ngModel)]="addGenre" name="addGenre"
                     (ngModelChange)="onAddGenreChange()"
                     class="edit-select"
+                    data-testid="add-genre-select"
                     (keydown.escape)="cancelAddRow()">
                     <option value="">—</option>
                     @for (g of genreOptionsForAdd(); track g) {
@@ -263,6 +271,13 @@
                 <tr>
                   <td colspan="7" class="conflict-cell">
                     <span class="conflict-text" data-testid="add-conflict-error"><span aria-hidden="true">⚠</span> {{ addConflictError() }}</span>
+                  </td>
+                </tr>
+              }
+              @if (addCertWarning()) {
+                <tr>
+                  <td colspan="7" class="conflict-cell">
+                    <span class="conflict-text" data-testid="add-cert-warning"><span aria-hidden="true">⚠</span> {{ addCertWarning() }}</span>
                   </td>
                 </tr>
               }

@@ -47,6 +47,7 @@
   "slots.error.djDoubleBooked": "{{djName}} 在此時段已有排程",
   "slots.error.stageOverlap": "{{stageName}} 在此時段已有演出",
   "slots.error.generic": "發生錯誤，請再試一次",
+  "slots.cert.warning": "{{djName}} 尚未取得 {{genre}} 認證——仍要指定請直接覆寫。",
 
   "djs.title": "DJ 名單",
   "djs.new": "新增 DJ",

@@ -119,6 +119,31 @@ export class EventDetailComponent implements OnDestroy {
       : this.djs();
   }
 
+  // ── EL-042: certification-aware DJ options ────────────────────────
+  // A student DJ is cleared for a genre only if they hold that certification
+  // (case-insensitive). Graduates (is_student === false) bypass the gate, and
+  // with no target genre there's nothing to gate.
+  isCertifiedFor(dj: DJ, genre: string): boolean {
+    if (dj.is_student === false) return true;
+    if (!genre) return true;
+    const g = genre.toLowerCase();
+    return (dj.certifications ?? []).some(c => c.toLowerCase() === g);
+  }
+
+  // Certified DJs first; uncertified are flagged (not hidden) so the teacher can
+  // still override.
+  djOptionsForAdd(): { dj: DJ; certified: boolean }[] {
+    return this.filteredDjsForAdd()
+      .map(dj => ({ dj, certified: this.isCertifiedFor(dj, this.addGenre) }))
+      .sort((a, b) => Number(b.certified) - Number(a.certified));
+  }
+
+  addCertWarning(): string | null {
+    const dj = this.djs().find(d => d.id === this.addDjId);
+    if (!dj || this.isCertifiedFor(dj, this.addGenre)) return null;
+    return this.translate.instant('slots.cert.warning', { djName: dj.name, genre: this.addGenre });
+  }
+
   onAddDjChange() {
     const djGenres = this.djs().find(d => d.id === this.addDjId)?.genre_tags ?? [];
     if (this.addGenre && this.addDjId && !djGenres.includes(this.addGenre)) {
@@ -324,6 +349,19 @@ export class EventDetailComponent implements OnDestroy {
     return this.editSlotGenre
       ? this.djs().filter(d => d.genre_tags.includes(this.editSlotGenre))
       : this.djs();
+  }
+
+  // EL-042: certification-aware options for the inline edit DJ dropdown.
+  djOptionsForEdit(): { dj: DJ; certified: boolean }[] {
+    return this.filteredDjsForEdit()
+      .map(dj => ({ dj, certified: this.isCertifiedFor(dj, this.editSlotGenre) }))
+      .sort((a, b) => Number(b.certified) - Number(a.certified));
+  }
+
+  editCertWarning(): string | null {
+    const dj = this.djs().find(d => d.id === this.editSlotDjId);
+    if (!dj || this.isCertifiedFor(dj, this.editSlotGenre)) return null;
+    return this.translate.instant('slots.cert.warning', { djName: dj.name, genre: this.editSlotGenre });
   }
 
   onEditDjChange() {

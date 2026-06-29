@@ -48,6 +48,7 @@
   "slots.error.djDoubleBooked": "{{djName}} is already booked at this time",
   "slots.error.stageOverlap": "{{stageName}} already has a set at this time",
   "slots.error.generic": "Something went wrong, please try again",
+  "slots.cert.warning": "{{djName}} isn't certified for {{genre}} — assign anyway to override.",
 
   "djs.title": "DJs",
   "djs.new": "Add a DJ",
