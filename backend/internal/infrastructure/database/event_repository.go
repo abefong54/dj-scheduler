@@ -108,7 +108,10 @@ func (r *eventRepo) Clone(ctx context.Context, origID, organizerID string) (mode
 	defer rows.Close()
 	for rows.Next() {
 		var s model.Stage
-		rows.Scan(&s.Name, &s.Color, &s.DisplayOrder)
+		if scanErr := rows.Scan(&s.Name, &s.Color, &s.DisplayOrder); scanErr != nil {
+			log.Printf("clone stage scan: %v", scanErr)
+			continue
+		}
 		if _, execErr := r.pool.Exec(ctx, queryStageInsertForClone,
 			newEvent.ID, s.Name, s.Color, s.DisplayOrder); execErr != nil {
 			log.Printf("clone stage insert: %v", execErr)
