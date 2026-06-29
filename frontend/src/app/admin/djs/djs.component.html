@@ -22,7 +22,21 @@
         <span class="genre-tag">{{ g }}</span>
       }
     </ng-template>
+    <ng-template appColumnDef="certifications" let-row="row">
+      @if (!isStudent(row)) {
+        <span class="text-xs font-medium text-violet-700 bg-violet-100 px-2 py-0.5 rounded-full">{{ 'djs.graduate' | translate }}</span>
+      }
+      @for (c of certs(row); track c) {
+        <span class="text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded-full ml-1" [attr.data-testid]="'dj-cert-' + rowId(row)">{{ c }}</span>
+      }
+      @if (certs(row).length === 0 && isStudent(row)) {
+        <span class="text-xs text-gray-400">{{ 'djs.no_certs' | translate }}</span>
+      }
+    </ng-template>
     <ng-template appColumnDef="actions" let-row="row">
+      <button (click)="openEdit(row)" class="btn-sm-outline" [attr.data-testid]="'dj-edit-' + rowId(row)">
+        {{ 'actions.edit' | translate }}
+      </button>
       <button (click)="copyPortalLink(rowId(row))" class="btn-sm-outline">
         {{ (copiedDJId() === rowId(row) ? 'dj.copy_portal_link.copied' : 'dj.copy_portal_link') | translate }}
       </button>
@@ -31,4 +45,65 @@
       </button>
     </ng-template>
   </app-data-table>
+
+  <!-- EL-020: certifications edit slide-over -->
+  @if (editing(); as dj) {
+    <div class="fixed inset-0 z-40 bg-black/40" (click)="cancelEdit()"></div>
+    <aside class="fixed inset-y-0 right-0 z-50 w-full max-w-md overflow-y-auto bg-white p-6 shadow-xl" data-testid="dj-edit-panel">
+      <h2 class="section-title mb-4">{{ 'djs.edit_title' | translate }}</h2>
+
+      <div class="form-group">
+        <label class="form-label">{{ 'djs.name' | translate }}</label>
+        <input [ngModel]="editName()" (ngModelChange)="editName.set($event)" name="editName"
+          type="text" class="form-input" data-testid="dj-edit-name" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ 'djs.status' | translate }}</label>
+        <div class="flex gap-2">
+          <button type="button" (click)="editIsStudent.set(true)"
+            [class]="editIsStudent() ? 'btn-primary' : 'btn-sm-outline'" data-testid="dj-edit-student">
+            {{ 'djs.student' | translate }}
+          </button>
+          <button type="button" (click)="editIsStudent.set(false)"
+            [class]="!editIsStudent() ? 'btn-primary' : 'btn-sm-outline'" data-testid="dj-edit-graduate">
+            {{ 'djs.graduate' | translate }}
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ 'djs.certifications' | translate }}</label>
+        <div class="flex flex-wrap gap-2">
+          @for (opt of certOptions; track opt) {
+            <button type="button" (click)="toggleCert(opt)"
+              [class]="isCertSelected(opt) ? 'btn-primary' : 'btn-sm-outline'"
+              [attr.data-testid]="'dj-edit-cert-' + opt">
+              {{ isCertSelected(opt) ? '✓ ' : '' }}{{ opt }}
+            </button>
+          }
+        </div>
+        <!-- custom (free-text) certifications beyond the standard curriculum -->
+        @for (c of editCerts(); track c) {
+          @if (!certOptions.includes(c)) {
+            <span class="genre-tag mt-2 inline-flex items-center gap-1">
+              {{ c }}
+              <button type="button" (click)="toggleCert(c)" aria-label="remove">×</button>
+            </span>
+          }
+        }
+        <div class="mt-2 flex gap-2">
+          <input [ngModel]="editCustom()" (ngModelChange)="editCustom.set($event)" name="editCustom"
+            type="text" class="form-input" placeholder="{{ 'djs.custom_cert' | translate }}"
+            (keyup.enter)="addCustomCert()" data-testid="dj-edit-custom" />
+          <button type="button" (click)="addCustomCert()" class="btn-sm-outline">+ {{ 'actions.add' | translate }}</button>
+        </div>
+      </div>
+
+      <div class="mt-6 flex gap-2">
+        <button (click)="saveEdit()" class="btn-primary" data-testid="dj-edit-save">{{ 'actions.save' | translate }}</button>
+        <button (click)="cancelEdit()" class="btn-sm-outline" data-testid="dj-edit-cancel">{{ 'actions.cancel' | translate }}</button>
+      </div>
+    </aside>
+  }
 </div>
