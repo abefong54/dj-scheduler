@@ -54,12 +54,13 @@ func Run() {
 	slotHandler := httphandler.NewSlotHandler(slotUC)
 	lineHandler := httphandler.NewLineHandler(linenotifyuc.New(eventRepo, cfg.LineNotifyEncryptionKey))
 	publicHandler := httphandler.NewPublicHandler(eventuc.New(eventRepo), stageuc.New(stageRepo), slotuc.New(slotRepo))
+	shareHandler := httphandler.NewShareHandler(slotuc.New(slotRepo), eventuc.New(eventRepo), cfg.FrontendURL)
 
 	organizerRepo := database.NewOrganizerRepository(pool)
 	googleAuth := googleauth.New(cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL)
 	authHandler := httphandler.NewAuthHandler(authuc.New(googleAuth, organizerRepo, cfg.JWTSecret, tokenTTL), cfg.FrontendURL, cfg.SecureCookies)
 
-	r := httphandler.NewRouter(cfg.FrontendURL, cfg.JWTSecret, publicHandler, djPortalHandler, djHandler, eventHandler, stageHandler, slotHandler, lineHandler)
+	r := httphandler.NewRouter(cfg.FrontendURL, cfg.JWTSecret, publicHandler, shareHandler, djPortalHandler, djHandler, eventHandler, stageHandler, slotHandler, lineHandler)
 	authHandler.Register(r) // unauthenticated auth routes
 
 	log.Printf("listening on :%s", cfg.Port)

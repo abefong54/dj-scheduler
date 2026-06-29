@@ -101,6 +101,15 @@
   "dj.portal.flag": "回報衝突",
   "dj.portal.confirmed": "已確認 ✓",
   "dj.portal.flagged": "已標記 ⚠",
+  "dj.portal.shareCard": "分享我的卡片",
+
+  "card.notFound": "找不到卡片，連結可能無效。",
+  "card.shareLine": "分享到 LINE",
+  "card.copyLink": "複製連結",
+  "card.copied": "已複製！",
+  "card.viewLineup": "查看完整陣容",
+  "card.saveImage": "儲存圖片",
+  "card.saving": "儲存中…",
 
   "slot.confirmation.confirmed": "✓ 已確認",
   "slot.confirmation.flagged": "⚠ 已標記",

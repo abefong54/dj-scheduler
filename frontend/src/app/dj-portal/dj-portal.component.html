@@ -40,6 +40,11 @@
                   }
 
                   <div class="flex items-center gap-2 mt-3">
+                    <a [routerLink]="['/card', slot.id]"
+                      [attr.data-testid]="'share-card-' + slot.id"
+                      class="text-sm font-medium text-violet-700 hover:underline underline-offset-2">
+                      {{ 'dj.portal.shareCard' | translate }}
+                    </a>
                     @switch (slot.dj_confirmation) {
                       @case ('confirmed') {
                         <span [attr.data-testid]="'slot-status-' + slot.id"

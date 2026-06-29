@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
-import { ApiService, Slot } from './api.service';
+import { ApiService, Slot, PublicSlot } from './api.service';
 
 const SLOT: Slot = {
   id: 'slot-1',
@@ -55,6 +55,25 @@ describe('ApiService', () => {
       expect(req.request.params.get('token')).toBeNull();
       expect(req.request.urlWithParams).not.toContain('token=');
       req.flush(SLOT);
+    });
+  });
+
+  describe('getPublicSlot (EL-049)', () => {
+    // Verify the method+path the backend actually registers (GET
+    // /api/slots/:id/public) — the EL-035 contract guard for the share card.
+    it('GETs the public single-slot endpoint and returns {slot, event}', () => {
+      const payload: PublicSlot = { slot: SLOT, event: { id: 'evt-1', name: 'Spring Showcase', venue_name: 'Revolver', start_date: '2026-07-01', end_date: '2026-07-01', genres: [] } };
+
+      let result: PublicSlot | undefined;
+      api.getPublicSlot('slot-1').subscribe(r => (result = r));
+
+      const req = httpMock.expectOne('/api/slots/slot-1/public');
+      expect(req.request.method).toBe('GET');
+      // Public endpoint — must not carry an Authorization header.
+      expect(req.request.headers.get('Authorization')).toBeNull();
+
+      req.flush(payload);
+      expect(result).toEqual(payload);
     });
   });
 

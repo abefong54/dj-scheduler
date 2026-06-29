@@ -47,5 +47,11 @@ export const routes: Routes = [
     loadComponent: () => import('./dj-portal/dj-portal.component')
       .then(m => m.DJPortalComponent),
   },
+  {
+    // Public per-DJ share card (no auth guard) — the link a DJ shares (EL-049).
+    path: 'card/:slotId',
+    loadComponent: () => import('./card/card.component')
+      .then(m => m.CardComponent),
+  },
   { path: '', redirectTo: 'admin/events', pathMatch: 'full' },
 ];

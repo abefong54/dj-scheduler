@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService, DJPortalResponse, DJPortalSlot } from '../services/api.service';
 
@@ -11,7 +11,7 @@ interface EventGroup {
 @Component({
   selector: 'app-dj-portal',
   standalone: true,
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, RouterLink],
   templateUrl: './dj-portal.component.html',
   styleUrl: './dj-portal.component.css',
 })
