@@ -159,7 +159,22 @@
                       {{ slot.stage_name }}
                     </span>
                   </td>
-                  <td class="slot-dj-cell">{{ slot.dj_name || '—' }}</td>
+                  <td class="slot-dj-cell">
+                    {{ slot.dj_name || '—' }}
+                    @if (slot.dj_name) {
+                      @switch (slot.dj_confirmation) {
+                        @case ('confirmed') {
+                          <span class="ml-1 text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded-full whitespace-nowrap">{{ 'slot.confirmation.confirmed' | translate }}</span>
+                        }
+                        @case ('flagged') {
+                          <span class="ml-1 text-xs font-medium text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full whitespace-nowrap">{{ 'slot.confirmation.flagged' | translate }}</span>
+                        }
+                        @default {
+                          <span class="ml-1 text-xs text-gray-400 whitespace-nowrap">{{ 'slot.confirmation.awaiting' | translate }}</span>
+                        }
+                      }
+                    }
+                  </td>
                   <td class="slot-genre-cell">{{ slot.genre || '—' }}</td>
                   <td class="slot-time-cell">{{ slot.start_time }}</td>
                   <td class="slot-time-cell">{{ duration(slot.start_time, slot.end_time) }}</td>

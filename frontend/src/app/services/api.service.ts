@@ -37,6 +37,7 @@ export interface Slot {
   start_time: string;  // 'HH:MM'
   end_time: string;    // 'HH:MM'
   notes: string;
+  dj_confirmation: DJConfirmation; // DJ portal response, null = no response yet
 }
 
 // Shape of GET /api/events/:id/public — the unauthenticated schedule payload.
@@ -77,6 +78,10 @@ export class ApiService {
   getDJs() { return this.http.get<DJ[]>(`${this.base}/api/djs`); }
   createDJ(d: Pick<DJ, 'name' | 'genre_tags'>) { return this.http.post<DJ>(`${this.base}/api/djs`, d); }
   deleteDJ(id: string) { return this.http.delete(`${this.base}/api/djs/${id}`); }
+  // Mint (or regenerate) a DJ's personal portal link.
+  generateDJPortalToken(djId: string) {
+    return this.http.post<{ portal_url: string; expires_at: string }>(`${this.base}/api/djs/${djId}/token`, {});
+  }
 
   // Events
   getEvents() { return this.http.get<Event[]>(`${this.base}/api/events`); }
