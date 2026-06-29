@@ -6,6 +6,7 @@ import { Subscription } from 'rxjs';
 import { ApiService, Event, Stage, Slot, DJ } from '../../services/api.service';
 import { DialogService } from '../../shared/dialog.service';
 import { ScheduleExportService } from '../../services/schedule-export.service';
+import { slotDurationMins } from '../../shared/slot-time.util';
 
 @Component({
   selector: 'app-event-detail',
@@ -240,7 +241,7 @@ export class EventDetailComponent implements OnDestroy {
   }
 
   duration(start: string, end: string): string {
-    const mins = this.toMins(end) - this.toMins(start);
+    const mins = slotDurationMins(start, end);
     if (mins < 60) return `${mins}m`;
     const h = Math.floor(mins / 60);
     const m = mins % 60;
@@ -371,7 +372,7 @@ export class EventDetailComponent implements OnDestroy {
     this.editSlotGenre = slot.genre;
     this.editSlotDate = slot.slot_date;
     this.editSlotStart = slot.start_time;
-    this.editSlotDuration = this.toMins(slot.end_time) - this.toMins(slot.start_time);
+    this.editSlotDuration = slotDurationMins(slot.start_time, slot.end_time);
     this.editSlotNotes = slot.notes;
     this.editConflictError.set(null);
     this.editingSlotId.set(slot.id);

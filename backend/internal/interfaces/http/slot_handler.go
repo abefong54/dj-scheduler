@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -34,8 +35,23 @@ type slotWriteRequest struct {
 	Notes     string `json:"notes"`
 }
 
-func (r slotWriteRequest) validate() bool {
-	return r.StageID != "" && r.SlotDate != "" && r.StartTime != "" && r.EndTime != ""
+// validate checks required fields and that the date and times are well-formed.
+// It does NOT require end_time > start_time: an end at or before the start means
+// the slot runs into the next day (e.g. a 23:30 set ending 00:30).
+func (r slotWriteRequest) validate() error {
+	if r.StageID == "" || r.SlotDate == "" || r.StartTime == "" || r.EndTime == "" {
+		return errors.New("stage_id, slot_date, start_time, end_time required")
+	}
+	if _, err := time.Parse("2006-01-02", r.SlotDate); err != nil {
+		return errors.New("slot_date must be a valid YYYY-MM-DD date")
+	}
+	if _, err := time.Parse("15:04", r.StartTime); err != nil {
+		return errors.New("start_time must be HH:MM (24-hour)")
+	}
+	if _, err := time.Parse("15:04", r.EndTime); err != nil {
+		return errors.New("end_time must be HH:MM (24-hour)")
+	}
+	return nil
 }
 
 // writeSlotError maps a usecase error to its HTTP response: 404 for a missing
@@ -114,8 +130,8 @@ func (h *SlotHandler) create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
 		return
 	}
-	if !req.validate() {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "stage_id, slot_date, start_time, end_time required"})
+	if err := req.validate(); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -155,8 +171,8 @@ func (h *SlotHandler) update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
 		return
 	}
-	if !req.validate() {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "stage_id, slot_date, start_time, end_time required"})
+	if err := req.validate(); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

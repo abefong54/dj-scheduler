@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import * as XLSX from 'xlsx-js-style';
+import { slotDurationMins } from '../shared/slot-time.util';
 
 /** Column header strings, already translated to the active language. */
 export interface ExportLabels {
@@ -30,9 +31,10 @@ const EMPTY_ROW = ['', '', '', '', '', ''];
 
 @Injectable({ providedIn: 'root' })
 export class ScheduleExportService {
-  /** "16:00 - 17:30 (1.5hr)" — whole hours render without a decimal. */
+  /** "16:00 - 17:30 (1.5hr)" — whole hours render without a decimal. A slot that
+   *  runs past midnight (end <= start) counts as next-day, so its hours stay positive. */
   formatTimeSlot(start: string, end: string): string {
-    const hours = (this.toMinutes(end) - this.toMinutes(start)) / 60;
+    const hours = slotDurationMins(start, end) / 60;
     const rounded = parseFloat(hours.toFixed(2));
     return `${start} - ${end} (${rounded}hr)`;
   }
@@ -107,10 +109,5 @@ export class ScheduleExportService {
   download(eventName: string, slots: ExportSlot[], labels: ExportLabels): void {
     const wb = this.buildWorkbook(eventName, slots, labels);
     XLSX.writeFile(wb, this.filename(eventName));
-  }
-
-  private toMinutes(time: string): number {
-    const [h, m] = time.split(':').map(Number);
-    return h * 60 + m;
   }
 }
