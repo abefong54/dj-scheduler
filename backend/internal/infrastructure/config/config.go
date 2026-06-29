@@ -14,6 +14,10 @@ type Config struct {
 	FrontendURL string
 	JWTSecret   string
 
+	// SecureCookies marks auth cookies Secure (HTTPS-only). Off by default for
+	// local http dev; set COOKIE_SECURE=true in production.
+	SecureCookies bool
+
 	GoogleClientID     string
 	GoogleClientSecret string
 	GoogleRedirectURL  string
@@ -33,6 +37,8 @@ func Load() Config {
 		Port:        port,
 		FrontendURL: frontendURL,
 		JWTSecret:   os.Getenv("JWT_SECRET"),
+
+		SecureCookies: os.Getenv("COOKIE_SECURE") == "true",
 
 		GoogleClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		GoogleClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
