@@ -23,6 +23,9 @@
       }
     </ng-template>
     <ng-template appColumnDef="actions" let-row="row">
+      <button (click)="copyPortalLink(rowId(row))" class="btn-sm-outline">
+        {{ (copiedDJId() === rowId(row) ? 'dj.copy_portal_link.copied' : 'dj.copy_portal_link') | translate }}
+      </button>
       <button (click)="deleteDJ(rowId(row))" class="btn-danger">
         {{ 'actions.delete' | translate }}
       </button>
