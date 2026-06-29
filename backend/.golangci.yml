@@ -1,0 +1,26 @@
+# golangci-lint v2 config. Deliberately lenient to start (the "standard" linter
+# set plus a couple of high-signal, low-noise additions), then ratchet up over
+# time — see 2026-06-29-backend-go-testing-strategy.md. To raise the bar later,
+# add e.g. gosec, nilerr, rowserrcheck, paralleltest here and fix the backlog.
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  # standard = errcheck, govet, ineffassign, staticcheck, unused
+  default: standard
+  enable:
+    - bodyclose # unclosed HTTP response bodies
+    - misspell  # common typos in comments/strings
+  exclusions:
+    generated: lax
+    presets:
+      - common-false-positives
+      - std-error-handling
+    rules:
+      # Tests favour brevity: unchecked errors in fixtures/teardown are fine.
+      - path: _test\.go
+        linters:
+          - errcheck
+          - bodyclose
