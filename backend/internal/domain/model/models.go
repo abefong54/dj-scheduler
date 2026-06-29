@@ -4,7 +4,12 @@ type DJ struct {
 	ID        string   `json:"id"`
 	Name      string   `json:"name"`
 	GenreTags []string `json:"genre_tags"`
-	CreatedAt string   `json:"created_at"`
+	// Certifications are the genres this DJ is cleared to perform (EL-019).
+	Certifications []string `json:"certifications"`
+	// IsStudent is true for active students (the certification gate applies) and
+	// false for graduates/pros (gate bypassed).
+	IsStudent bool   `json:"is_student"`
+	CreatedAt string `json:"created_at"`
 }
 
 type Event struct {

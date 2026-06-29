@@ -7,8 +7,16 @@ import (
 	"eventlineup/internal/domain/model"
 )
 
+// DJListFilter narrows the DJ list (EL-019). The zero value lists everyone.
+type DJListFilter struct {
+	// CertifiedFor, when non-empty, keeps only DJs certified for that genre
+	// (case-insensitive). ReadyOnly keeps only DJs with at least one certification.
+	CertifiedFor string
+	ReadyOnly    bool
+}
+
 type DJRepository interface {
-	List(ctx context.Context, organizerID string) ([]model.DJ, error)
+	List(ctx context.Context, organizerID string, filter DJListFilter) ([]model.DJ, error)
 	Get(ctx context.Context, id, organizerID string) (model.DJ, error)
 	Create(ctx context.Context, name string, tags []string, organizerID string) (model.DJ, error)
 	Update(ctx context.Context, dj model.DJ, organizerID string) (model.DJ, error)
