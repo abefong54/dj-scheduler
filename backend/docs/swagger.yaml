@@ -384,9 +384,10 @@ paths:
       summary: Patch Event
       tags:
       - events
-  /api/events/{id}/duplicate:
+  /api/events/{id}/clone:
     post:
-      description: Creates a copy of an event including its stages
+      description: Creates a "Copy of" the event with its stages (not slots), dates
+        reset to today
       parameters:
       - description: Event ID (UUID)
         in: path
@@ -406,9 +407,42 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Duplicate Event
+      summary: Clone Event
       tags:
       - events
+  /api/events/{id}/public:
+    get:
+      description: Returns an event with its stages and slots in a single payload.
+        No auth required.
+      parameters:
+      - description: Event ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Public Event Schedule
+      tags:
+      - public
   /api/events/{id}/slots:
     get:
       description: Returns all slots for an event ordered by date and start time
@@ -461,6 +495,12 @@ paths:
             $ref: '#/definitions/model.Slot'
         "400":
           description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
           schema:
             additionalProperties:
               type: string
@@ -577,6 +617,12 @@ paths:
             type: object
         "404":
           description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
           schema:
             additionalProperties:
               type: string

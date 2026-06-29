@@ -47,13 +47,16 @@ const (
 
 	queryEventDelete = `DELETE FROM events WHERE id = $1 AND organizer_id = $2`
 
-	queryEventDuplicateFetch = `
-		SELECT name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}')
+	// Clone (US-008): copy an event's name/venue/genres as a template. Dates are
+	// reset to today on insert (the organizer sets the real dates afterwards), so
+	// the source dates are not fetched.
+	queryEventCloneFetch = `
+		SELECT name, venue_name, COALESCE(genres, '{}')
 		FROM events WHERE id = $1 AND organizer_id = $2`
 
-	queryEventDuplicateInsert = `
+	queryEventCloneInsert = `
 		INSERT INTO events (name, venue_name, start_date, end_date, genres, organizer_id)
-		VALUES ($1||' (copy)', $2, $3, $4, $5, $6)
+		VALUES ('Copy of '||$1, $2, CURRENT_DATE, CURRENT_DATE, $3, $4)
 		RETURNING id, name, venue_name, start_date::text, end_date::text, COALESCE(genres, '{}')`
 
 	// Stage queries
@@ -77,8 +80,8 @@ const (
 		WHERE id = $3 AND event_id = $4
 		RETURNING id, event_id, name, color, display_order`
 
-	queryStageListForDuplicate   = `SELECT name, color, display_order FROM stages WHERE event_id = $1 ORDER BY display_order`
-	queryStageInsertForDuplicate = `INSERT INTO stages (event_id, name, color, display_order) VALUES ($1,$2,$3,$4)`
+	queryStageListForClone   = `SELECT name, color, display_order FROM stages WHERE event_id = $1 ORDER BY display_order`
+	queryStageInsertForClone = `INSERT INTO stages (event_id, name, color, display_order) VALUES ($1,$2,$3,$4)`
 
 	// Slot queries
 	querySlotList = `

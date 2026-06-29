@@ -22,7 +22,7 @@ func (h *EventHandler) Register(rg *gin.RouterGroup) {
 	rg.GET("/events/:id", h.get)
 	rg.PATCH("/events/:id", h.patch)
 	rg.DELETE("/events/:id", h.delete)
-	rg.POST("/events/:id/duplicate", h.duplicate)
+	rg.POST("/events/:id/clone", h.clone)
 }
 
 // @Summary     List Events
@@ -150,17 +150,17 @@ func (h *EventHandler) delete(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-// @Summary     Duplicate Event
-// @Description Creates a copy of an event including its stages
+// @Summary     Clone Event
+// @Description Creates a "Copy of" the event with its stages (not slots), dates reset to today
 // @Tags        events
 // @Produce     json
 // @Param       id   path      string  true  "Event ID (UUID)"
 // @Success     201  {object}  model.Event
 // @Failure     404  {object}  map[string]string
-// @Router      /api/events/{id}/duplicate [post]
-func (h *EventHandler) duplicate(c *gin.Context) {
+// @Router      /api/events/{id}/clone [post]
+func (h *EventHandler) clone(c *gin.Context) {
 	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	e, err := h.uc.Duplicate(c.Request.Context(), c.Param("id"), organizerID)
+	e, err := h.uc.Clone(c.Request.Context(), c.Param("id"), organizerID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return

@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ApiService, Event } from '../../services/api.service';
 import { DialogService } from '../../shared/dialog.service';
@@ -15,6 +15,7 @@ export class EventsListComponent {
   private api = inject(ApiService);
   private translate = inject(TranslateService);
   private dialog = inject(DialogService);
+  private router = inject(Router);
 
   activeTab = signal<'upcoming' | 'past'>('upcoming');
   today = new Date().toISOString().slice(0, 10);
@@ -48,7 +49,15 @@ export class EventsListComponent {
     this.api.deleteEvent(id).subscribe(() => this.loadEvents());
   }
 
-  duplicate(id: string) {
-    this.api.duplicateEvent(id).subscribe(() => this.loadEvents());
+  async clone(id: string) {
+    const ok = await this.dialog.confirm({
+      title: this.translate.instant('events.clone'),
+      message: this.translate.instant('events.clone.confirm'),
+      confirmLabel: this.translate.instant('events.clone'),
+    });
+    if (!ok) return;
+    this.api.cloneEvent(id).subscribe(newEvent =>
+      this.router.navigate(['/admin/events', newEvent.id]),
+    );
   }
 }

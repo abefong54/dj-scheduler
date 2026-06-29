@@ -22,7 +22,7 @@ type EventRepository interface {
 	Create(ctx context.Context, e model.Event, organizerID string) (model.Event, error)
 	Update(ctx context.Context, e model.Event, organizerID string) (model.Event, error)
 	Delete(ctx context.Context, id, organizerID string) error
-	Duplicate(ctx context.Context, id, organizerID string) (model.Event, error)
+	Clone(ctx context.Context, id, organizerID string) (model.Event, error)
 }
 
 type StageRepository interface {

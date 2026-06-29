@@ -208,27 +208,81 @@ func TestPatchEvent(t *testing.T) {
 	})
 }
 
-func TestDuplicateEvent(t *testing.T) {
+// US-008: cloning copies the stage structure (not slots), prefixes the name with
+// "Copy of ", and resets the dates to today so the organizer starts fresh.
+func TestCloneEvent(t *testing.T) {
 	pool := setupTestDB(t)
 	org := createTestOrganizer(t, pool)
 	r := eventRouterForOrg(t, pool, org)
 
+	// Source event with one stage and one slot.
 	id := createTestEventForOrg(t, pool, org)
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/api/events/"+id+"/duplicate", nil))
+	stageID := createTestStage(t, pool, id)
+	createTestSlot(t, pool, id, stageID)
 
+	clone := func(eventID string) (*httptest.ResponseRecorder, model.Event) {
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/api/events/"+eventID+"/clone", nil))
+		var e model.Event
+		json.NewDecoder(w.Body).Decode(&e)
+		if e.ID != "" {
+			t.Cleanup(func() { pool.Exec(context.Background(), "DELETE FROM events WHERE id = $1", e.ID) })
+		}
+		return w, e
+	}
+
+	w, e := clone(id)
 	if w.Code != http.StatusCreated {
 		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
 	}
-	var e model.Event
-	json.NewDecoder(w.Body).Decode(&e)
-	if e.ID == "" {
-		t.Fatal("expected ID in duplicate response")
+	if e.ID == "" || e.ID == id {
+		t.Fatalf("clone should have a new non-empty ID, got %q (source %q)", e.ID, id)
 	}
-	if e.ID == id {
-		t.Fatal("duplicate should have a new ID")
+
+	// Name is prefixed with "Copy of ".
+	if e.Name != "Copy of test-event" {
+		t.Fatalf(`expected name "Copy of test-event", got %q`, e.Name)
 	}
-	t.Cleanup(func() {
-		pool.Exec(context.Background(), "DELETE FROM events WHERE id = $1", e.ID)
-	})
+
+	// Dates reset to today (CURRENT_DATE), not the source's past dates.
+	var today string
+	pool.QueryRow(context.Background(), "SELECT CURRENT_DATE::text").Scan(&today)
+	if e.StartDate != today || e.EndDate != today {
+		t.Fatalf("expected dates reset to today %s, got start=%s end=%s", today, e.StartDate, e.EndDate)
+	}
+
+	// Stages copied; slots NOT copied.
+	var stageCount, slotCount int
+	pool.QueryRow(context.Background(), "SELECT count(*) FROM stages WHERE event_id = $1", e.ID).Scan(&stageCount)
+	pool.QueryRow(context.Background(), "SELECT count(*) FROM slots WHERE event_id = $1", e.ID).Scan(&slotCount)
+	if stageCount != 1 {
+		t.Fatalf("expected 1 stage copied, got %d", stageCount)
+	}
+	if slotCount != 0 {
+		t.Fatalf("expected 0 slots on clone, got %d", slotCount)
+	}
+
+	// Cloning a clone works (no recursion / name issues): "Copy of Copy of test-event".
+	w2, e2 := clone(e.ID)
+	if w2.Code != http.StatusCreated {
+		t.Fatalf("clone of clone: expected 201, got %d: %s", w2.Code, w2.Body.String())
+	}
+	if e2.Name != "Copy of Copy of test-event" {
+		t.Fatalf(`expected "Copy of Copy of test-event", got %q`, e2.Name)
+	}
+}
+
+// US-008 / US-002: cloning another organizer's event returns 404 (don't leak existence).
+func TestCloneEventCrossOrganizer(t *testing.T) {
+	pool := setupTestDB(t)
+	orgA := createTestOrganizer(t, pool)
+	orgB := createTestOrganizer(t, pool)
+	eventA := createTestEventForOrg(t, pool, orgA)
+
+	r := eventRouterForOrg(t, pool, orgB)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/api/events/"+eventA+"/clone", nil))
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 for cross-organizer clone, got %d: %s", w.Code, w.Body.String())
+	}
 }
