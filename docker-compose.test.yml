@@ -1,0 +1,63 @@
+# docker-compose.test.yml
+#
+# Throwaway full stack for the Playwright E2E suite: a fresh Postgres plus the Go
+# API, fully self-contained (no backend/.env). Schema is applied from migrations
+# on first boot; the deterministic fixtures are loaded separately via
+# `make e2e-seed` so the same seed file can also reset state between test runs.
+#
+# All values here are TEST-ONLY. JWT_SECRET and the GOOGLE_* values are dummies:
+# the OAuth flow is never exercised in E2E (admin auth is via a minted token),
+# they exist only to satisfy the API's startup config validation. Never reuse
+# these anywhere real.
+#
+# Brought up isolated from the dev stack via a distinct project name and DB port
+# (see the Makefile e2e-* targets).
+name: eventlineup-e2e
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: eventlineup
+      POSTGRES_PASSWORD: eventlineup
+      POSTGRES_DB: eventlineup
+    ports:
+      # 5433 on the host to avoid clashing with a running dev DB on 5432.
+      - "5433:5432"
+    volumes:
+      - pgdata_e2e:/var/lib/postgresql/data
+      # Schema only. initdb.d runs once on a fresh volume; fixtures are loaded
+      # afterwards by `make e2e-seed` so they can also be re-applied as a reset.
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eventlineup"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgresql://eventlineup:eventlineup@db:5432/eventlineup
+      PORT: "8080"
+      FRONTEND_URL: "http://localhost:4200"
+      # Fixed test secret (>= 32 chars). The Playwright harness signs admin JWTs
+      # with this exact value; keep it in sync with the Makefile JWT_SECRET.
+      JWT_SECRET: "e2e-test-jwt-secret-do-not-use-in-prod-0123456789"
+      # Dummy Google creds — only needed so config validation passes at startup.
+      GOOGLE_CLIENT_ID: "test-google-client-id"
+      GOOGLE_CLIENT_SECRET: "test-google-client-secret"
+      GOOGLE_REDIRECT_URL: "http://localhost:8080/auth/google/callback"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata_e2e:

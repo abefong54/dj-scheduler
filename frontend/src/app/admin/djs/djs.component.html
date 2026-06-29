@@ -6,14 +6,14 @@
     <div class="form-group">
       <label class="form-label">{{ 'djs.name' | translate }}</label>
       <input [ngModel]="newDJ().name" (ngModelChange)="newDJ.set({name: $event})"
-        name="name" type="text" class="form-input" placeholder="DJ Name" />
+        name="name" type="text" class="form-input" placeholder="DJ Name" data-testid="dj-name-input" />
     </div>
     <div class="form-group">
       <label class="form-label">{{ 'djs.genres' | translate }}</label>
       <input [ngModel]="newDJGenres()" (ngModelChange)="newDJGenres.set($event)"
-        name="genres" type="text" class="form-input" placeholder="genre1, genre2, genre3" />
+        name="genres" type="text" class="form-input" placeholder="genre1, genre2, genre3" data-testid="dj-genres-input" />
     </div>
-    <button (click)="addDJ()" class="btn-primary">+ {{ 'actions.add' | translate }}</button>
+    <button (click)="addDJ()" class="btn-primary" data-testid="dj-add-btn">+ {{ 'actions.add' | translate }}</button>
   </div>
 
   <app-data-table [columns]="djColumns()" [data]="djsAsRows()">
@@ -23,7 +23,7 @@
       }
     </ng-template>
     <ng-template appColumnDef="actions" let-row="row">
-      <button (click)="deleteDJ(rowId(row))" class="btn-danger">
+      <button (click)="deleteDJ(rowId(row))" class="btn-danger" [attr.data-testid]="'dj-delete-' + rowId(row)">
         {{ 'actions.delete' | translate }}
       </button>
     </ng-template>

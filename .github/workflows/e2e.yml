@@ -1,0 +1,59 @@
+name: E2E
+
+# Runs the full-stack Playwright suite against a throwaway backend + Postgres.
+# Make this a REQUIRED status check on `main` (Settings → Branches → branch
+# protection) so nothing merges — and therefore nothing deploys to Netlify /
+# Railway — unless these tests pass.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # Build + start the test API and Postgres, waiting on their healthchecks.
+      - name: Start test backend stack
+        run: docker compose -f docker-compose.test.yml up -d --build --wait
+
+      # Load the deterministic fixtures the specs assert against.
+      - name: Seed database
+        run: docker compose -f docker-compose.test.yml exec -T db psql -U eventlineup -d eventlineup < backend/seed/seed_test.sql
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright browser
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      # CI=true makes Playwright start a fresh `ng serve` (no reuse) and retry once.
+      - name: Run E2E tests
+        working-directory: frontend
+        run: npx playwright test
+        env:
+          CI: 'true'
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          retention-days: 7
+
+      - name: Tear down stack
+        if: always()
+        run: docker compose -f docker-compose.test.yml down -v

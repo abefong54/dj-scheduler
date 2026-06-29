@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -30,6 +32,12 @@ func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, djPortal *D
 	ev.Register(api)
 	st.Register(api)
 	sl.Register(api)
+
+	// Liveness probe — unauthenticated. Used by docker-compose healthchecks and
+	// CI to wait for the API to come up before running E2E tests.
+	r.GET("/healthz", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
