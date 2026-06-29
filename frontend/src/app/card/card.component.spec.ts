@@ -24,6 +24,7 @@ const PUBLIC_SLOT: PublicSlot = {
     start_time: '22:00',
     end_time: '23:00',
     notes: '',
+    dj_confirmation: null,
   },
   event: {
     id: 'evt-1',
