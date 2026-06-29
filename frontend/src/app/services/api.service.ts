@@ -39,6 +39,13 @@ export interface Slot {
   notes: string;
 }
 
+// Shape of GET /api/events/:id/public — the unauthenticated schedule payload.
+export interface PublicSchedule {
+  event: Event;
+  stages: Stage[];
+  slots: Slot[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private base = environment.apiUrl;
@@ -53,6 +60,8 @@ export class ApiService {
   // Events
   getEvents() { return this.http.get<Event[]>(`${this.base}/api/events`); }
   getEvent(id: string) { return this.http.get<Event>(`${this.base}/api/events/${id}`); }
+  // Unauthenticated schedule for the public/shareable view (no Bearer token needed).
+  getPublicSchedule(id: string) { return this.http.get<PublicSchedule>(`${this.base}/api/events/${id}/public`); }
   createEvent(e: Omit<Event, 'id'>) { return this.http.post<Event>(`${this.base}/api/events`, e); }
   deleteEvent(id: string) { return this.http.delete(`${this.base}/api/events/${id}`); }
   cloneEvent(id: string) { return this.http.post<Event>(`${this.base}/api/events/${id}/clone`, {}); }

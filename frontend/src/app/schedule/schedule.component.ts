@@ -44,24 +44,19 @@ export class ScheduleComponent implements OnDestroy {
   ) {
     const eventId = this.route.snapshot.paramMap.get('id')!;
 
-    this.api.getEvent(eventId)
+    // This page is public (no auth guard), so it must read from the
+    // unauthenticated /public endpoint — the protected endpoints would 401 for
+    // a visitor without a session and bounce them to /login (EL-034).
+    this.api.getPublicSchedule(eventId)
       .pipe(takeUntil(this.destroy$))
-      .subscribe(e => {
-        this.event.set(e);
-        const newDates = this.dateRange(e.start_date, e.end_date);
+      .subscribe(({ event, stages, slots }) => {
+        this.event.set(event);
+        this.stages.set(stages);
+        this.slots.set(slots);
+        const newDates = this.dateRange(event.start_date, event.end_date);
         if (newDates.length > 0 && this.selectedDate() === '') {
           this.selectedDate.set(newDates[0]);
         }
-      });
-
-    this.api.getStages(eventId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(s => this.stages.set(s));
-
-    this.api.getSlots(eventId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(s => {
-        this.slots.set(s);
         this.updateTimeHeaders();
       });
 
