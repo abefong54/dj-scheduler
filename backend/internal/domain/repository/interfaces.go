@@ -50,4 +50,7 @@ type SlotRepository interface {
 	Create(ctx context.Context, s model.Slot, eventID string) (model.Slot, error)
 	Update(ctx context.Context, s model.Slot, eventID string) (model.Slot, error)
 	Delete(ctx context.Context, id, eventID string) error
+	// SetDJConfirmation records a DJ portal confirm/flag, scoped to the DJ who owns
+	// the slot (ErrForbidden when the slot isn't theirs). US-011.
+	SetDJConfirmation(ctx context.Context, slotID, djID, confirmation string) error
 }

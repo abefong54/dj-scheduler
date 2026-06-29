@@ -1,0 +1,73 @@
+<div class="min-h-screen bg-gray-50 px-4 py-8">
+  <div class="mx-auto max-w-2xl">
+
+    @if (loading()) {
+      <p class="text-center text-gray-400 py-16">…</p>
+    } @else if (error()) {
+      <div class="text-center py-16">
+        <p class="text-lg font-medium text-gray-700">{{ 'dj.portal.error.expired' | translate }}</p>
+      </div>
+    } @else {
+      <!-- Header: DJ name + genre tags -->
+      <header class="mb-8">
+        <p class="text-sm uppercase tracking-wide text-violet-600 font-medium">{{ 'dj.portal.title' | translate }}</p>
+        <h1 class="text-2xl font-bold text-gray-900 mt-1">{{ dj()?.name }}</h1>
+        @if (dj()?.genre_tags?.length) {
+          <div class="flex flex-wrap gap-1.5 mt-2">
+            @for (tag of dj()!.genre_tags; track tag) {
+              <span class="text-xs font-medium text-violet-700 bg-violet-100 px-2 py-0.5 rounded-full">{{ tag }}</span>
+            }
+          </div>
+        }
+      </header>
+
+      @if (slots().length === 0) {
+        <p class="text-center text-gray-400 py-12">{{ 'dj.portal.no_slots' | translate }}</p>
+      } @else {
+        @for (group of slotsByEvent(); track group.eventName) {
+          <section class="mb-6">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">{{ group.eventName }}</h2>
+            <div class="space-y-3">
+              @for (slot of group.slots; track slot.id) {
+                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+                  <div class="flex items-baseline justify-between gap-2">
+                    <p class="font-medium text-gray-900">{{ slot.slot_date }}</p>
+                    <p class="text-sm text-gray-600">{{ slot.start_time }}–{{ slot.end_time }}</p>
+                  </div>
+                  <p class="text-sm text-gray-600 mt-0.5">{{ slot.stage_name }}@if (slot.genre) { · {{ slot.genre }} }</p>
+                  @if (slot.notes) {
+                    <p class="text-sm text-gray-500 mt-1 italic">{{ slot.notes }}</p>
+                  }
+
+                  <div class="flex items-center gap-2 mt-3">
+                    @switch (slot.dj_confirmation) {
+                      @case ('confirmed') {
+                        <span class="text-sm font-medium text-green-700">{{ 'dj.portal.confirmed' | translate }}</span>
+                      }
+                      @case ('flagged') {
+                        <span class="text-sm font-medium text-amber-700">{{ 'dj.portal.flagged' | translate }}</span>
+                      }
+                    }
+                    <div class="ml-auto flex gap-2">
+                      <button (click)="confirm(slot.id, 'confirmed')"
+                        [disabled]="slot.dj_confirmation === 'confirmed'"
+                        class="text-sm font-medium px-3 py-1 rounded-md bg-green-600 text-white disabled:opacity-40">
+                        {{ 'dj.portal.confirm' | translate }}
+                      </button>
+                      <button (click)="confirm(slot.id, 'flagged')"
+                        [disabled]="slot.dj_confirmation === 'flagged'"
+                        class="text-sm font-medium px-3 py-1 rounded-md bg-amber-100 text-amber-800 disabled:opacity-40">
+                        {{ 'dj.portal.flag' | translate }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </section>
+        }
+      }
+    }
+
+  </div>
+</div>

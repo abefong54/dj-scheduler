@@ -84,5 +84,13 @@
   "export.timeSlot": "時段",
   "export.dj": "DJ",
   "export.genre": "風格",
-  "export.notes": "備註"
+  "export.notes": "備註",
+
+  "dj.portal.title": "你的演出時間表",
+  "dj.portal.no_slots": "目前沒有即將到來的演出",
+  "dj.portal.error.expired": "此連結已失效或無效。請向主辦單位索取新的連結。",
+  "dj.portal.confirm": "確認",
+  "dj.portal.flag": "回報衝突",
+  "dj.portal.confirmed": "已確認 ✓",
+  "dj.portal.flagged": "已標記 ⚠"
 }

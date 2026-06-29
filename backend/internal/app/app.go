@@ -42,11 +42,12 @@ func Run() {
 	slotRepo := database.NewSlotRepository(pool)
 
 	djUC := djuc.New(djRepo)
+	slotUC := slotuc.New(slotRepo)
 	djHandler := httphandler.NewDJHandler(djUC)
-	djPortalHandler := httphandler.NewDJPortalHandler(djUC, cfg.FrontendURL)
+	djPortalHandler := httphandler.NewDJPortalHandler(djUC, slotUC, cfg.FrontendURL)
 	eventHandler := httphandler.NewEventHandler(eventuc.New(eventRepo))
 	stageHandler := httphandler.NewStageHandler(stageuc.New(stageRepo))
-	slotHandler := httphandler.NewSlotHandler(slotuc.New(slotRepo))
+	slotHandler := httphandler.NewSlotHandler(slotUC)
 	publicHandler := httphandler.NewPublicHandler(eventuc.New(eventRepo), stageuc.New(stageRepo), slotuc.New(slotRepo))
 
 	organizerRepo := database.NewOrganizerRepository(pool)

@@ -46,6 +46,13 @@ func (uc *UseCase) PortalByToken(ctx context.Context, rawToken string) (model.DJ
 	return d, slots, nil
 }
 
+// DJByToken resolves a raw portal token to its DJ, or apperrors.ErrNotFound if
+// the token is unknown or expired. Used to authenticate portal write actions
+// (US-011) without loading the DJ's full slot list.
+func (uc *UseCase) DJByToken(ctx context.Context, rawToken string) (model.DJ, error) {
+	return uc.repo.GetByPortalToken(ctx, hashToken(rawToken))
+}
+
 func hashToken(rawToken string) string {
 	sum := sha256.Sum256([]byte(rawToken))
 	return hex.EncodeToString(sum[:])

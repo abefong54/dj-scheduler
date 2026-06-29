@@ -104,8 +104,8 @@ func (r *djRepo) ListSlotsForDJ(ctx context.Context, djID string) ([]model.Porta
 	slots := []model.PortalSlot{}
 	for rows.Next() {
 		var s model.PortalSlot
-		if err := rows.Scan(&s.EventID, &s.EventName, &s.StageName, &s.Genre,
-			&s.SlotDate, &s.StartTime, &s.EndTime, &s.Notes); err != nil {
+		if err := rows.Scan(&s.ID, &s.EventID, &s.EventName, &s.StageName, &s.Genre,
+			&s.SlotDate, &s.StartTime, &s.EndTime, &s.Notes, &s.DJConfirmation); err != nil {
 			return nil, err
 		}
 		slots = append(slots, s)

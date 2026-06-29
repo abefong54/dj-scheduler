@@ -1,6 +1,7 @@
 package handler_test
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -17,6 +18,7 @@ import (
 	"eventlineup/internal/infrastructure/database"
 	httphandler "eventlineup/internal/interfaces/http"
 	djuc "eventlineup/internal/usecase/dj"
+	slotuc "eventlineup/internal/usecase/slot"
 )
 
 // djPortalRouters builds two engines sharing one DJ usecase: an organizer-scoped
@@ -24,7 +26,11 @@ import (
 func djPortalRouters(t *testing.T, pool *pgxpool.Pool, organizerID string) (org *gin.Engine, public *gin.Engine) {
 	t.Helper()
 	gin.SetMode(gin.TestMode)
-	h := httphandler.NewDJPortalHandler(djuc.New(database.NewDJRepository(pool)), "http://localhost:4200")
+	h := httphandler.NewDJPortalHandler(
+		djuc.New(database.NewDJRepository(pool)),
+		slotuc.New(database.NewSlotRepository(pool)),
+		"http://localhost:4200",
+	)
 
 	org = gin.New()
 	org.Use(orgContext(organizerID))
@@ -153,6 +159,116 @@ func TestDJPortalExpiredToken(t *testing.T) {
 	_, publicR := djPortalRouters(t, pool, org)
 	if w := getPortal(publicR, raw); w.Code != http.StatusUnauthorized {
 		t.Fatalf("expired token: expected 401, got %d", w.Code)
+	}
+}
+
+// patchConfirm PATCHes a slot's confirmation via the public portal route.
+func patchConfirm(public *gin.Engine, slotID, token, confirmation string) *httptest.ResponseRecorder {
+	w := httptest.NewRecorder()
+	body := bytes.NewBufferString(`{"confirmation":"` + confirmation + `"}`)
+	req := httptest.NewRequest(http.MethodPatch, "/api/dj/portal/slots/"+slotID+"?token="+token, body)
+	req.Header.Set("Content-Type", "application/json")
+	public.ServeHTTP(w, req)
+	return w
+}
+
+// seedSlotForDJ inserts a slot booked for djID and returns its ID.
+func seedSlotForDJ(t *testing.T, pool *pgxpool.Pool, eventID, stageID, djID string) string {
+	t.Helper()
+	var id string
+	if err := pool.QueryRow(context.Background(),
+		`INSERT INTO slots (event_id, stage_id, dj_id, slot_date, start_time, end_time)
+		 VALUES ($1, $2, $3, '2026-07-25', '20:00', '21:00') RETURNING id`,
+		eventID, stageID, djID).Scan(&id); err != nil {
+		t.Fatalf("seed slot: %v", err)
+	}
+	return id
+}
+
+// US-011: DJ confirms then re-flags a slot; status persists and is reflected on the portal.
+func TestDJPortalConfirmSlot(t *testing.T) {
+	pool := setupTestDB(t)
+	org := createTestOrganizer(t, pool)
+	djID := seedDJ(t, pool, org, "Sasha")
+	eventID := createTestEventForOrg(t, pool, org)
+	stageID := createTestStage(t, pool, eventID)
+	slotID := seedSlotForDJ(t, pool, eventID, stageID, djID)
+
+	orgR, publicR := djPortalRouters(t, pool, org)
+	token, _ := mintPortalToken(t, orgR, djID)
+
+	dbConfirmation := func() *string {
+		var v *string
+		pool.QueryRow(context.Background(), "SELECT dj_confirmation FROM slots WHERE id = $1", slotID).Scan(&v)
+		return v
+	}
+
+	// Confirm.
+	if w := patchConfirm(publicR, slotID, token, "confirmed"); w.Code != http.StatusOK {
+		t.Fatalf("confirm: expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	if v := dbConfirmation(); v == nil || *v != "confirmed" {
+		t.Fatalf("expected DB confirmation 'confirmed', got %v", v)
+	}
+
+	// Change the response to flagged.
+	if w := patchConfirm(publicR, slotID, token, "flagged"); w.Code != http.StatusOK {
+		t.Fatalf("flag: expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	if v := dbConfirmation(); v == nil || *v != "flagged" {
+		t.Fatalf("expected DB confirmation 'flagged', got %v", v)
+	}
+
+	// Portal GET reflects the confirmation.
+	w := getPortal(publicR, token)
+	var resp struct {
+		Slots []struct {
+			DJConfirmation *string `json:"dj_confirmation"`
+		} `json:"slots"`
+	}
+	json.NewDecoder(w.Body).Decode(&resp)
+	if len(resp.Slots) != 1 || resp.Slots[0].DJConfirmation == nil || *resp.Slots[0].DJConfirmation != "flagged" {
+		t.Fatalf("portal should show flagged confirmation, got %+v", resp.Slots)
+	}
+}
+
+func TestDJPortalConfirmInvalidValue(t *testing.T) {
+	pool := setupTestDB(t)
+	org := createTestOrganizer(t, pool)
+	djID := seedDJ(t, pool, org, "Sasha")
+	eventID := createTestEventForOrg(t, pool, org)
+	stageID := createTestStage(t, pool, eventID)
+	slotID := seedSlotForDJ(t, pool, eventID, stageID, djID)
+
+	orgR, publicR := djPortalRouters(t, pool, org)
+	token, _ := mintPortalToken(t, orgR, djID)
+
+	if w := patchConfirm(publicR, slotID, token, "maybe"); w.Code != http.StatusBadRequest {
+		t.Fatalf("invalid value: expected 400, got %d", w.Code)
+	}
+	if w := patchConfirm(publicR, slotID, "", "confirmed"); w.Code != http.StatusUnauthorized {
+		t.Fatalf("empty token: expected 401, got %d", w.Code)
+	}
+	if w := patchConfirm(publicR, slotID, token+"bad", "confirmed"); w.Code != http.StatusUnauthorized {
+		t.Fatalf("bad token: expected 401, got %d", w.Code)
+	}
+}
+
+// US-011: a DJ's token cannot confirm a slot that belongs to a different DJ.
+func TestDJPortalConfirmWrongDJ(t *testing.T) {
+	pool := setupTestDB(t)
+	org := createTestOrganizer(t, pool)
+	djA := seedDJ(t, pool, org, "Sasha")
+	djB := seedDJ(t, pool, org, "Marco")
+	eventID := createTestEventForOrg(t, pool, org)
+	stageID := createTestStage(t, pool, eventID)
+	slotA := seedSlotForDJ(t, pool, eventID, stageID, djA) // belongs to djA
+
+	orgR, publicR := djPortalRouters(t, pool, org)
+	tokenB, _ := mintPortalToken(t, orgR, djB) // djB's token
+
+	if w := patchConfirm(publicR, slotA, tokenB, "confirmed"); w.Code != http.StatusForbidden {
+		t.Fatalf("wrong-DJ confirm: expected 403, got %d: %s", w.Code, w.Body.String())
 	}
 }
 

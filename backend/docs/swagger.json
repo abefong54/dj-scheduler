@@ -48,6 +48,73 @@
                 }
             }
         },
+        "/api/dj/portal/slots/{slot_id}": {
+            "patch": {
+                "description": "Sets the DJ's response on one of their slots. Token-gated, no organizer auth.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "public"
+                ],
+                "summary": "DJ confirms or flags a slot",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Slot ID (UUID)",
+                        "name": "slot_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Raw portal token",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/djs": {
             "get": {
                 "description": "Returns all DJs ordered by name",
@@ -1251,6 +1318,10 @@
         "model.Slot": {
             "type": "object",
             "properties": {
+                "dj_confirmation": {
+                    "description": "DJConfirmation is the DJ's portal response: \"confirmed\", \"flagged\", or nil\n(no response yet). Pointer so null round-trips as JSON null (US-011).",
+                    "type": "string"
+                },
                 "dj_id": {
                     "type": "string"
                 },

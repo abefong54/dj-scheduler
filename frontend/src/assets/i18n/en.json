@@ -85,5 +85,13 @@
   "export.timeSlot": "Time Slot",
   "export.dj": "DJ",
   "export.genre": "Genre",
-  "export.notes": "Notes"
+  "export.notes": "Notes",
+
+  "dj.portal.title": "Your Schedule",
+  "dj.portal.no_slots": "No upcoming sets scheduled",
+  "dj.portal.error.expired": "This link has expired or is invalid. Ask your event organizer for a new link.",
+  "dj.portal.confirm": "Confirm",
+  "dj.portal.flag": "Flag conflict",
+  "dj.portal.confirmed": "Confirmed ✓",
+  "dj.portal.flagged": "Flagged ⚠"
 }

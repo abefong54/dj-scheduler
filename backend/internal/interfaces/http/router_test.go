@@ -26,7 +26,7 @@ func fullRouter(t *testing.T) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	djUC := djuc.New(database.NewDJRepository(pool))
 	dj := httphandler.NewDJHandler(djUC)
-	djPortal := httphandler.NewDJPortalHandler(djUC, "http://localhost:4200")
+	djPortal := httphandler.NewDJPortalHandler(djUC, slotuc.New(database.NewSlotRepository(pool)), "http://localhost:4200")
 	ev := httphandler.NewEventHandler(eventuc.New(database.NewEventRepository(pool)))
 	st := httphandler.NewStageHandler(stageuc.New(database.NewStageRepository(pool)))
 	sl := httphandler.NewSlotHandler(slotuc.New(database.NewSlotRepository(pool)))
