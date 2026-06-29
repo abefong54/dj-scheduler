@@ -52,7 +52,7 @@ func Run() {
 
 	organizerRepo := database.NewOrganizerRepository(pool)
 	googleAuth := googleauth.New(cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL)
-	authHandler := httphandler.NewAuthHandler(authuc.New(googleAuth, organizerRepo, cfg.JWTSecret, tokenTTL), cfg.FrontendURL)
+	authHandler := httphandler.NewAuthHandler(authuc.New(googleAuth, organizerRepo, cfg.JWTSecret, tokenTTL), cfg.FrontendURL, cfg.SecureCookies)
 
 	r := httphandler.NewRouter(cfg.FrontendURL, cfg.JWTSecret, publicHandler, djPortalHandler, djHandler, eventHandler, stageHandler, slotHandler)
 	authHandler.Register(r) // unauthenticated auth routes
