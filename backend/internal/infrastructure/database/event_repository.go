@@ -27,7 +27,7 @@ func (r *eventRepo) List(ctx context.Context, organizerID string) ([]model.Event
 	events := []model.Event{}
 	for rows.Next() {
 		var e model.Event
-		if err := rows.Scan(&e.ID, &e.Name, &e.VenueName, &e.StartDate, &e.EndDate, &e.Genres); err != nil {
+		if err := rows.Scan(&e.ID, &e.Name, &e.VenueName, &e.StartDate, &e.EndDate, &e.Genres, &e.LineNotifyEnabled); err != nil {
 			return nil, err
 		}
 		events = append(events, e)
@@ -38,7 +38,7 @@ func (r *eventRepo) List(ctx context.Context, organizerID string) ([]model.Event
 func (r *eventRepo) Get(ctx context.Context, id, organizerID string) (model.Event, error) {
 	var e model.Event
 	err := r.pool.QueryRow(ctx, queryEventGet, id, organizerID).
-		Scan(&e.ID, &e.Name, &e.VenueName, &e.StartDate, &e.EndDate, &e.Genres)
+		Scan(&e.ID, &e.Name, &e.VenueName, &e.StartDate, &e.EndDate, &e.Genres, &e.LineNotifyEnabled)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return model.Event{}, apperrors.ErrNotFound
 	}
@@ -59,7 +59,7 @@ func (r *eventRepo) Create(ctx context.Context, e model.Event, organizerID strin
 	var out model.Event
 	err := r.pool.QueryRow(ctx, queryEventInsert,
 		e.Name, e.VenueName, e.StartDate, e.EndDate, e.Genres, organizerID).
-		Scan(&out.ID, &out.Name, &out.VenueName, &out.StartDate, &out.EndDate, &out.Genres)
+		Scan(&out.ID, &out.Name, &out.VenueName, &out.StartDate, &out.EndDate, &out.Genres, &out.LineNotifyEnabled)
 	return out, err
 }
 
@@ -67,11 +67,22 @@ func (r *eventRepo) Update(ctx context.Context, e model.Event, organizerID strin
 	var out model.Event
 	err := r.pool.QueryRow(ctx, queryEventUpdate,
 		e.Name, e.VenueName, e.StartDate, e.EndDate, e.Genres, e.ID, organizerID).
-		Scan(&out.ID, &out.Name, &out.VenueName, &out.StartDate, &out.EndDate, &out.Genres)
+		Scan(&out.ID, &out.Name, &out.VenueName, &out.StartDate, &out.EndDate, &out.Genres, &out.LineNotifyEnabled)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return model.Event{}, apperrors.ErrNotFound
 	}
 	return out, err
+}
+
+// SetLineNotifyToken stores or clears (encToken == nil) the encrypted LINE
+// Notify token for the organizer's event. See US-006.
+func (r *eventRepo) SetLineNotifyToken(ctx context.Context, id, organizerID string, encToken *string) (bool, error) {
+	var enabled bool
+	err := r.pool.QueryRow(ctx, querySetLineToken, encToken, id, organizerID).Scan(&enabled)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return false, apperrors.ErrNotFound
+	}
+	return enabled, err
 }
 
 func (r *eventRepo) Delete(ctx context.Context, id, organizerID string) error {
@@ -96,7 +107,7 @@ func (r *eventRepo) Clone(ctx context.Context, origID, organizerID string) (mode
 	var newEvent model.Event
 	err = r.pool.QueryRow(ctx, queryEventCloneInsert,
 		orig.Name, orig.VenueName, orig.Genres, organizerID).
-		Scan(&newEvent.ID, &newEvent.Name, &newEvent.VenueName, &newEvent.StartDate, &newEvent.EndDate, &newEvent.Genres)
+		Scan(&newEvent.ID, &newEvent.Name, &newEvent.VenueName, &newEvent.StartDate, &newEvent.EndDate, &newEvent.Genres, &newEvent.LineNotifyEnabled)
 	if err != nil {
 		return model.Event{}, err
 	}

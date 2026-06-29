@@ -29,6 +29,11 @@ type EventRepository interface {
 	Update(ctx context.Context, e model.Event, organizerID string) (model.Event, error)
 	Delete(ctx context.Context, id, organizerID string) error
 	Clone(ctx context.Context, id, organizerID string) (model.Event, error)
+	// SetLineNotifyToken stores encToken (an already-encrypted token) for the
+	// organizer's event, or clears it when encToken is nil. It returns whether
+	// LINE Notify is now enabled, and apperrors.ErrNotFound if the event is not
+	// the organizer's. See US-006.
+	SetLineNotifyToken(ctx context.Context, id, organizerID string, encToken *string) (bool, error)
 }
 
 // StageRepository scopes every operation to the organizer who owns the parent
