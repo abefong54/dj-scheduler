@@ -183,11 +183,8 @@
   opacity: 0.9;
 }
 
-.card__spiral polyline {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.7);
-  stroke-width: 0.8;
-}
+/* The polyline's fill/stroke live as presentation attributes in the template so
+   they survive the PNG export (html-to-image drops descendant CSS on SVG kids). */
 
 /* Event + venue + recruitment lockup. */
 .card__event {

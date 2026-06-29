@@ -100,5 +100,7 @@
   "card.shareLine": "Share to LINE",
   "card.copyLink": "Copy link",
   "card.copied": "Copied!",
-  "card.viewLineup": "View full lineup"
+  "card.viewLineup": "View full lineup",
+  "card.saveImage": "Save image",
+  "card.saving": "Saving…"
 }

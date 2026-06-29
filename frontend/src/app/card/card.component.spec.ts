@@ -4,8 +4,12 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { provideTranslateService } from '@ngx-translate/core';
 
+import { toPng } from 'html-to-image';
 import { CardComponent } from './card.component';
 import { ApiService, PublicSlot } from '../services/api.service';
+
+// Stub the DOM→PNG library so the export flow is testable without a real canvas.
+vi.mock('html-to-image', () => ({ toPng: vi.fn().mockResolvedValue('data:image/png;base64,AAAA') }));
 
 const PUBLIC_SLOT: PublicSlot = {
   slot: {
@@ -139,5 +143,42 @@ describe('CardComponent (EL-049)', () => {
     slotId = '';
     const { component } = await build();
     expect(component.notFound()).toBe(true);
+  });
+
+  describe('save image (EL-053)', () => {
+    it('builds a slugged PNG filename from the DJ + event', async () => {
+      const { component } = await build();
+      expect(component.fileName()).toBe('cody-spring-showcase.png');
+      component.data.set({
+        ...PUBLIC_SLOT,
+        slot: { ...PUBLIC_SLOT.slot, dj_name: 'DJ Anthony!' },
+        event: { ...PUBLIC_SLOT.event, name: 'Summer / Bash 2026' },
+      });
+      expect(component.fileName()).toBe('dj-anthony-summer-bash-2026.png');
+    });
+
+    it('exports the card DOM to a PNG and triggers a download', async () => {
+      const { component } = await build();
+      const clicked: HTMLAnchorElement[] = [];
+      const realCreate = document.createElement.bind(document);
+      vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+        const el = realCreate(tag) as HTMLElement;
+        if (tag === 'a') {
+          (el as HTMLAnchorElement).click = () => clicked.push(el as HTMLAnchorElement);
+        }
+        return el as any;
+      });
+
+      await component.saveImage();
+
+      expect(toPng).toHaveBeenCalledTimes(1);
+      // Scales up to the 1080px export width and busts the cache.
+      expect((toPng as any).mock.calls[0][1]).toMatchObject({ cacheBust: true });
+      expect(clicked.length).toBe(1);
+      expect(clicked[0].download).toBe('cody-spring-showcase.png');
+      expect(clicked[0].href).toContain('data:image/png');
+      expect(component.exporting()).toBe(false);
+      vi.restoreAllMocks();
+    });
   });
 });
