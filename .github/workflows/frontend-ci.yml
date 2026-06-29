@@ -1,0 +1,39 @@
+name: Frontend CI
+
+# Gates frontend changes: production build, unit tests (vitest), and CSS lint.
+# Mirrors the backend gate. NOTE: intentionally NOT path-filtered — it runs on
+# every PR so the `frontend` check always reports. A required check behind a
+# `paths:` filter deadlocks PRs that don't touch those paths (the check never
+# runs, so "Require status checks" waits forever). Running unconditionally costs
+# ~1-2 min on unrelated PRs but keeps the gate safe to require.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: frontend
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Lint CSS
+        run: npm run lint:css
+      - name: Unit tests
+        run: npm test -- --no-watch
+      - name: Production build
+        run: npx ng build --configuration production

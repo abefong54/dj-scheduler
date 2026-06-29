@@ -1,0 +1,32 @@
+version: 2
+
+# Weekly dependency updates across all three ecosystems. Minor/patch bumps are
+# grouped into one PR per ecosystem to cut noise; majors get their own PR since
+# they may break. With the CI gates required, an update can't merge unless the
+# backend/frontend/e2e checks pass.
+updates:
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      frontend-minor-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: gomod
+    directory: /backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      backend-minor-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ['*']
