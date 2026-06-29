@@ -111,7 +111,7 @@ export class ApiService {
     return this.http.post<Slot>(`${this.base}/api/events/${eventId}/slots`, s);
   }
   updateSlot(eventId: string, slotId: string, s: Pick<Slot, 'stage_id' | 'dj_id' | 'genre' | 'slot_date' | 'start_time' | 'end_time' | 'notes'>) {
-    return this.http.put<Slot>(`${this.base}/api/events/${eventId}/slots/${slotId}`, s);
+    return this.http.patch<Slot>(`${this.base}/api/events/${eventId}/slots/${slotId}`, s);
   }
   deleteSlot(eventId: string, slotId: string) {
     return this.http.delete(`${this.base}/api/events/${eventId}/slots/${slotId}`);
