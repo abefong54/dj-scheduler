@@ -14,7 +14,7 @@ type fakeLister struct {
 	err   error
 }
 
-func (f fakeLister) List(_ context.Context, _ string) ([]model.Slot, error) {
+func (f fakeLister) List(_ context.Context, _, _ string) ([]model.Slot, error) {
 	return f.slots, f.err
 }
 
@@ -44,7 +44,7 @@ func TestCheckConflicts_DJDoubleBookedAcrossStages(t *testing.T) {
 		EndTime:   "23:30",
 	}
 
-	err := CheckConflicts(context.Background(), repo, candidate, "")
+	err := CheckConflicts(context.Background(), repo, candidate, "", "")
 
 	var conflict *apperrors.ConflictError
 	if !errors.As(err, &conflict) {
@@ -72,7 +72,7 @@ func TestCheckConflicts_StageOverlap(t *testing.T) {
 		EndTime:   "23:30",
 	}
 
-	err := CheckConflicts(context.Background(), repo, candidate, "")
+	err := CheckConflicts(context.Background(), repo, candidate, "", "")
 
 	var conflict *apperrors.ConflictError
 	if !errors.As(err, &conflict) {
@@ -97,7 +97,7 @@ func TestCheckConflicts_AdjacentSlotsAllowed(t *testing.T) {
 		EndTime:   "23:30",
 	}
 
-	if err := CheckConflicts(context.Background(), repo, candidate, ""); err != nil {
+	if err := CheckConflicts(context.Background(), repo, candidate, "", ""); err != nil {
 		t.Fatalf("adjacent slots should not conflict, got %v", err)
 	}
 }
@@ -114,7 +114,7 @@ func TestCheckConflicts_UpdateExcludesSelf(t *testing.T) {
 		EndTime:   "23:00",
 	}
 
-	if err := CheckConflicts(context.Background(), repo, candidate, "slot-a"); err != nil {
+	if err := CheckConflicts(context.Background(), repo, candidate, "slot-a", ""); err != nil {
 		t.Fatalf("slot should not conflict with itself, got %v", err)
 	}
 }
@@ -130,7 +130,7 @@ func TestCheckConflicts_DifferentDateNoConflict(t *testing.T) {
 		EndTime:   "23:30",
 	}
 
-	if err := CheckConflicts(context.Background(), repo, candidate, ""); err != nil {
+	if err := CheckConflicts(context.Background(), repo, candidate, "", ""); err != nil {
 		t.Fatalf("different date should not conflict, got %v", err)
 	}
 }
@@ -146,7 +146,7 @@ func TestCheckConflicts_NonOverlappingTimesNoConflict(t *testing.T) {
 		EndTime:   "21:00", // ends before slot-a starts
 	}
 
-	if err := CheckConflicts(context.Background(), repo, candidate, ""); err != nil {
+	if err := CheckConflicts(context.Background(), repo, candidate, "", ""); err != nil {
 		t.Fatalf("non-overlapping times should not conflict, got %v", err)
 	}
 }
@@ -172,7 +172,7 @@ func TestCheckConflicts_EmptyDJIgnoredForDoubleBooking(t *testing.T) {
 		EndTime:   "23:30",
 	}
 
-	if err := CheckConflicts(context.Background(), repo, candidate, ""); err != nil {
+	if err := CheckConflicts(context.Background(), repo, candidate, "", ""); err != nil {
 		t.Fatalf("empty DJ on different stages should not conflict, got %v", err)
 	}
 }

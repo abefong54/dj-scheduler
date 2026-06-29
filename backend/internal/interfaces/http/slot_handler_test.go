@@ -7,23 +7,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gin-gonic/gin"
-
-	"eventlineup/internal/infrastructure/database"
 	"eventlineup/internal/domain/model"
-	httphandler "eventlineup/internal/interfaces/http"
-	slotuc "eventlineup/internal/usecase/slot"
 )
 
 func TestListSlots(t *testing.T) {
 	pool := setupTestDB(t)
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	repo := database.NewSlotRepository(pool)
-	h := httphandler.NewSlotHandler(slotuc.New(repo))
-	h.Register(r.Group("/api"))
-
-	eventID := createTestEvent(t, pool)
+	org := createTestOrganizer(t, pool)
+	eventID := createTestEventForOrg(t, pool, org)
+	r := slotRouterForOrg(t, pool, org)
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/api/events/"+eventID+"/slots", nil)
 	r.ServeHTTP(w, req)
@@ -42,13 +33,9 @@ func TestListSlots(t *testing.T) {
 
 func TestCreateSlot(t *testing.T) {
 	pool := setupTestDB(t)
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	repo := database.NewSlotRepository(pool)
-	h := httphandler.NewSlotHandler(slotuc.New(repo))
-	h.Register(r.Group("/api"))
-
-	eventID := createTestEvent(t, pool)
+	org := createTestOrganizer(t, pool)
+	eventID := createTestEventForOrg(t, pool, org)
+	r := slotRouterForOrg(t, pool, org)
 	stageID := createTestStage(t, pool, eventID)
 
 	body, _ := json.Marshal(map[string]string{
@@ -75,13 +62,9 @@ func TestCreateSlot(t *testing.T) {
 
 func TestCreateSlot_StageOverlapReturns409(t *testing.T) {
 	pool := setupTestDB(t)
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	repo := database.NewSlotRepository(pool)
-	h := httphandler.NewSlotHandler(slotuc.New(repo))
-	h.Register(r.Group("/api"))
-
-	eventID := createTestEvent(t, pool)
+	org := createTestOrganizer(t, pool)
+	eventID := createTestEventForOrg(t, pool, org)
+	r := slotRouterForOrg(t, pool, org)
 	stageID := createTestStage(t, pool, eventID)
 	existingID := createTestSlot(t, pool, eventID, stageID) // 16:00–17:30 on stageID
 
@@ -116,13 +99,9 @@ func TestCreateSlot_StageOverlapReturns409(t *testing.T) {
 
 func TestCreateSlot_AdjacentReturns201(t *testing.T) {
 	pool := setupTestDB(t)
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	repo := database.NewSlotRepository(pool)
-	h := httphandler.NewSlotHandler(slotuc.New(repo))
-	h.Register(r.Group("/api"))
-
-	eventID := createTestEvent(t, pool)
+	org := createTestOrganizer(t, pool)
+	eventID := createTestEventForOrg(t, pool, org)
+	r := slotRouterForOrg(t, pool, org)
 	stageID := createTestStage(t, pool, eventID)
 	createTestSlot(t, pool, eventID, stageID) // 16:00–17:30 on stageID
 
@@ -145,13 +124,9 @@ func TestCreateSlot_AdjacentReturns201(t *testing.T) {
 
 func TestGetSlot(t *testing.T) {
 	pool := setupTestDB(t)
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	repo := database.NewSlotRepository(pool)
-	h := httphandler.NewSlotHandler(slotuc.New(repo))
-	h.Register(r.Group("/api"))
-
-	eventID := createTestEvent(t, pool)
+	org := createTestOrganizer(t, pool)
+	eventID := createTestEventForOrg(t, pool, org)
+	r := slotRouterForOrg(t, pool, org)
 	stageID := createTestStage(t, pool, eventID)
 	slotID := createTestSlot(t, pool, eventID, stageID)
 
@@ -181,13 +156,9 @@ func TestGetSlot(t *testing.T) {
 
 func TestUpdateSlot(t *testing.T) {
 	pool := setupTestDB(t)
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	repo := database.NewSlotRepository(pool)
-	h := httphandler.NewSlotHandler(slotuc.New(repo))
-	h.Register(r.Group("/api"))
-
-	eventID := createTestEvent(t, pool)
+	org := createTestOrganizer(t, pool)
+	eventID := createTestEventForOrg(t, pool, org)
+	r := slotRouterForOrg(t, pool, org)
 	stageID := createTestStage(t, pool, eventID)
 	slotID := createTestSlot(t, pool, eventID, stageID)
 
@@ -235,13 +206,9 @@ func TestUpdateSlot(t *testing.T) {
 
 func TestDeleteSlot(t *testing.T) {
 	pool := setupTestDB(t)
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	repo := database.NewSlotRepository(pool)
-	h := httphandler.NewSlotHandler(slotuc.New(repo))
-	h.Register(r.Group("/api"))
-
-	eventID := createTestEvent(t, pool)
+	org := createTestOrganizer(t, pool)
+	eventID := createTestEventForOrg(t, pool, org)
+	r := slotRouterForOrg(t, pool, org)
 	stageID := createTestStage(t, pool, eventID)
 
 	t.Run("deletes slot and returns 204", func(t *testing.T) {
