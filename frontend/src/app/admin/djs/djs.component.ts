@@ -24,6 +24,8 @@ export class DjsComponent implements OnDestroy {
   djs = signal<DJ[]>([]);
   newDJ = signal({ name: '' });
   newDJGenres = signal('');
+  // ID of the DJ whose portal link was just copied (drives the "Copied!" flash).
+  copiedDJId = signal<string | null>(null);
 
   private subscriptions: Subscription[] = [];
 
@@ -79,6 +81,16 @@ export class DjsComponent implements OnDestroy {
       this.newDJ.set({ name: '' });
       this.newDJGenres.set('');
       this.loadDJs();
+    });
+  }
+
+  copyPortalLink(id: string) {
+    this.api.generateDJPortalToken(id).subscribe(async ({ portal_url }) => {
+      await navigator.clipboard.writeText(portal_url);
+      this.copiedDJId.set(id);
+      setTimeout(() => {
+        if (this.copiedDJId() === id) this.copiedDJId.set(null);
+      }, 2000);
     });
   }
 
