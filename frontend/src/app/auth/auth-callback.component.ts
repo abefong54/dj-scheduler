@@ -20,6 +20,9 @@ export class AuthCallbackComponent {
     const token = this.route.snapshot.queryParamMap.get('token');
     if (token) {
       this.auth.setToken(token);
+      // EL-038: strip the JWT from the URL before navigating, so it never lingers
+      // in the address bar, browser history, or a Referer header.
+      history.replaceState(history.state, '', window.location.pathname);
       this.router.navigate(['/admin/events']);
     } else {
       this.router.navigate(['/login']);

@@ -16,6 +16,7 @@ const SLOT: Slot = {
   start_time: '19:00',
   end_time: '20:00',
   notes: '',
+  dj_confirmation: null,
 };
 
 describe('ApiService', () => {
@@ -31,6 +32,46 @@ describe('ApiService', () => {
   });
 
   afterEach(() => httpMock.verify());
+
+  // EL-038: the DJ portal token must travel in the Authorization header, never
+  // a URL query param, so it can't leak via history/Referer/logs.
+  describe('DJ portal token delivery', () => {
+    it('getDJPortal sends the token as a Bearer header, not a query param', () => {
+      api.getDJPortal('portal-tok-123').subscribe();
+
+      const req = httpMock.expectOne(r => r.url === '/api/dj/portal');
+      expect(req.request.headers.get('Authorization')).toBe('Bearer portal-tok-123');
+      expect(req.request.params.get('token')).toBeNull();
+      expect(req.request.urlWithParams).not.toContain('token=');
+      req.flush({ dj: null, slots: [] });
+    });
+
+    it('confirmSlot sends the token as a Bearer header, not a query param', () => {
+      api.confirmSlot('slot-1', 'confirmed', 'portal-tok-456').subscribe();
+
+      const req = httpMock.expectOne(r => r.url === '/api/dj/portal/slots/slot-1');
+      expect(req.request.method).toBe('PATCH');
+      expect(req.request.headers.get('Authorization')).toBe('Bearer portal-tok-456');
+      expect(req.request.params.get('token')).toBeNull();
+      expect(req.request.urlWithParams).not.toContain('token=');
+      req.flush(SLOT);
+    });
+  });
+
+  // US-012: organizer mints a DJ's portal link to hand out.
+  describe('generateDJPortalToken', () => {
+    it('POSTs to the DJ token route and returns the portal URL', () => {
+      let result: { portal_url: string; expires_at: string } | undefined;
+      api.generateDJPortalToken('dj-9').subscribe(r => (result = r));
+
+      const req = httpMock.expectOne('/api/djs/dj-9/token');
+      expect(req.request.method).toBe('POST');
+
+      const body = { portal_url: 'http://localhost:4200/dj/portal?token=abc', expires_at: '2026-10-01T00:00:00Z' };
+      req.flush(body);
+      expect(result).toEqual(body);
+    });
+  });
 
   describe('updateSlot', () => {
     // Regression for EL-035: the backend registers PATCH (not PUT) for the

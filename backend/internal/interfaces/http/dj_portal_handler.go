@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -11,6 +12,20 @@ import (
 	djuc "eventlineup/internal/usecase/dj"
 	slotuc "eventlineup/internal/usecase/slot"
 )
+
+// bearerPrefix is the scheme prefix on the Authorization header.
+const bearerPrefix = "Bearer "
+
+// portalToken extracts the raw DJ portal token from the Authorization header.
+// EL-038: the token travels in a header, never the URL, so it can't leak via
+// browser history, Referer, or access logs. Returns "" when absent/malformed.
+func portalToken(c *gin.Context) string {
+	h := c.GetHeader("Authorization")
+	if !strings.HasPrefix(h, bearerPrefix) {
+		return ""
+	}
+	return strings.TrimSpace(strings.TrimPrefix(h, bearerPrefix))
+}
 
 // DJPortalHandler serves the DJ self-service portal (US-009): organizers mint
 // per-DJ tokens on an authenticated route, and DJs redeem those tokens on a
@@ -68,12 +83,12 @@ func (h *DJPortalHandler) generateToken(c *gin.Context) {
 // @Description Returns the DJ and their slots across all events for a valid portal token. No auth required.
 // @Tags        public
 // @Produce     json
-// @Param       token  query     string  true  "Raw portal token"
+// @Param       Authorization  header  string  true  "Bearer <raw portal token>"
 // @Success     200    {object}  map[string]interface{}
 // @Failure     401    {object}  map[string]string
 // @Router      /api/dj/portal [get]
 func (h *DJPortalHandler) portal(c *gin.Context) {
-	rawToken := c.Query("token")
+	rawToken := portalToken(c)
 	if rawToken == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
 		return
@@ -93,14 +108,14 @@ func (h *DJPortalHandler) portal(c *gin.Context) {
 // @Accept      json
 // @Produce     json
 // @Param       slot_id  path      string  true  "Slot ID (UUID)"
-// @Param       token    query     string  true  "Raw portal token"
+// @Param       Authorization  header  string  true  "Bearer <raw portal token>"
 // @Success     200      {object}  map[string]interface{}
 // @Failure     400      {object}  map[string]string
 // @Failure     401      {object}  map[string]string
 // @Failure     403      {object}  map[string]string
 // @Router      /api/dj/portal/slots/{slot_id} [patch]
 func (h *DJPortalHandler) confirmSlot(c *gin.Context) {
-	rawToken := c.Query("token")
+	rawToken := portalToken(c)
 	if rawToken == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
 		return

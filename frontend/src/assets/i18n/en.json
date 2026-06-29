@@ -48,11 +48,19 @@
   "slots.error.djDoubleBooked": "{{djName}} is already booked at this time",
   "slots.error.stageOverlap": "{{stageName}} already has a set at this time",
   "slots.error.generic": "Something went wrong, please try again",
+  "slots.cert.warning": "{{djName}} isn't certified for {{genre}} — assign anyway to override.",
 
   "djs.title": "DJs",
   "djs.new": "Add a DJ",
   "djs.name": "Name",
   "djs.genres": "Genres",
+  "djs.certifications": "Certifications",
+  "djs.status": "Status",
+  "djs.student": "Student",
+  "djs.graduate": "Graduate",
+  "djs.no_certs": "None yet",
+  "djs.edit_title": "Edit DJ",
+  "djs.custom_cert": "Add a custom genre",
   "djs.noDJs": "No DJs yet. Add your first DJ above.",
   "djs.fillRequired": "Please enter a name and at least one genre.",
   "djs.deleteConfirm": "Delete this DJ?",
@@ -93,5 +101,11 @@
   "dj.portal.confirm": "Confirm",
   "dj.portal.flag": "Flag conflict",
   "dj.portal.confirmed": "Confirmed ✓",
-  "dj.portal.flagged": "Flagged ⚠"
+  "dj.portal.flagged": "Flagged ⚠",
+
+  "slot.confirmation.confirmed": "✓ Confirmed",
+  "slot.confirmation.flagged": "⚠ Flagged",
+  "slot.confirmation.awaiting": "— Awaiting",
+  "dj.copy_portal_link": "Copy portal link",
+  "dj.copy_portal_link.copied": "Copied!"
 }

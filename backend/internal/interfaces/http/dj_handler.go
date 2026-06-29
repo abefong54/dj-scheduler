@@ -8,6 +8,7 @@ import (
 
 	"eventlineup/internal/domain/apperrors"
 	"eventlineup/internal/domain/model"
+	"eventlineup/internal/domain/repository"
 	"eventlineup/internal/interfaces/http/middleware"
 	djuc "eventlineup/internal/usecase/dj"
 )
@@ -25,15 +26,21 @@ func (h *DJHandler) Register(rg *gin.RouterGroup) {
 }
 
 // @Summary     List DJs
-// @Description Returns all DJs ordered by name
+// @Description Returns all DJs ordered by name. Optional filters (EL-019): certified_for=<genre>, ready=true.
 // @Tags        djs
 // @Produce     json
+// @Param       certified_for  query  string  false  "Only DJs certified for this genre (case-insensitive)"
+// @Param       ready          query  string  false  "ready=true → only DJs with at least one certification"
 // @Success     200  {array}   model.DJ
 // @Failure     500  {object}  map[string]string
 // @Router      /api/djs [get]
 func (h *DJHandler) list(c *gin.Context) {
 	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	djs, err := h.uc.List(c.Request.Context(), organizerID)
+	filter := repository.DJListFilter{
+		CertifiedFor: c.Query("certified_for"),
+		ReadyOnly:    c.Query("ready") == "true",
+	}
+	djs, err := h.uc.List(c.Request.Context(), organizerID, filter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
@@ -120,6 +127,12 @@ func (h *DJHandler) patch(c *gin.Context) {
 	}
 	if body.GenreTags == nil {
 		body.GenreTags = []string{}
+	}
+	// PATCH is full-replace here: the edit panel (EL-020) always sends the DJ's
+	// certifications and is_student, so an omitted certifications list means
+	// "none". Default nil → empty array for a clean DB write.
+	if body.Certifications == nil {
+		body.Certifications = []string{}
 	}
 	body.ID = c.Param("id")
 	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)

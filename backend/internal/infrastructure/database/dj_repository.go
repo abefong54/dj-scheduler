@@ -10,6 +10,7 @@ import (
 
 	"eventlineup/internal/domain/apperrors"
 	"eventlineup/internal/domain/model"
+	"eventlineup/internal/domain/repository"
 )
 
 type djRepo struct{ pool *pgxpool.Pool }
@@ -18,8 +19,8 @@ func NewDJRepository(pool *pgxpool.Pool) *djRepo {
 	return &djRepo{pool: pool}
 }
 
-func (r *djRepo) List(ctx context.Context, organizerID string) ([]model.DJ, error) {
-	rows, err := r.pool.Query(ctx, queryDJList, organizerID)
+func (r *djRepo) List(ctx context.Context, organizerID string, filter repository.DJListFilter) ([]model.DJ, error) {
+	rows, err := r.pool.Query(ctx, queryDJList, organizerID, filter.CertifiedFor, filter.ReadyOnly)
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +28,7 @@ func (r *djRepo) List(ctx context.Context, organizerID string) ([]model.DJ, erro
 	djs := []model.DJ{}
 	for rows.Next() {
 		var d model.DJ
-		if err := rows.Scan(&d.ID, &d.Name, &d.GenreTags, &d.CreatedAt); err != nil {
+		if err := rows.Scan(&d.ID, &d.Name, &d.GenreTags, &d.Certifications, &d.IsStudent, &d.CreatedAt); err != nil {
 			return nil, err
 		}
 		djs = append(djs, d)
@@ -38,7 +39,7 @@ func (r *djRepo) List(ctx context.Context, organizerID string) ([]model.DJ, erro
 func (r *djRepo) Get(ctx context.Context, id, organizerID string) (model.DJ, error) {
 	var d model.DJ
 	err := r.pool.QueryRow(ctx, queryDJGet, id, organizerID).
-		Scan(&d.ID, &d.Name, &d.GenreTags, &d.CreatedAt)
+		Scan(&d.ID, &d.Name, &d.GenreTags, &d.Certifications, &d.IsStudent, &d.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return model.DJ{}, apperrors.ErrNotFound
 	}
@@ -48,14 +49,14 @@ func (r *djRepo) Get(ctx context.Context, id, organizerID string) (model.DJ, err
 func (r *djRepo) Create(ctx context.Context, name string, tags []string, organizerID string) (model.DJ, error) {
 	var d model.DJ
 	err := r.pool.QueryRow(ctx, queryDJInsert, name, tags, organizerID).
-		Scan(&d.ID, &d.Name, &d.GenreTags, &d.CreatedAt)
+		Scan(&d.ID, &d.Name, &d.GenreTags, &d.Certifications, &d.IsStudent, &d.CreatedAt)
 	return d, err
 }
 
 func (r *djRepo) Update(ctx context.Context, dj model.DJ, organizerID string) (model.DJ, error) {
 	var d model.DJ
-	err := r.pool.QueryRow(ctx, queryDJUpdate, dj.Name, dj.GenreTags, dj.ID, organizerID).
-		Scan(&d.ID, &d.Name, &d.GenreTags, &d.CreatedAt)
+	err := r.pool.QueryRow(ctx, queryDJUpdate, dj.Name, dj.GenreTags, dj.Certifications, dj.IsStudent, dj.ID, organizerID).
+		Scan(&d.ID, &d.Name, &d.GenreTags, &d.Certifications, &d.IsStudent, &d.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return model.DJ{}, apperrors.ErrNotFound
 	}
