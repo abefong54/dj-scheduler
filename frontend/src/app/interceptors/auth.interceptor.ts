@@ -13,6 +13,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
+  // The DJ portal is a separate, token-in-header auth context (EL-038): it carries
+  // its own portal token in Authorization and isn't an organizer session. Leave
+  // those requests untouched — don't overwrite the header, and don't treat a
+  // portal 401 as an organizer-session expiry (which would bounce a DJ to /login).
+  if (req.url.includes('/api/dj/portal')) {
+    return next(req);
+  }
+
   const token = auth.token();
   const authReq = token
     ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })

@@ -47,11 +47,19 @@
   "slots.error.djDoubleBooked": "{{djName}} 在此時段已有排程",
   "slots.error.stageOverlap": "{{stageName}} 在此時段已有演出",
   "slots.error.generic": "發生錯誤，請再試一次",
+  "slots.cert.warning": "{{djName}} 尚未取得 {{genre}} 認證——仍要指定請直接覆寫。",
 
   "djs.title": "DJ 名單",
   "djs.new": "新增 DJ",
   "djs.name": "名稱",
   "djs.genres": "音樂類型",
+  "djs.certifications": "認證類型",
+  "djs.status": "身分",
+  "djs.student": "學員",
+  "djs.graduate": "畢業生",
+  "djs.no_certs": "尚無認證",
+  "djs.edit_title": "編輯 DJ",
+  "djs.custom_cert": "新增自訂類型",
   "djs.noDJs": "尚未新增 DJ，請在上方新增。",
   "djs.fillRequired": "請輸入名稱及至少一個音樂類型。",
   "djs.deleteConfirm": "確定要刪除此 DJ 嗎？",
@@ -92,5 +100,11 @@
   "dj.portal.confirm": "確認",
   "dj.portal.flag": "回報衝突",
   "dj.portal.confirmed": "已確認 ✓",
-  "dj.portal.flagged": "已標記 ⚠"
+  "dj.portal.flagged": "已標記 ⚠",
+
+  "slot.confirmation.confirmed": "✓ 已確認",
+  "slot.confirmation.flagged": "⚠ 已標記",
+  "slot.confirmation.awaiting": "— 待回覆",
+  "dj.copy_portal_link": "複製專屬連結",
+  "dj.copy_portal_link.copied": "已複製！"
 }

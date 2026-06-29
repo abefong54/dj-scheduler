@@ -5,6 +5,9 @@
   <title>Frontend</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- EL-038: never send a Referer. Defense-in-depth so a bearer token briefly
+       present in a URL can't leak to third parties via the Referer header. -->
+  <meta name="referrer" content="no-referrer">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

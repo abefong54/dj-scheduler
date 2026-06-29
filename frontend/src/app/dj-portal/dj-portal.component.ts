@@ -42,6 +42,11 @@ export class DJPortalComponent {
 
   constructor() {
     this.token = this.route.snapshot.queryParams['token'] ?? '';
+    if (this.token) {
+      // EL-038: drop the token from the URL once read, so it doesn't linger in
+      // the address bar, browser history, or any Referer header.
+      history.replaceState(history.state, '', window.location.pathname);
+    }
     if (!this.token) {
       this.error.set('expired');
       this.loading.set(false);

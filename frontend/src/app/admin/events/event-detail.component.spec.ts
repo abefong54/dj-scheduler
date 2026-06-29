@@ -154,3 +154,78 @@ describe('EventDetailComponent — conflict warnings (US-005)', () => {
     expect(component.editConflictError()).toBeNull();
   });
 });
+
+// EL-042: certification-gated slot assignment.
+describe('EventDetailComponent — certification gating (EL-042)', () => {
+  const MIA = { id: 'mia', name: 'Mia', genre_tags: ['Hip Hop'], certifications: [], is_student: true };
+  const KAI = { id: 'kai', name: 'Kai', genre_tags: ['Hip Hop'], certifications: ['Hip Hop'], is_student: true };
+  const PRO = { id: 'pro', name: 'Pro', genre_tags: ['Hip Hop'], certifications: [], is_student: false };
+
+  const apiMock = {
+    getEvent: () => of(EVENT),
+    getStages: () => of(STAGES),
+    getSlots: () => of([] as Slot[]),
+    getDJs: () => of([MIA, KAI, PRO]),
+    createSlot: () => of({}),
+    updateSlot: () => of({}),
+  };
+
+  let component: EventDetailComponent;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [EventDetailComponent],
+      providers: [
+        provideTranslateService(),
+        { provide: ApiService, useValue: apiMock },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'evt-1' } } } },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+        { provide: ScheduleExportService, useValue: { download: () => {} } },
+      ],
+    }).compileComponents();
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en', {
+      'slots.cert.warning': "{{djName}} isn't certified for {{genre}}",
+    });
+    translate.use('en');
+
+    component = TestBed.createComponent(EventDetailComponent).componentInstance;
+  });
+
+  it('treats a student without the certification as uncertified', () => {
+    expect(component.isCertifiedFor(MIA, 'Hip Hop')).toBe(false);
+    expect(component.isCertifiedFor(KAI, 'Hip Hop')).toBe(true);
+  });
+
+  it('lets graduates bypass the gate', () => {
+    expect(component.isCertifiedFor(PRO, 'Hip Hop')).toBe(true);
+  });
+
+  it('matches certifications case-insensitively', () => {
+    expect(component.isCertifiedFor(KAI, 'hip hop')).toBe(true);
+  });
+
+  it('orders certified DJs first and flags the rest (not hidden)', () => {
+    component.addGenre = 'Hip Hop';
+    const opts = component.djOptionsForAdd();
+    // All three remain selectable (uncertified are flagged, not hidden).
+    expect(opts.map(o => o.dj.id).sort()).toEqual(['kai', 'mia', 'pro']);
+    // The uncertified student sorts last.
+    expect(opts[opts.length - 1].dj.id).toBe('mia');
+    expect(opts.find(o => o.dj.id === 'mia')!.certified).toBe(false);
+  });
+
+  it('warns for an uncertified student, but not for certified DJs or graduates', () => {
+    component.addGenre = 'Hip Hop';
+
+    component.addDjId = 'mia';
+    expect(component.addCertWarning()).toContain('Mia');
+
+    component.addDjId = 'kai';
+    expect(component.addCertWarning()).toBeNull();
+
+    component.addDjId = 'pro';
+    expect(component.addCertWarning()).toBeNull();
+  });
+});
