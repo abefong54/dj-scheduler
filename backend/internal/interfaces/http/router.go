@@ -19,6 +19,7 @@ func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, djPortal *D
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(middleware.RequestLogger())
+	r.Use(middleware.SecurityHeaders())
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{frontendURL},
 		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},

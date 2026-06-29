@@ -5,5 +5,8 @@ dockerfilePath = "Dockerfile"
 
 [deploy]
 startCommand = "./server"
-healthcheckPath = "/api/events"
+# /healthz is the unauthenticated liveness probe (router.go). The previous value
+# /api/events sits behind the organizer JWT middleware and always 401s with no
+# token, so Railway would mark every healthy deploy as failing (EL-017).
+healthcheckPath = "/healthz"
 healthcheckTimeout = 10
