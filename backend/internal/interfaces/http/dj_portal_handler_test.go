@@ -57,9 +57,15 @@ func mintPortalToken(t *testing.T, org *gin.Engine, djID string) (string, int) {
 	return token, w.Code
 }
 
+// getPortal sends the portal token via the Authorization header (EL-038), not a
+// query param. An empty token means no header is set (→ 401).
 func getPortal(public *gin.Engine, token string) *httptest.ResponseRecorder {
 	w := httptest.NewRecorder()
-	public.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/dj/portal?token="+token, nil))
+	req := httptest.NewRequest(http.MethodGet, "/api/dj/portal", nil)
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	public.ServeHTTP(w, req)
 	return w
 }
 
@@ -141,6 +147,31 @@ func TestDJPortalTokenAndAccess(t *testing.T) {
 	}
 }
 
+// EL-038: the portal token must travel in the Authorization header, never the
+// URL. A token supplied only as a query param is rejected, so it can't leak via
+// history, Referer, or access logs.
+func TestDJPortalRejectsQueryParamToken(t *testing.T) {
+	pool := setupTestDB(t)
+	org := createTestOrganizer(t, pool)
+	djID := seedDJ(t, pool, org, "Sasha")
+
+	orgR, publicR := djPortalRouters(t, pool, org)
+	token, _ := mintPortalToken(t, orgR, djID)
+
+	// Token only in the query string, no Authorization header → 401.
+	w := httptest.NewRecorder()
+	publicR.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/dj/portal?token="+token, nil))
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("query-param token must be rejected: expected 401, got %d", w.Code)
+	}
+
+	// The same token in the Authorization header works — proving it's valid and
+	// only the delivery channel changed.
+	if w := getPortal(publicR, token); w.Code != http.StatusOK {
+		t.Fatalf("header token: expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
 func TestDJPortalExpiredToken(t *testing.T) {
 	pool := setupTestDB(t)
 	org := createTestOrganizer(t, pool)
@@ -166,8 +197,11 @@ func TestDJPortalExpiredToken(t *testing.T) {
 func patchConfirm(public *gin.Engine, slotID, token, confirmation string) *httptest.ResponseRecorder {
 	w := httptest.NewRecorder()
 	body := bytes.NewBufferString(`{"confirmation":"` + confirmation + `"}`)
-	req := httptest.NewRequest(http.MethodPatch, "/api/dj/portal/slots/"+slotID+"?token="+token, body)
+	req := httptest.NewRequest(http.MethodPatch, "/api/dj/portal/slots/"+slotID, body)
 	req.Header.Set("Content-Type", "application/json")
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
 	public.ServeHTTP(w, req)
 	return w
 }
