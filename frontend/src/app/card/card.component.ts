@@ -3,6 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService, PublicSlot } from '../services/api.service';
 import { environment } from '../../environments/environment';
+import { genreTheme } from './genre-theme';
 
 // Pilot brand for the card lockup. IMDJ is the beachhead school; this becomes
 // per-school config when EL-045 (configurable curriculum/branding) lands.
@@ -68,11 +69,12 @@ export class CardComponent {
     return 10;
   });
 
-  // Genre-derived theme hook. EL-049 ships the violet/lime default; EL-052 adds
-  // the per-genre palette rules keyed off this class.
+  // Genre-derived theme (EL-052): maps the slot's genre to a card palette, with
+  // the brand violet/lime default applied by the base .card rule. The matching
+  // CSS-variable overrides live under `.card.theme-<key>` in card.component.css.
   themeClass = computed(() => {
-    const g = this.genre().toLowerCase().replace(/[^a-z]/g, '');
-    return g ? `theme-${g}` : '';
+    const theme = genreTheme(this.genre());
+    return theme === 'default' ? '' : `theme-${theme}`;
   });
 
   // A white vinyl spiral (Archimedean) drawn as a polyline so it exports crisply.

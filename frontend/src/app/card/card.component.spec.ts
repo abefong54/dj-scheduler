@@ -85,11 +85,17 @@ describe('CardComponent (EL-049)', () => {
     expect(component.nameSizeCqw()).toBe(10); // 10 chars
   });
 
-  it('normalizes the genre into a theme class hook (EL-052)', async () => {
+  it('maps the genre to a theme palette class (EL-052)', async () => {
     const { component } = await build();
     expect(component.themeClass()).toBe('theme-house');
     component.data.set({ ...PUBLIC_SLOT, slot: { ...PUBLIC_SLOT.slot, genre: 'Hip-Hop' } });
     expect(component.themeClass()).toBe('theme-hiphop');
+    // Aliased genre rides the soul palette.
+    component.data.set({ ...PUBLIC_SLOT, slot: { ...PUBLIC_SLOT.slot, genre: 'R&B' } });
+    expect(component.themeClass()).toBe('theme-soul');
+    // Unknown / empty genre → brand default (no theme class).
+    component.data.set({ ...PUBLIC_SLOT, slot: { ...PUBLIC_SLOT.slot, genre: 'Reggae' } });
+    expect(component.themeClass()).toBe('');
     component.data.set({ ...PUBLIC_SLOT, slot: { ...PUBLIC_SLOT.slot, genre: '' } });
     expect(component.themeClass()).toBe('');
   });

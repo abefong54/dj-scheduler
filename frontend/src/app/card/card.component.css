@@ -244,3 +244,46 @@
   text-transform: uppercase;
   color: var(--muted);
 }
+
+/* Genre-themed palettes (EL-052). Each overrides only the brand colour vars;
+   layout is unchanged. Keyed by genreTheme() in genre-theme.ts. The default
+   (violet/lime) is the base .card rule above. */
+.card.theme-house {
+  --ground: #e7f5ea;
+  --name: #15803d;
+  --accent: #c4f24d;
+  --accent-ink: #13311e;
+  --panel-from: #16a34a;
+  --panel-to: #0a4d2e;
+  --genre: #e3ff8a;
+}
+
+.card.theme-techno {
+  --ground: #e6eef2;
+  --name: #0e7490;
+  --accent: #34e0e0;
+  --accent-ink: #06282e;
+  --panel-from: #0e7490;
+  --panel-to: #0a2540;
+  --genre: #7df0f5;
+}
+
+.card.theme-hiphop {
+  --ground: #f4ece4;
+  --name: #6d28d9;
+  --accent: #fb8c2e;
+  --accent-ink: #2a1206;
+  --panel-from: #7c3aed;
+  --panel-to: #9a3412;
+  --genre: #ffb86b;
+}
+
+.card.theme-soul {
+  --ground: #e8edfa;
+  --name: #1d4ed8;
+  --accent: #c4f24d;
+  --accent-ink: #0b1b40;
+  --panel-from: #2563eb;
+  --panel-to: #1a2a7a;
+  --genre: #e3ff8a;
+}
