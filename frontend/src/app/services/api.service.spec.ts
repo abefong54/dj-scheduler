@@ -16,6 +16,7 @@ const SLOT: Slot = {
   start_time: '19:00',
   end_time: '20:00',
   notes: '',
+  dj_confirmation: null,
 };
 
 describe('ApiService', () => {
@@ -54,6 +55,21 @@ describe('ApiService', () => {
       expect(req.request.params.get('token')).toBeNull();
       expect(req.request.urlWithParams).not.toContain('token=');
       req.flush(SLOT);
+    });
+  });
+
+  // US-012: organizer mints a DJ's portal link to hand out.
+  describe('generateDJPortalToken', () => {
+    it('POSTs to the DJ token route and returns the portal URL', () => {
+      let result: { portal_url: string; expires_at: string } | undefined;
+      api.generateDJPortalToken('dj-9').subscribe(r => (result = r));
+
+      const req = httpMock.expectOne('/api/djs/dj-9/token');
+      expect(req.request.method).toBe('POST');
+
+      const body = { portal_url: 'http://localhost:4200/dj/portal?token=abc', expires_at: '2026-10-01T00:00:00Z' };
+      req.flush(body);
+      expect(result).toEqual(body);
     });
   });
 
