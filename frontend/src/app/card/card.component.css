@@ -1,0 +1,246 @@
+/* Echo Press student promo card (EL-049). Matches Design/student-card.png.
+   Sized in container-query units (cqw = 1% of the card's width) so the whole
+   card scales with its container and exports crisply at 1080×1350. No @apply —
+   per the project styling rule, component CSS is plain utilities/CSS only. */
+
+.card-stage {
+  width: 100%;
+  max-width: 480px;
+}
+
+.card {
+  /* Default (violet/lime) theme. EL-052 overrides these vars per genre. */
+  --ground: #eceaf9;
+  --ink: #1a1726;
+  --muted: #8e88a8;
+  --name: #6d28d9;
+  --accent: #bff026;
+  --accent-ink: #1a1726;
+  --panel-from: #6d28d9;
+  --panel-to: #3b2197;
+  --genre: #bff026;
+  --panel-ink: #ffffff;
+
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1080 / 1350;
+  container-type: inline-size;
+  overflow: hidden;
+  border-radius: 4cqw;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: 'Inter', system-ui, sans-serif;
+  isolation: isolate;
+  box-shadow: 0 18px 48px rgba(26, 23, 38, 0.22);
+}
+
+.card * {
+  box-sizing: border-box;
+}
+
+/* Analog grain over everything — the screenprint patina from the design spec. */
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.card__inner {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 6cqw;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top hairline rule with structural labels. */
+.card__top {
+  display: flex;
+  align-items: center;
+  gap: 2cqw;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 2cqw;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.card__top .rule {
+  flex: 1;
+  height: 0.3cqw;
+  background: currentColor;
+  opacity: 0.85;
+}
+
+/* Echoed wordmark — a lime offset duplicate behind the violet name. */
+.card__name {
+  position: relative;
+  align-self: flex-start;
+  margin-top: 5cqw;
+  line-height: 0.8;
+}
+
+.card__name span {
+  display: block;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1em;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.card__name .back {
+  position: absolute;
+  left: 0.05em;
+  top: 0.05em;
+  color: var(--accent);
+  z-index: 1;
+}
+
+.card__name .front {
+  position: relative;
+  color: var(--name);
+  z-index: 2;
+}
+
+/* Stage pill + date/time row. */
+.card__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2cqw;
+  margin-top: 4cqw;
+}
+
+.card__pill {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 2.2cqw;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 1.3cqw 2.4cqw;
+  border-radius: 2cqw;
+}
+
+.card__datetime {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 3cqw;
+  color: var(--name);
+}
+
+/* Color-block panel: NOW PLAYING + genre + vinyl spiral. */
+.card__panel {
+  position: relative;
+  overflow: hidden;
+  margin-top: 4cqw;
+  height: 34cqw;
+  border-radius: 3cqw;
+  padding: 4cqw;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: linear-gradient(150deg, var(--panel-from), var(--panel-to));
+  color: var(--panel-ink);
+}
+
+.card__nowplaying {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.9cqw;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.card__genre {
+  position: relative;
+  z-index: 2;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 10cqw;
+  line-height: 0.9;
+  color: var(--genre);
+  text-transform: uppercase;
+}
+
+.card__spiral {
+  position: absolute;
+  right: 3cqw;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30cqw;
+  height: 30cqw;
+  opacity: 0.9;
+}
+
+.card__spiral polyline {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.7);
+  stroke-width: 0.8;
+}
+
+/* Event + venue + recruitment lockup. */
+.card__event {
+  margin-top: 4cqw;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 4.4cqw;
+  line-height: 1;
+  color: var(--ink);
+  text-transform: uppercase;
+}
+
+.card__venue {
+  margin-top: 1.6cqw;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 2.4cqw;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.card__lockup {
+  display: flex;
+  align-items: center;
+  gap: 2cqw;
+  margin-top: 3.2cqw;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 3.2cqw;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.card__lockup .brand {
+  background: var(--accent);
+  padding: 0.15em 0.5em;
+  border-radius: 1cqw;
+}
+
+.card__lockup .x {
+  font-weight: 500;
+  opacity: 0.6;
+}
+
+.card__foot {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 2cqw;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}

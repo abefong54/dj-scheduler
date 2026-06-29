@@ -59,6 +59,9 @@ type SlotRepository interface {
 	List(ctx context.Context, eventID, organizerID string) ([]model.Slot, error)
 	// ListPublic is unscoped, for the public schedule endpoint only.
 	ListPublic(ctx context.Context, eventID string) ([]model.Slot, error)
+	// GetPublicByID looks up a slot by id alone, without organizer/event scoping,
+	// for the public per-DJ share card (EL-049).
+	GetPublicByID(ctx context.Context, id string) (model.Slot, error)
 	Get(ctx context.Context, id, eventID, organizerID string) (model.Slot, error)
 	Create(ctx context.Context, s model.Slot, eventID, organizerID string) (model.Slot, error)
 	Update(ctx context.Context, s model.Slot, eventID, organizerID string) (model.Slot, error)

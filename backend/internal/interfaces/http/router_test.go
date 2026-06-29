@@ -37,7 +37,12 @@ func fullRouter(t *testing.T) *gin.Engine {
 		slotuc.New(database.NewSlotRepository(pool)),
 	)
 	line := httphandler.NewLineHandler(linenotifyuc.New(database.NewEventRepository(pool), lineTestKey))
-	return httphandler.NewRouter("http://localhost:4200", routerTestSecret, pub, djPortal, dj, ev, st, sl, line)
+	share := httphandler.NewShareHandler(
+		slotuc.New(database.NewSlotRepository(pool)),
+		eventuc.New(database.NewEventRepository(pool)),
+		"http://localhost:4200",
+	)
+	return httphandler.NewRouter("http://localhost:4200", routerTestSecret, pub, share, djPortal, dj, ev, st, sl, line)
 }
 
 func mintRouterToken(t *testing.T) string {

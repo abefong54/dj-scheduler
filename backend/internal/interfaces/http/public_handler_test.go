@@ -84,3 +84,54 @@ func TestPublicEventUnknownIDReturns404(t *testing.T) {
 		t.Fatalf("expected 404, got %d: %s", w.Code, w.Body.String())
 	}
 }
+
+type publicSlotResponse struct {
+	Slot  model.Slot  `json:"slot"`
+	Event model.Event `json:"event"`
+}
+
+func TestPublicSlotReturnsSlotAndEvent(t *testing.T) {
+	pool := setupTestDB(t)
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	h := httphandler.NewPublicHandler(
+		eventuc.New(database.NewEventRepository(pool)),
+		stageuc.New(database.NewStageRepository(pool)),
+		slotuc.New(database.NewSlotRepository(pool)),
+	)
+	h.Register(r.Group("/api"))
+
+	eventID := createTestEvent(t, pool)
+	stageID := createTestStage(t, pool, eventID)
+	slotID := createTestSlot(t, pool, eventID, stageID)
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/api/slots/"+slotID+"/public", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var body publicSlotResponse
+	if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if body.Slot.ID != slotID {
+		t.Fatalf("expected slot id %s, got %s", slotID, body.Slot.ID)
+	}
+	if body.Event.ID != eventID {
+		t.Fatalf("expected event id %s, got %s", eventID, body.Event.ID)
+	}
+}
+
+func TestPublicSlotUnknownIDReturns404(t *testing.T) {
+	r := publicRouter(t)
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/api/slots/00000000-0000-0000-0000-000000000000/public", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d: %s", w.Code, w.Body.String())
+	}
+}

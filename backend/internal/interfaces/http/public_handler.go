@@ -25,6 +25,7 @@ func NewPublicHandler(events *eventuc.UseCase, stages *stageuc.UseCase, slots *s
 
 func (h *PublicHandler) Register(rg *gin.RouterGroup) {
 	rg.GET("/events/:id/public", h.get)
+	rg.GET("/slots/:id/public", h.getSlot)
 }
 
 // @Summary     Public Event Schedule
@@ -62,5 +63,35 @@ func (h *PublicHandler) get(c *gin.Context) {
 		"event":  event,
 		"stages": stages,
 		"slots":  slots,
+	})
+}
+
+// @Summary     Public Slot
+// @Description Returns a single slot with its parent event, by slot ID. No auth required. Backs the per-DJ share card (EL-049).
+// @Tags        public
+// @Produce     json
+// @Param       id   path      string  true  "Slot ID (UUID)"
+// @Success     200  {object}  map[string]interface{}
+// @Failure     404  {object}  map[string]string
+// @Router      /api/slots/{id}/public [get]
+func (h *PublicHandler) getSlot(c *gin.Context) {
+	ctx := c.Request.Context()
+	id := c.Param("id")
+
+	slot, err := h.slots.GetPublicByID(ctx, id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+
+	event, err := h.events.GetPublic(ctx, slot.EventID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"slot":  slot,
+		"event": event,
 	})
 }

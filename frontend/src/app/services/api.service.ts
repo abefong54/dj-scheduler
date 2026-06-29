@@ -46,6 +46,13 @@ export interface PublicSchedule {
   slots: Slot[];
 }
 
+// Shape of GET /api/slots/:id/public — a single booking plus its event, for the
+// public per-DJ share card (EL-049). No auth; exposes only already-public slot data.
+export interface PublicSlot {
+  slot: Slot;
+  event: Event;
+}
+
 // A DJ's portal response is "confirmed", "flagged", or null (no response yet).
 export type DJConfirmation = 'confirmed' | 'flagged' | null;
 
@@ -88,6 +95,8 @@ export class ApiService {
   getEvent(id: string) { return this.http.get<Event>(`${this.base}/api/events/${id}`); }
   // Unauthenticated schedule for the public/shareable view (no Bearer token needed).
   getPublicSchedule(id: string) { return this.http.get<PublicSchedule>(`${this.base}/api/events/${id}/public`); }
+  // Unauthenticated single slot + its event, for the per-DJ share card (EL-049).
+  getPublicSlot(slotId: string) { return this.http.get<PublicSlot>(`${this.base}/api/slots/${slotId}/public`); }
   createEvent(e: Omit<Event, 'id'>) { return this.http.post<Event>(`${this.base}/api/events`, e); }
   deleteEvent(id: string) { return this.http.delete(`${this.base}/api/events/${id}`); }
   cloneEvent(id: string) { return this.http.post<Event>(`${this.base}/api/events/${id}/clone`, {}); }
