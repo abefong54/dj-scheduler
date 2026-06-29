@@ -25,12 +25,6 @@ export const routes: Routes = [
       .then(m => m.EventNewComponent),
   },
   {
-    path: 'admin/events/:id/slots/new',
-    canActivate: [authGuard],
-    loadComponent: () => import('./admin/events/slot-new.component')
-      .then(m => m.SlotNewComponent),
-  },
-  {
     path: 'admin/events/:id',
     canActivate: [authGuard],
     loadComponent: () => import('./admin/events/event-detail.component')
