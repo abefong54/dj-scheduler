@@ -67,6 +67,11 @@ export interface DJPortalResponse {
   slots: DJPortalSlot[];
 }
 
+// portalAuth builds the Authorization header carrying a DJ portal token (EL-038).
+function portalAuth(token: string) {
+  return { Authorization: `Bearer ${token}` };
+}
+
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private base = environment.apiUrl;
@@ -87,13 +92,15 @@ export class ApiService {
   deleteEvent(id: string) { return this.http.delete(`${this.base}/api/events/${id}`); }
   cloneEvent(id: string) { return this.http.post<Event>(`${this.base}/api/events/${id}/clone`, {}); }
 
-  // DJ portal (token-gated, no auth header)
+  // DJ portal (token-gated). EL-038: the portal token travels in the
+  // Authorization header, never a query param, so it can't leak via browser
+  // history, Referer headers, or access logs.
   getDJPortal(token: string) {
-    return this.http.get<DJPortalResponse>(`${this.base}/api/dj/portal`, { params: { token } });
+    return this.http.get<DJPortalResponse>(`${this.base}/api/dj/portal`, { headers: portalAuth(token) });
   }
   confirmSlot(slotId: string, confirmation: 'confirmed' | 'flagged', token: string) {
     return this.http.patch<{ id: string; dj_confirmation: DJConfirmation }>(
-      `${this.base}/api/dj/portal/slots/${slotId}`, { confirmation }, { params: { token } });
+      `${this.base}/api/dj/portal/slots/${slotId}`, { confirmation }, { headers: portalAuth(token) });
   }
 
   // Stages

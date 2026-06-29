@@ -32,6 +32,31 @@ describe('ApiService', () => {
 
   afterEach(() => httpMock.verify());
 
+  // EL-038: the DJ portal token must travel in the Authorization header, never
+  // a URL query param, so it can't leak via history/Referer/logs.
+  describe('DJ portal token delivery', () => {
+    it('getDJPortal sends the token as a Bearer header, not a query param', () => {
+      api.getDJPortal('portal-tok-123').subscribe();
+
+      const req = httpMock.expectOne(r => r.url === '/api/dj/portal');
+      expect(req.request.headers.get('Authorization')).toBe('Bearer portal-tok-123');
+      expect(req.request.params.get('token')).toBeNull();
+      expect(req.request.urlWithParams).not.toContain('token=');
+      req.flush({ dj: null, slots: [] });
+    });
+
+    it('confirmSlot sends the token as a Bearer header, not a query param', () => {
+      api.confirmSlot('slot-1', 'confirmed', 'portal-tok-456').subscribe();
+
+      const req = httpMock.expectOne(r => r.url === '/api/dj/portal/slots/slot-1');
+      expect(req.request.method).toBe('PATCH');
+      expect(req.request.headers.get('Authorization')).toBe('Bearer portal-tok-456');
+      expect(req.request.params.get('token')).toBeNull();
+      expect(req.request.urlWithParams).not.toContain('token=');
+      req.flush(SLOT);
+    });
+  });
+
   describe('updateSlot', () => {
     // Regression for EL-035: the backend registers PATCH (not PUT) for the
     // single-slot route, so a PUT here 404s and slot edits silently fail.
