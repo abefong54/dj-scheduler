@@ -45,3 +45,77 @@ describe('DjsComponent — copy portal link (US-012)', () => {
     expect(component.copiedDJId()).toBe('dj-1');
   });
 });
+
+// EL-020: the certifications edit panel.
+describe('DjsComponent — certifications edit panel (EL-020)', () => {
+  const DJ = { id: 'dj-1', name: 'Mia', genre_tags: ['House'], certifications: ['House'], is_student: true };
+  const updateDJ = vi.fn(() => of({ ...DJ }));
+  const apiMock = {
+    getDJs: vi.fn(() => of([DJ])),
+    updateDJ,
+  };
+
+  function makeComponent() {
+    TestBed.configureTestingModule({
+      imports: [DjsComponent],
+      providers: [
+        provideTranslateService(),
+        { provide: ApiService, useValue: apiMock },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+      ],
+    });
+    return TestBed.createComponent(DjsComponent).componentInstance;
+  }
+
+  beforeEach(() => {
+    updateDJ.mockClear();
+    apiMock.getDJs.mockClear();
+  });
+
+  it('openEdit loads the DJ into the form', () => {
+    const c = makeComponent();
+    c.openEdit({ id: 'dj-1' });
+    expect(c.editing()?.id).toBe('dj-1');
+    expect(c.editName()).toBe('Mia');
+    expect(c.editIsStudent()).toBe(true);
+    expect(c.editCerts()).toEqual(['House']);
+  });
+
+  it('toggleCert adds and removes a certification', () => {
+    const c = makeComponent();
+    c.openEdit({ id: 'dj-1' });
+    c.toggleCert('Techno');
+    expect(c.editCerts()).toContain('Techno');
+    c.toggleCert('House');
+    expect(c.editCerts()).not.toContain('House');
+  });
+
+  it('addCustomCert appends a free-text certification once', () => {
+    const c = makeComponent();
+    c.openEdit({ id: 'dj-1' });
+    c.editCustom.set('Afrobeat');
+    c.addCustomCert();
+    expect(c.editCerts()).toContain('Afrobeat');
+    expect(c.editCustom()).toBe('');
+    // Adding the same value again is a no-op.
+    c.editCustom.set('Afrobeat');
+    c.addCustomCert();
+    expect(c.editCerts().filter(x => x === 'Afrobeat')).toHaveLength(1);
+  });
+
+  it('saveEdit PATCHes the DJ with cert + student changes and closes the panel', () => {
+    const c = makeComponent();
+    c.openEdit({ id: 'dj-1' });
+    c.editIsStudent.set(false);
+    c.toggleCert('Hip Hop');
+    c.saveEdit();
+
+    expect(updateDJ).toHaveBeenCalledWith('dj-1', {
+      name: 'Mia',
+      genre_tags: ['House'],
+      certifications: ['House', 'Hip Hop'],
+      is_student: false,
+    });
+    expect(c.editing()).toBeNull();
+  });
+});

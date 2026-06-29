@@ -6,6 +6,10 @@ export interface DJ {
   id: string;
   name: string;
   genre_tags: string[];
+  // EL-019: genres the DJ is certified to perform, and student vs graduate.
+  // Optional so existing DJ literals/tests stay valid; the API always returns them.
+  certifications?: string[];
+  is_student?: boolean;
 }
 
 export interface Event {
@@ -81,7 +85,18 @@ export class ApiService {
 
   // DJs
   getDJs() { return this.http.get<DJ[]>(`${this.base}/api/djs`); }
+  // EL-019: optional ?certified_for= / ?ready=true filters on the roster.
+  getDJsFiltered(opts: { certifiedFor?: string; ready?: boolean }) {
+    const params: Record<string, string> = {};
+    if (opts.certifiedFor) params['certified_for'] = opts.certifiedFor;
+    if (opts.ready) params['ready'] = 'true';
+    return this.http.get<DJ[]>(`${this.base}/api/djs`, { params });
+  }
   createDJ(d: Pick<DJ, 'name' | 'genre_tags'>) { return this.http.post<DJ>(`${this.base}/api/djs`, d); }
+  // EL-020: update a DJ's name, genres, certifications, and student status (PATCH).
+  updateDJ(id: string, d: Pick<DJ, 'name' | 'genre_tags' | 'certifications' | 'is_student'>) {
+    return this.http.patch<DJ>(`${this.base}/api/djs/${id}`, d);
+  }
   deleteDJ(id: string) { return this.http.delete(`${this.base}/api/djs/${id}`); }
   // Mint (or regenerate) a DJ's personal portal link.
   generateDJPortalToken(djId: string) {

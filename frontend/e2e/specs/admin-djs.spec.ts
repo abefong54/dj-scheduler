@@ -36,4 +36,21 @@ test.describe('admin · DJs', () => {
     await expect(page.getByTestId(`dj-delete-${SEED.djTesta.id}`)).toBeVisible();
     await expect(page.getByTestId(`dj-delete-${SEED.djBeta.id}`)).toHaveCount(0);
   });
+
+  // EL-020: edit a DJ's certifications + student status from the roster.
+  test('edits a DJ — sets a certification and graduate status', async ({ page }) => {
+    await page.goto('/admin/djs');
+    await page.getByTestId(`dj-edit-${SEED.djTesta.id}`).click();
+    await expect(page.getByTestId('dj-edit-panel')).toBeVisible();
+
+    await page.getByTestId('dj-edit-cert-House').click();
+    await page.getByTestId('dj-edit-graduate').click();
+    await page.getByTestId('dj-edit-save').click();
+
+    // Panel closes and the new certification chip appears on the roster row.
+    await expect(page.getByTestId('dj-edit-panel')).toHaveCount(0);
+    await expect(
+      page.getByTestId(`dj-cert-${SEED.djTesta.id}`).filter({ hasText: 'House' }),
+    ).toBeVisible();
+  });
 });
