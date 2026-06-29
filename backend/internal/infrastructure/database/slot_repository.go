@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"eventlineup/internal/domain/apperrors"
@@ -15,6 +16,22 @@ type slotRepo struct{ pool *pgxpool.Pool }
 
 func NewSlotRepository(pool *pgxpool.Pool) *slotRepo {
 	return &slotRepo{pool: pool}
+}
+
+// overlapConflict translates a Postgres exclusion-constraint violation (raised by
+// the slots_stage_no_overlap / slots_dj_no_overlap GiST constraints) into a
+// ConflictError, so a slot that loses the check-then-write race still surfaces as
+// a 409 rather than a 500. Other errors pass through unchanged.
+func overlapConflict(err error) error {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "23P01" {
+		typ := "stage_overlap"
+		if pgErr.ConstraintName == "slots_dj_no_overlap" {
+			typ = "dj_double_booked"
+		}
+		return &apperrors.ConflictError{Type: typ}
+	}
+	return err
 }
 
 func (r *slotRepo) List(ctx context.Context, eventID string) ([]model.Slot, error) {
@@ -59,7 +76,7 @@ func (r *slotRepo) Create(ctx context.Context, s model.Slot, eventID string) (mo
 		eventID, s.StageID, s.DjID, s.Genre, s.SlotDate, s.StartTime, s.EndTime, s.Notes).
 		Scan(&s.ID)
 	if err != nil {
-		return model.Slot{}, err
+		return model.Slot{}, overlapConflict(err)
 	}
 	s.EventID = eventID
 	return s, nil
@@ -79,7 +96,7 @@ func (r *slotRepo) Update(ctx context.Context, s model.Slot, eventID string) (mo
 		return model.Slot{}, apperrors.ErrNotFound
 	}
 	if err != nil {
-		return model.Slot{}, err
+		return model.Slot{}, overlapConflict(err)
 	}
 	return s, nil
 }
