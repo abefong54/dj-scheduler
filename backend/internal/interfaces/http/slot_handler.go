@@ -3,11 +3,13 @@ package handler
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
 	"eventlineup/internal/domain/apperrors"
 	"eventlineup/internal/domain/model"
+	"eventlineup/internal/interfaces/http/middleware"
 	slotuc "eventlineup/internal/usecase/slot"
 )
 
@@ -34,8 +36,23 @@ type slotWriteRequest struct {
 	Notes     string `json:"notes"`
 }
 
-func (r slotWriteRequest) validate() bool {
-	return r.StageID != "" && r.SlotDate != "" && r.StartTime != "" && r.EndTime != ""
+// validate checks required fields and that the date and times are well-formed.
+// It does NOT require end_time > start_time: an end at or before the start means
+// the slot runs into the next day (e.g. a 23:30 set ending 00:30).
+func (r slotWriteRequest) validate() error {
+	if r.StageID == "" || r.SlotDate == "" || r.StartTime == "" || r.EndTime == "" {
+		return errors.New("stage_id, slot_date, start_time, end_time required")
+	}
+	if _, err := time.Parse("2006-01-02", r.SlotDate); err != nil {
+		return errors.New("slot_date must be a valid YYYY-MM-DD date")
+	}
+	if _, err := time.Parse("15:04", r.StartTime); err != nil {
+		return errors.New("start_time must be HH:MM (24-hour)")
+	}
+	if _, err := time.Parse("15:04", r.EndTime); err != nil {
+		return errors.New("end_time must be HH:MM (24-hour)")
+	}
+	return nil
 }
 
 // writeSlotError maps a usecase error to its HTTP response: 404 for a missing
@@ -65,7 +82,12 @@ func writeSlotError(c *gin.Context, err error) {
 // @Failure     500  {object}  map[string]string
 // @Router      /api/events/{id}/slots [get]
 func (h *SlotHandler) list(c *gin.Context) {
-	slots, err := h.uc.List(c.Request.Context(), c.Param("id"))
+	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
+	slots, err := h.uc.List(c.Request.Context(), c.Param("id"), organizerID)
+	if errors.Is(err, apperrors.ErrNotFound) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "event not found"})
+		return
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -84,7 +106,8 @@ func (h *SlotHandler) list(c *gin.Context) {
 // @Failure     500      {object}  map[string]string
 // @Router      /api/events/{id}/slots/{slot_id} [get]
 func (h *SlotHandler) get(c *gin.Context) {
-	s, err := h.uc.Get(c.Request.Context(), c.Param("slot_id"), c.Param("id"))
+	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
+	s, err := h.uc.Get(c.Request.Context(), c.Param("slot_id"), c.Param("id"), organizerID)
 	if errors.Is(err, apperrors.ErrNotFound) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "slot not found"})
 		return
@@ -114,11 +137,12 @@ func (h *SlotHandler) create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
 		return
 	}
-	if !req.validate() {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "stage_id, slot_date, start_time, end_time required"})
+	if err := req.validate(); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
 	s, err := h.uc.Create(c.Request.Context(), model.Slot{
 		StageID:   req.StageID,
 		DjID:      req.DjID,
@@ -127,7 +151,7 @@ func (h *SlotHandler) create(c *gin.Context) {
 		StartTime: req.StartTime,
 		EndTime:   req.EndTime,
 		Notes:     req.Notes,
-	}, c.Param("id"))
+	}, c.Param("id"), organizerID)
 	if err != nil {
 		writeSlotError(c, err)
 		return
@@ -155,11 +179,12 @@ func (h *SlotHandler) update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
 		return
 	}
-	if !req.validate() {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "stage_id, slot_date, start_time, end_time required"})
+	if err := req.validate(); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
 	s, err := h.uc.Update(c.Request.Context(), model.Slot{
 		ID:        c.Param("slot_id"),
 		StageID:   req.StageID,
@@ -169,7 +194,7 @@ func (h *SlotHandler) update(c *gin.Context) {
 		StartTime: req.StartTime,
 		EndTime:   req.EndTime,
 		Notes:     req.Notes,
-	}, c.Param("id"))
+	}, c.Param("id"), organizerID)
 	if err != nil {
 		writeSlotError(c, err)
 		return
@@ -187,7 +212,8 @@ func (h *SlotHandler) update(c *gin.Context) {
 // @Failure     500  {object}  map[string]string
 // @Router      /api/events/{id}/slots/{slot_id} [delete]
 func (h *SlotHandler) delete(c *gin.Context) {
-	err := h.uc.Delete(c.Request.Context(), c.Param("slot_id"), c.Param("id"))
+	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
+	err := h.uc.Delete(c.Request.Context(), c.Param("slot_id"), c.Param("id"), organizerID)
 	if errors.Is(err, apperrors.ErrNotFound) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "slot not found"})
 		return

@@ -42,6 +42,11 @@ describe('ScheduleExportService', () => {
     it('formats a half-hour slot', () => {
       expect(svc.formatTimeSlot('16:00', '16:30')).toBe('16:00 - 16:30 (0.5hr)');
     });
+
+    it('formats a slot that runs past midnight as a positive duration', () => {
+      // 23:30 -> 00:30 is one hour, not minus 22.5.
+      expect(svc.formatTimeSlot('23:30', '00:30')).toBe('23:30 - 00:30 (1hr)');
+    });
   });
 
   describe('filename', () => {

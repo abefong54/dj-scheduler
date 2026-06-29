@@ -89,6 +89,7 @@ go run ./cmd/app
 | `DATABASE_URL` | Yes      | —                        | PostgreSQL connection string        |
 | `PORT`         | No       | `8080`                   | Port the API listens on            |
 | `FRONTEND_URL` | No       | `http://localhost:4200`  | Allowed CORS origin                |
+| `COOKIE_SECURE`| No       | `false`                  | Set to `true` in production so the OAuth state cookie is HTTPS-only |
 
 ---
 

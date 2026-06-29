@@ -12,7 +12,13 @@ import (
 )
 
 func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, djPortal *DJPortalHandler, dj *DJHandler, ev *EventHandler, st *StageHandler, sl *SlotHandler) *gin.Engine {
-	r := gin.Default()
+	// gin.New() (not gin.Default()) so we control logging: the default logger
+	// writes the full request URL including query strings, leaking OAuth
+	// code/state and DJ portal tokens into access logs (EL-037). RequestLogger
+	// logs the route template instead.
+	r := gin.New()
+	r.Use(gin.Recovery())
+	r.Use(middleware.RequestLogger())
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{frontendURL},
 		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},

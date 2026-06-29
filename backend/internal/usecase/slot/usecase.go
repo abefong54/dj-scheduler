@@ -15,37 +15,43 @@ func New(repo repository.SlotRepository) *UseCase {
 	return &UseCase{repo: repo}
 }
 
-func (uc *UseCase) List(ctx context.Context, eventID string) ([]model.Slot, error) {
-	return uc.repo.List(ctx, eventID)
+func (uc *UseCase) List(ctx context.Context, eventID, organizerID string) ([]model.Slot, error) {
+	return uc.repo.List(ctx, eventID, organizerID)
 }
 
-func (uc *UseCase) Get(ctx context.Context, id, eventID string) (model.Slot, error) {
-	return uc.repo.Get(ctx, id, eventID)
+// ListPublic returns slots without organizer scoping, for the public schedule.
+func (uc *UseCase) ListPublic(ctx context.Context, eventID string) ([]model.Slot, error) {
+	return uc.repo.ListPublic(ctx, eventID)
 }
 
-func (uc *UseCase) Create(ctx context.Context, s model.Slot, eventID string) (model.Slot, error) {
+func (uc *UseCase) Get(ctx context.Context, id, eventID, organizerID string) (model.Slot, error) {
+	return uc.repo.Get(ctx, id, eventID, organizerID)
+}
+
+func (uc *UseCase) Create(ctx context.Context, s model.Slot, eventID, organizerID string) (model.Slot, error) {
 	s.EventID = eventID
-	if err := CheckConflicts(ctx, uc.repo, s, ""); err != nil {
+	if err := CheckConflicts(ctx, uc.repo, s, "", organizerID); err != nil {
 		return model.Slot{}, err
 	}
-	return uc.repo.Create(ctx, s, eventID)
+	return uc.repo.Create(ctx, s, eventID, organizerID)
 }
 
-func (uc *UseCase) Update(ctx context.Context, s model.Slot, eventID string) (model.Slot, error) {
+func (uc *UseCase) Update(ctx context.Context, s model.Slot, eventID, organizerID string) (model.Slot, error) {
 	// Confirm the slot exists first so updating a missing slot returns not-found
 	// rather than a conflict against some other slot its payload would overlap.
-	if _, err := uc.repo.Get(ctx, s.ID, eventID); err != nil {
+	// Get is organizer-scoped, so another organizer's slot also reads as not-found.
+	if _, err := uc.repo.Get(ctx, s.ID, eventID, organizerID); err != nil {
 		return model.Slot{}, err
 	}
 	s.EventID = eventID
-	if err := CheckConflicts(ctx, uc.repo, s, s.ID); err != nil {
+	if err := CheckConflicts(ctx, uc.repo, s, s.ID, organizerID); err != nil {
 		return model.Slot{}, err
 	}
-	return uc.repo.Update(ctx, s, eventID)
+	return uc.repo.Update(ctx, s, eventID, organizerID)
 }
 
-func (uc *UseCase) Delete(ctx context.Context, id, eventID string) error {
-	return uc.repo.Delete(ctx, id, eventID)
+func (uc *UseCase) Delete(ctx context.Context, id, eventID, organizerID string) error {
+	return uc.repo.Delete(ctx, id, eventID, organizerID)
 }
 
 // SetDJConfirmation records a DJ's confirm/flag response on their own slot

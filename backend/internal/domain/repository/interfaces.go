@@ -31,12 +31,16 @@ type EventRepository interface {
 	Clone(ctx context.Context, id, organizerID string) (model.Event, error)
 }
 
+// StageRepository scopes every operation to the organizer who owns the parent
+// event (EL-036); a stage that isn't theirs reads as not-found.
 type StageRepository interface {
-	List(ctx context.Context, eventID string) ([]model.Stage, error)
-	Get(ctx context.Context, id, eventID string) (model.Stage, error)
-	Create(ctx context.Context, eventID, name, color string) (model.Stage, error)
-	Update(ctx context.Context, s model.Stage) (model.Stage, error)
-	Delete(ctx context.Context, id, eventID string) error
+	List(ctx context.Context, eventID, organizerID string) ([]model.Stage, error)
+	// ListPublic is unscoped, for the public schedule endpoint only.
+	ListPublic(ctx context.Context, eventID string) ([]model.Stage, error)
+	Get(ctx context.Context, id, eventID, organizerID string) (model.Stage, error)
+	Create(ctx context.Context, eventID, name, color, organizerID string) (model.Stage, error)
+	Update(ctx context.Context, s model.Stage, organizerID string) (model.Stage, error)
+	Delete(ctx context.Context, id, eventID, organizerID string) error
 }
 
 type OrganizerRepository interface {
@@ -44,12 +48,16 @@ type OrganizerRepository interface {
 	Create(ctx context.Context, email, name, googleID string) (model.Organizer, error)
 }
 
+// SlotRepository scopes every operation to the organizer who owns the parent
+// event (EL-036), except SetDJConfirmation which is scoped to the DJ instead.
 type SlotRepository interface {
-	List(ctx context.Context, eventID string) ([]model.Slot, error)
-	Get(ctx context.Context, id, eventID string) (model.Slot, error)
-	Create(ctx context.Context, s model.Slot, eventID string) (model.Slot, error)
-	Update(ctx context.Context, s model.Slot, eventID string) (model.Slot, error)
-	Delete(ctx context.Context, id, eventID string) error
+	List(ctx context.Context, eventID, organizerID string) ([]model.Slot, error)
+	// ListPublic is unscoped, for the public schedule endpoint only.
+	ListPublic(ctx context.Context, eventID string) ([]model.Slot, error)
+	Get(ctx context.Context, id, eventID, organizerID string) (model.Slot, error)
+	Create(ctx context.Context, s model.Slot, eventID, organizerID string) (model.Slot, error)
+	Update(ctx context.Context, s model.Slot, eventID, organizerID string) (model.Slot, error)
+	Delete(ctx context.Context, id, eventID, organizerID string) error
 	// SetDJConfirmation records a DJ portal confirm/flag, scoped to the DJ who owns
 	// the slot (ErrForbidden when the slot isn't theirs). US-011.
 	SetDJConfirmation(ctx context.Context, slotID, djID, confirmation string) error

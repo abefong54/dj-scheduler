@@ -46,13 +46,13 @@ func (h *PublicHandler) get(c *gin.Context) {
 		return
 	}
 
-	stages, err := h.stages.List(ctx, id)
+	stages, err := h.stages.ListPublic(ctx, id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	slots, err := h.slots.List(ctx, id)
+	slots, err := h.slots.ListPublic(ctx, id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
