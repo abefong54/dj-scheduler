@@ -41,5 +41,11 @@ export const routes: Routes = [
     loadComponent: () => import('./schedule/schedule.component')
       .then(m => m.ScheduleComponent),
   },
+  {
+    // Public, token-gated DJ portal (no auth guard) — the link DJs receive.
+    path: 'dj/portal',
+    loadComponent: () => import('./dj-portal/dj-portal.component')
+      .then(m => m.DJPortalComponent),
+  },
   { path: '', redirectTo: 'admin/events', pathMatch: 'full' },
 ];

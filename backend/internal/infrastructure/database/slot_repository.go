@@ -31,6 +31,7 @@ func (r *slotRepo) List(ctx context.Context, eventID string) ([]model.Slot, erro
 			&s.ID, &s.EventID, &s.StageID, &s.StageName,
 			&s.DjID, &s.DjName, &s.Genre,
 			&s.SlotDate, &s.StartTime, &s.EndTime, &s.Notes,
+			&s.DJConfirmation,
 		); err != nil {
 			return nil, err
 		}
@@ -45,6 +46,7 @@ func (r *slotRepo) Get(ctx context.Context, id, eventID string) (model.Slot, err
 		&s.ID, &s.EventID, &s.StageID, &s.StageName,
 		&s.DjID, &s.DjName, &s.Genre,
 		&s.SlotDate, &s.StartTime, &s.EndTime, &s.Notes,
+		&s.DJConfirmation,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return model.Slot{}, apperrors.ErrNotFound
@@ -71,6 +73,7 @@ func (r *slotRepo) Update(ctx context.Context, s model.Slot, eventID string) (mo
 		&s.ID, &s.EventID, &s.StageID, &s.StageName,
 		&s.DjID, &s.DjName, &s.Genre,
 		&s.SlotDate, &s.StartTime, &s.EndTime, &s.Notes,
+		&s.DJConfirmation,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return model.Slot{}, apperrors.ErrNotFound
@@ -79,6 +82,20 @@ func (r *slotRepo) Update(ctx context.Context, s model.Slot, eventID string) (mo
 		return model.Slot{}, err
 	}
 	return s, nil
+}
+
+// SetDJConfirmation records a DJ's confirm/flag response on a slot, but only if
+// the slot actually belongs to that DJ. Returns ErrForbidden when no row matches
+// (the slot isn't theirs or doesn't exist), so the portal can't touch others' slots.
+func (r *slotRepo) SetDJConfirmation(ctx context.Context, slotID, djID, confirmation string) error {
+	tag, err := r.pool.Exec(ctx, querySlotSetDJConfirmation, confirmation, slotID, djID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return apperrors.ErrForbidden
+	}
+	return nil
 }
 
 func (r *slotRepo) Delete(ctx context.Context, id, eventID string) error {

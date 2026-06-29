@@ -49,6 +49,11 @@ definitions:
     type: object
   model.Slot:
     properties:
+      dj_confirmation:
+        description: |-
+          DJConfirmation is the DJ's portal response: "confirmed", "flagged", or nil
+          (no response yet). Pointer so null round-trips as JSON null (US-011).
+        type: string
       dj_id:
         type: string
       dj_name:
@@ -117,6 +122,52 @@ paths:
               type: string
             type: object
       summary: DJ portal view
+      tags:
+      - public
+  /api/dj/portal/slots/{slot_id}:
+    patch:
+      consumes:
+      - application/json
+      description: Sets the DJ's response on one of their slots. Token-gated, no organizer
+        auth.
+      parameters:
+      - description: Slot ID (UUID)
+        in: path
+        name: slot_id
+        required: true
+        type: string
+      - description: Raw portal token
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: DJ confirms or flags a slot
       tags:
       - public
   /api/djs:

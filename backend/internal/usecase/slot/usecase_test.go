@@ -34,6 +34,7 @@ func (f *fakeRepo) Update(_ context.Context, s model.Slot, _ string) (model.Slot
 	return s, nil
 }
 func (f *fakeRepo) Delete(_ context.Context, _, _ string) error { return nil }
+func (f *fakeRepo) SetDJConfirmation(_ context.Context, _, _, _ string) error { return nil }
 
 func bookedSlot() model.Slot {
 	return model.Slot{

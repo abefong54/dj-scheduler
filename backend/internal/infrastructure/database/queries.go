@@ -30,10 +30,11 @@ const (
 		WHERE portal_token_hash = $1 AND portal_token_expires_at > now()`
 
 	queryDJPortalSlots = `
-		SELECT sl.event_id, e.name, st.name,
+		SELECT sl.id, sl.event_id, e.name, st.name,
 		       COALESCE(sl.genre,''),
 		       sl.slot_date::text, to_char(sl.start_time,'HH24:MI'), to_char(sl.end_time,'HH24:MI'),
-		       COALESCE(sl.notes,'')
+		       COALESCE(sl.notes,''),
+		       sl.dj_confirmation
 		FROM slots sl
 		JOIN events e ON e.id = sl.event_id
 		JOIN stages st ON st.id = sl.stage_id
@@ -109,7 +110,8 @@ const (
 		SELECT sl.id, sl.event_id, sl.stage_id, st.name,
 		       COALESCE(sl.dj_id::text,''), COALESCE(d.name,''),
 		       COALESCE(sl.genre,''),
-		       sl.slot_date::text, to_char(sl.start_time,'HH24:MI'), to_char(sl.end_time,'HH24:MI'), COALESCE(sl.notes,'')
+		       sl.slot_date::text, to_char(sl.start_time,'HH24:MI'), to_char(sl.end_time,'HH24:MI'), COALESCE(sl.notes,''),
+		       sl.dj_confirmation
 		FROM slots sl
 		JOIN stages st ON st.id = sl.stage_id
 		LEFT JOIN djs d ON d.id = sl.dj_id
@@ -132,7 +134,8 @@ const (
 		SELECT u.id, u.event_id, u.stage_id, st.name,
 		       COALESCE(u.dj_id::text,''), COALESCE(d.name,''),
 		       COALESCE(u.genre,''),
-		       u.slot_date::text, to_char(u.start_time,'HH24:MI'), to_char(u.end_time,'HH24:MI'), COALESCE(u.notes,'')
+		       u.slot_date::text, to_char(u.start_time,'HH24:MI'), to_char(u.end_time,'HH24:MI'), COALESCE(u.notes,''),
+		       u.dj_confirmation
 		FROM updated u
 		JOIN stages st ON st.id = u.stage_id
 		LEFT JOIN djs d ON d.id = u.dj_id`
@@ -141,11 +144,17 @@ const (
 		SELECT sl.id, sl.event_id, sl.stage_id, st.name,
 		       COALESCE(sl.dj_id::text,''), COALESCE(d.name,''),
 		       COALESCE(sl.genre,''),
-		       sl.slot_date::text, to_char(sl.start_time,'HH24:MI'), to_char(sl.end_time,'HH24:MI'), COALESCE(sl.notes,'')
+		       sl.slot_date::text, to_char(sl.start_time,'HH24:MI'), to_char(sl.end_time,'HH24:MI'), COALESCE(sl.notes,''),
+		       sl.dj_confirmation
 		FROM slots sl
 		JOIN stages st ON st.id = sl.stage_id
 		LEFT JOIN djs d ON d.id = sl.dj_id
 		WHERE sl.id = $1 AND sl.event_id = $2`
+
+	// Set a DJ's confirmation on a slot the token's DJ actually owns (US-011).
+	querySlotSetDJConfirmation = `
+		UPDATE slots SET dj_confirmation = $1
+		WHERE id = $2 AND dj_id = $3`
 
 	querySlotDelete = `DELETE FROM slots WHERE id = $1 AND event_id = $2`
 

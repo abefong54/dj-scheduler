@@ -5,6 +5,10 @@ import "errors"
 // ErrNotFound is returned when a requested resource does not exist.
 var ErrNotFound = errors.New("not found")
 
+// ErrForbidden is returned when the caller is authenticated but not permitted to
+// act on the resource (e.g. a DJ portal token targeting a slot that isn't theirs).
+var ErrForbidden = errors.New("forbidden")
+
 // ErrConflict is the sentinel for scheduling conflicts. It lets callers use
 // errors.Is(err, apperrors.ErrConflict) regardless of the concrete details.
 var ErrConflict = errors.New("conflict")

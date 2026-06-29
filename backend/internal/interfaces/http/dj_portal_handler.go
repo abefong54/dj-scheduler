@@ -9,6 +9,7 @@ import (
 	"eventlineup/internal/domain/apperrors"
 	"eventlineup/internal/interfaces/http/middleware"
 	djuc "eventlineup/internal/usecase/dj"
+	slotuc "eventlineup/internal/usecase/slot"
 )
 
 // DJPortalHandler serves the DJ self-service portal (US-009): organizers mint
@@ -16,11 +17,12 @@ import (
 // public route (the token itself is the credential — no login).
 type DJPortalHandler struct {
 	uc          *djuc.UseCase
+	slots       *slotuc.UseCase
 	frontendURL string
 }
 
-func NewDJPortalHandler(uc *djuc.UseCase, frontendURL string) *DJPortalHandler {
-	return &DJPortalHandler{uc: uc, frontendURL: frontendURL}
+func NewDJPortalHandler(uc *djuc.UseCase, slots *slotuc.UseCase, frontendURL string) *DJPortalHandler {
+	return &DJPortalHandler{uc: uc, slots: slots, frontendURL: frontendURL}
 }
 
 // RegisterProtected registers routes that require an organizer JWT.
@@ -31,6 +33,7 @@ func (h *DJPortalHandler) RegisterProtected(rg *gin.RouterGroup) {
 // RegisterPublic registers routes that are reachable without auth (token-gated).
 func (h *DJPortalHandler) RegisterPublic(rg *gin.RouterGroup) {
 	rg.GET("/dj/portal", h.portal)
+	rg.PATCH("/dj/portal/slots/:slot_id", h.confirmSlot)
 }
 
 // @Summary     Generate DJ portal token
@@ -82,4 +85,52 @@ func (h *DJPortalHandler) portal(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"dj": d, "slots": slots})
+}
+
+// @Summary     DJ confirms or flags a slot
+// @Description Sets the DJ's response on one of their slots. Token-gated, no organizer auth.
+// @Tags        public
+// @Accept      json
+// @Produce     json
+// @Param       slot_id  path      string  true  "Slot ID (UUID)"
+// @Param       token    query     string  true  "Raw portal token"
+// @Success     200      {object}  map[string]interface{}
+// @Failure     400      {object}  map[string]string
+// @Failure     401      {object}  map[string]string
+// @Failure     403      {object}  map[string]string
+// @Router      /api/dj/portal/slots/{slot_id} [patch]
+func (h *DJPortalHandler) confirmSlot(c *gin.Context) {
+	rawToken := c.Query("token")
+	if rawToken == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
+		return
+	}
+	var body struct {
+		Confirmation string `json:"confirmation"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
+		return
+	}
+	if body.Confirmation != "confirmed" && body.Confirmation != "flagged" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "confirmation must be 'confirmed' or 'flagged'"})
+		return
+	}
+
+	dj, err := h.uc.DJByToken(c.Request.Context(), rawToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
+		return
+	}
+
+	err = h.slots.SetDJConfirmation(c.Request.Context(), c.Param("slot_id"), dj.ID, body.Confirmation)
+	if errors.Is(err, apperrors.ErrForbidden) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "slot does not belong to this DJ"})
+		return
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"id": c.Param("slot_id"), "dj_confirmation": body.Confirmation})
 }

@@ -46,6 +46,27 @@ export interface PublicSchedule {
   slots: Slot[];
 }
 
+// A DJ's portal response is "confirmed", "flagged", or null (no response yet).
+export type DJConfirmation = 'confirmed' | 'flagged' | null;
+
+export interface DJPortalSlot {
+  id: string;
+  event_id: string;
+  event_name: string;
+  stage_name: string;
+  genre: string;
+  slot_date: string;
+  start_time: string;
+  end_time: string;
+  notes: string;
+  dj_confirmation: DJConfirmation;
+}
+
+export interface DJPortalResponse {
+  dj: { id: string; name: string; genre_tags: string[] };
+  slots: DJPortalSlot[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private base = environment.apiUrl;
@@ -65,6 +86,15 @@ export class ApiService {
   createEvent(e: Omit<Event, 'id'>) { return this.http.post<Event>(`${this.base}/api/events`, e); }
   deleteEvent(id: string) { return this.http.delete(`${this.base}/api/events/${id}`); }
   cloneEvent(id: string) { return this.http.post<Event>(`${this.base}/api/events/${id}/clone`, {}); }
+
+  // DJ portal (token-gated, no auth header)
+  getDJPortal(token: string) {
+    return this.http.get<DJPortalResponse>(`${this.base}/api/dj/portal`, { params: { token } });
+  }
+  confirmSlot(slotId: string, confirmation: 'confirmed' | 'flagged', token: string) {
+    return this.http.patch<{ id: string; dj_confirmation: DJConfirmation }>(
+      `${this.base}/api/dj/portal/slots/${slotId}`, { confirmation }, { params: { token } });
+  }
 
   // Stages
   getStages(eventId: string) { return this.http.get<Stage[]>(`${this.base}/api/events/${eventId}/stages`); }

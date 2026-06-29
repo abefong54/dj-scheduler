@@ -47,3 +47,10 @@ func (uc *UseCase) Update(ctx context.Context, s model.Slot, eventID string) (mo
 func (uc *UseCase) Delete(ctx context.Context, id, eventID string) error {
 	return uc.repo.Delete(ctx, id, eventID)
 }
+
+// SetDJConfirmation records a DJ's confirm/flag response on their own slot
+// (US-011). djID must be the DJ resolved from a valid portal token; the
+// repository enforces that the slot belongs to that DJ.
+func (uc *UseCase) SetDJConfirmation(ctx context.Context, slotID, djID, confirmation string) error {
+	return uc.repo.SetDJConfirmation(ctx, slotID, djID, confirmation)
+}

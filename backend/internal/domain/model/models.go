@@ -36,11 +36,15 @@ type Slot struct {
 	StartTime string `json:"start_time"`
 	EndTime   string `json:"end_time"`
 	Notes     string `json:"notes"`
+	// DJConfirmation is the DJ's portal response: "confirmed", "flagged", or nil
+	// (no response yet). Pointer so null round-trips as JSON null (US-011).
+	DJConfirmation *string `json:"dj_confirmation"`
 }
 
 // PortalSlot is a single booking as seen from a DJ's self-service portal: it
 // spans events, so it carries the event and stage names directly (US-009).
 type PortalSlot struct {
+	ID        string `json:"id"`
 	EventID   string `json:"event_id"`
 	EventName string `json:"event_name"`
 	StageName string `json:"stage_name"`
@@ -49,4 +53,6 @@ type PortalSlot struct {
 	StartTime string `json:"start_time"`
 	EndTime   string `json:"end_time"`
 	Notes     string `json:"notes"`
+	// DJConfirmation: "confirmed", "flagged", or nil (no response yet) — US-011.
+	DJConfirmation *string `json:"dj_confirmation"`
 }
