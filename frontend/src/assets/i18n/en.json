@@ -17,6 +17,12 @@
 
   "auth.signInTitle": "Sign in to EventLineup",
   "auth.signInWithGoogle": "Sign in with Google",
+  "auth.tagline": "Plan the lineup. Run the night.",
+  "auth.continueWithGoogle": "Continue with Google",
+  "auth.or": "or",
+  "auth.emailPlaceholder": "Email address",
+  "auth.sendMagicLink": "Send magic link",
+  "auth.magicLinkComingSoon": "Coming soon",
 
   "events.title": "Events",
   "events.new": "New Event",
