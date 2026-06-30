@@ -17,6 +17,12 @@
 
   "auth.signInTitle": "登入 EventLineup",
   "auth.signInWithGoogle": "使用 Google 登入",
+  "auth.tagline": "規劃陣容，掌控全場。",
+  "auth.continueWithGoogle": "使用 Google 繼續",
+  "auth.or": "或",
+  "auth.emailPlaceholder": "電子郵件地址",
+  "auth.sendMagicLink": "傳送魔法連結",
+  "auth.magicLinkComingSoon": "即將推出",
   "events.title": "活動",
   "events.new": "新增活動",
   "events.name": "活動名稱",
