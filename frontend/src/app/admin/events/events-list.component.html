@@ -75,13 +75,16 @@
                 }
               </td>
               <td class="events-td events-td-actions">
-                <button (click)="clone(e.id)" class="btn-sm-outline" [attr.data-testid]="'event-clone-' + e.id">
-                  {{ 'events.clone' | translate }}
-                </button>
+                <app-button variant="secondary" size="icon" icon="edit" [iconOnly]="true"
+                  [label]="'actions.edit' | translate" [testId]="'event-edit-' + e.id"
+                  (click)="edit(e.id)" />
+                <app-button variant="secondary" size="icon" icon="clone" [iconOnly]="true"
+                  [label]="'events.clone' | translate" [testId]="'event-clone-' + e.id"
+                  (click)="clone(e.id)" />
                 @if (activeTab() === 'upcoming') {
-                  <button (click)="delete(e.id)" class="btn-danger" [attr.data-testid]="'event-delete-' + e.id">
-                    {{ 'actions.delete' | translate }}
-                  </button>
+                  <app-button variant="danger" size="icon" icon="trash" [iconOnly]="true"
+                    [label]="'actions.delete' | translate" [testId]="'event-delete-' + e.id"
+                    (click)="delete(e.id)" />
                 }
               </td>
             </tr>
