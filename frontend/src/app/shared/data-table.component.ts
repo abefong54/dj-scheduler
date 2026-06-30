@@ -1,8 +1,9 @@
-import { Component, contentChildren, input, signal, computed, TemplateRef } from '@angular/core';
+import { Component, contentChildren, input, TemplateRef } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ColumnDefDirective } from './column-def.directive';
+import { TableSort } from './table-sort';
 
 export interface TableColumn {
   key: string;
@@ -24,45 +25,18 @@ export class DataTableComponent {
 
   private defs = contentChildren(ColumnDefDirective);
 
-  searchQuery = signal('');
-  sortKey = signal('');
-  sortDir = signal<'asc' | 'desc'>('asc');
-
-  filteredData = computed(() => {
-    const q = this.searchQuery().toLowerCase().trim();
-    const key = this.sortKey();
-    const dir = this.sortDir();
-    const searchableCols = this.columns()
-      .filter(c => c.searchable !== false)
-      .map(c => c.key);
-
-    let rows = this.data();
-
-    if (q) {
-      rows = rows.filter(row =>
-        searchableCols.some(k => String(row[k] ?? '').toLowerCase().includes(q))
-      );
-    }
-
-    if (key) {
-      rows = [...rows].sort((a, b) => {
-        const av = String(a[key] ?? '');
-        const bv = String(b[key] ?? '');
-        return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
-      });
-    }
-
-    return rows;
+  private table = new TableSort<Record<string, unknown>>(() => this.data(), {
+    searchKeys: () => this.columns().filter(c => c.searchable !== false).map(c => c.key),
   });
+
+  searchQuery = this.table.search;
+  sortKey = this.table.sortKey;
+  sortDir = this.table.sortDir;
+  filteredData = this.table.view;
 
   sort(col: TableColumn) {
     if (col.sortable === false) return;
-    if (this.sortKey() === col.key) {
-      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
-    } else {
-      this.sortKey.set(col.key);
-      this.sortDir.set('asc');
-    }
+    this.table.toggle(col.key);
   }
 
   getTemplate(key: string): TemplateRef<{ row: Record<string, unknown> }> | null {

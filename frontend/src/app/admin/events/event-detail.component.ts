@@ -8,6 +8,7 @@ import { DialogService } from '../../shared/dialog.service';
 import { ScheduleExportService } from '../../services/schedule-export.service';
 import { slotDurationMins } from '../../shared/slot-time.util';
 import { parseLocalDate } from '../../shared/date.util';
+import { TableSort } from '../../shared/table-sort';
 
 @Component({
   selector: 'app-event-detail',
@@ -43,44 +44,11 @@ export class EventDetailComponent implements OnDestroy {
       .sort((a, b) => a.start_time.localeCompare(b.start_time))
   );
 
-  // ── Slot search + sort ──────────────────────────────────────────────
-  slotSearch = signal('');
-  slotSortKey = signal<'stage_name' | 'start_time' | 'dj_name'>('start_time');
-  slotSortDir = signal<'asc' | 'desc'>('asc');
-
-  sortedFilteredSlots = computed(() => {
-    const q = this.slotSearch().toLowerCase().trim();
-    const key = this.slotSortKey();
-    const dir = this.slotSortDir();
-
-    let rows = this.slotsForSelectedDate();
-    if (q) {
-      rows = rows.filter(s =>
-        s.dj_name?.toLowerCase().includes(q) ||
-        s.stage_name?.toLowerCase().includes(q) ||
-        s.genre?.toLowerCase().includes(q)
-      );
-    }
-    return [...rows].sort((a, b) => {
-      const av = String(a[key] ?? '');
-      const bv = String(b[key] ?? '');
-      return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
-    });
+  // ── Slot search + sort (shared TableSort engine, EL-028) ────────────
+  slotTable = new TableSort<Slot>(() => this.slotsForSelectedDate(), {
+    searchKeys: () => ['dj_name', 'stage_name', 'genre'],
+    initialSortKey: 'start_time',
   });
-
-  sortSlots(key: 'stage_name' | 'start_time' | 'dj_name') {
-    if (this.slotSortKey() === key) {
-      this.slotSortDir.set(this.slotSortDir() === 'asc' ? 'desc' : 'asc');
-    } else {
-      this.slotSortKey.set(key);
-      this.slotSortDir.set('asc');
-    }
-  }
-
-  sortIndicator(key: 'stage_name' | 'start_time' | 'dj_name'): string {
-    if (this.slotSortKey() !== key) return '';
-    return this.slotSortDir() === 'asc' ? ' ↑' : ' ↓';
-  }
 
   // ── Inline add row ──────────────────────────────────────────────────
   addRowActive = signal(false);
