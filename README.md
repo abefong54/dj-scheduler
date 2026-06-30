@@ -278,6 +278,8 @@ export class MyFeatureComponent {
 
 ## 📚 Documentation
 
+- **[Users Guide](docs/users-guide.md)** — non-technical, feature-by-feature "how to" for DJ-school teachers & staff
+- **[Developer Guide](docs/developer-guide.md)** — onboarding: architecture, setup, API, auth/multi-tenancy, database, CI
 - **[Backend README](backend/README.md)** — Go API architecture, handlers, database schema
 - **[Frontend README](frontend/README.md)** — Angular components, state management, styling
 
