@@ -42,7 +42,7 @@
         <app-button variant="secondary" size="icon"
           [icon]="copiedDJId() === rowId(row) ? 'check' : 'link'" [iconOnly]="true"
           [label]="(copiedDJId() === rowId(row) ? 'dj.copy_portal_link.copied' : 'dj.copy_portal_link') | translate"
-          (click)="copyPortalLink(rowId(row))" />
+          [testId]="'dj-copy-' + rowId(row)" (click)="copyPortalLink(rowId(row))" />
         <app-button variant="danger" size="icon" icon="trash" [iconOnly]="true"
           [label]="'actions.delete' | translate" [testId]="'dj-delete-' + rowId(row)"
           (click)="deleteDJ(rowId(row))" />

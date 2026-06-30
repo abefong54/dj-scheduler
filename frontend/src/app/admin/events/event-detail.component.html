@@ -17,11 +17,14 @@
       <div class="detail-hero-actions">
         <a routerLink="/admin/events" class="back-link">← {{ 'actions.back' | translate }}</a>
         <app-button variant="secondary" size="icon" icon="eye" [iconOnly]="true"
-          [label]="'eventDetail.viewPublic' | translate" (click)="viewPublic()" />
+          [label]="'eventDetail.viewPublic' | translate" testId="event-view-public"
+          (click)="viewPublic()" />
         <app-button variant="success" size="icon" icon="share" [iconOnly]="true"
-          [label]="'schedule.share' | translate" (click)="shareViaLine()" />
+          [label]="'schedule.share' | translate" testId="event-share"
+          (click)="shareViaLine()" />
         <app-button variant="secondary" size="icon" icon="download" [iconOnly]="true"
-          [label]="'eventDetail.export' | translate" (click)="exportXlsx()" />
+          [label]="'eventDetail.export' | translate" testId="event-export"
+          (click)="exportXlsx()" />
       </div>
     </div>
 
