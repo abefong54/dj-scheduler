@@ -37,6 +37,12 @@ export const routes: Routes = [
       .then(m => m.DjsComponent),
   },
   {
+    path: 'admin/performance',
+    canActivate: [authGuard],
+    loadComponent: () => import('./admin/performance/performance.component')
+      .then(m => m.PerformanceComponent),
+  },
+  {
     path: 'events/:id',
     loadComponent: () => import('./schedule/schedule.component')
       .then(m => m.ScheduleComponent),

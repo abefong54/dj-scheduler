@@ -79,9 +79,53 @@ export interface DJPortalResponse {
   slots: DJPortalSlot[];
 }
 
+// Performance aggregation (EL-043/044): "reps" = slots played. total_minutes is
+// real stage time (sets crossing midnight count their full length). last_played
+// is 'YYYY-MM-DD' or '' when the DJ has never played.
+export interface GenreStat {
+  genre: string;
+  reps: number;
+  total_minutes: number;
+}
+
+export interface DJPerformance {
+  dj_id: string;
+  dj_name: string;
+  reps: number;
+  total_minutes: number;
+  last_played: string;
+  by_genre: GenreStat[];
+}
+
+export interface RosterPerformance {
+  dj_id: string;
+  dj_name: string;
+  is_student: boolean;
+  reps: number;
+  total_minutes: number;
+  last_played: string;
+}
+
+// Optional window/event filters shared by the roster + under-served endpoints.
+export interface PerformanceFilter {
+  eventId?: string;
+  from?: string; // 'YYYY-MM-DD'
+  to?: string;
+}
+
 // portalAuth builds the Authorization header carrying a DJ portal token (EL-038).
 function portalAuth(token: string) {
   return { Authorization: `Bearer ${token}` };
+}
+
+// performanceParams maps the optional window/event filter to query params, omitting
+// empties so the backend's "unset" branches apply.
+function performanceParams(filter: PerformanceFilter): Record<string, string> {
+  const params: Record<string, string> = {};
+  if (filter.eventId) params['event_id'] = filter.eventId;
+  if (filter.from) params['from'] = filter.from;
+  if (filter.to) params['to'] = filter.to;
+  return params;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -108,6 +152,20 @@ export class ApiService {
   // Mint (or regenerate) a DJ's personal portal link.
   generateDJPortalToken(djId: string) {
     return this.http.post<{ portal_url: string; expires_at: string }>(`${this.base}/api/djs/${djId}/token`, {});
+  }
+
+  // Performance (EL-043/044). Routes registered by the backend performance handler:
+  // GET /api/djs/:id/performance, GET /api/performance, GET /api/performance/underserved.
+  getDJPerformance(id: string) {
+    return this.http.get<DJPerformance>(`${this.base}/api/djs/${id}/performance`);
+  }
+  getPerformance(filter: PerformanceFilter = {}) {
+    return this.http.get<RosterPerformance[]>(`${this.base}/api/performance`, { params: performanceParams(filter) });
+  }
+  getUnderserved(threshold?: number, filter: PerformanceFilter = {}) {
+    const params = performanceParams(filter);
+    if (threshold != null) params['threshold'] = String(threshold);
+    return this.http.get<RosterPerformance[]>(`${this.base}/api/performance/underserved`, { params });
   }
 
   // Events
