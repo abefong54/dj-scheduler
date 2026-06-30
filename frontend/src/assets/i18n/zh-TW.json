@@ -6,6 +6,7 @@
   "shell.workspace": "工作區",
   "shell.nav.events": "活動",
   "shell.nav.djs": "DJ",
+  "shell.nav.performance": "演出表現",
   "shell.nav.schedule": "時間表",
   "shell.search": "搜尋…",
   "shell.new": "新增",
@@ -142,5 +143,24 @@
   "slot.confirmation.flagged": "⚠ 已標記",
   "slot.confirmation.awaiting": "— 待回覆",
   "dj.copy_portal_link": "複製專屬連結",
-  "dj.copy_portal_link.copied": "已複製！"
+  "dj.copy_portal_link.copied": "已複製！",
+
+  "performance.title": "演出表現",
+  "performance.stat.students": "學生",
+  "performance.stat.underserved": "機會不足",
+  "performance.stat.totalSets": "總場次",
+  "performance.underserved.title": "演出機會不足的學生",
+  "performance.underserved.empty": "每位學生都有上台機會。",
+  "performance.repsCount": "{{count}} 場",
+  "performance.col.student": "學生",
+  "performance.col.reps": "場次",
+  "performance.col.stageTime": "演出時長",
+  "performance.col.lastPlayed": "最近演出",
+  "performance.col.actions": "操作",
+  "performance.never": "尚無",
+  "performance.view": "查看紀錄",
+  "performance.byGenre": "各曲風",
+  "performance.noGenre": "未分類",
+  "performance.close": "關閉",
+  "performance.underservedFlag": "機會不足"
 }

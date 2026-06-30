@@ -6,6 +6,7 @@
   "shell.workspace": "Workspace",
   "shell.nav.events": "Events",
   "shell.nav.djs": "DJs",
+  "shell.nav.performance": "Performance",
   "shell.nav.schedule": "Schedule",
   "shell.search": "Search…",
   "shell.new": "New",
@@ -143,5 +144,24 @@
   "slot.confirmation.flagged": "⚠ Flagged",
   "slot.confirmation.awaiting": "— Awaiting",
   "dj.copy_portal_link": "Copy portal link",
-  "dj.copy_portal_link.copied": "Copied!"
+  "dj.copy_portal_link.copied": "Copied!",
+
+  "performance.title": "Performance",
+  "performance.stat.students": "Students",
+  "performance.stat.underserved": "Under-served",
+  "performance.stat.totalSets": "Total sets",
+  "performance.underserved.title": "Under-served students",
+  "performance.underserved.empty": "Everyone's getting stage time.",
+  "performance.repsCount": "{{count}} reps",
+  "performance.col.student": "Student",
+  "performance.col.reps": "Reps",
+  "performance.col.stageTime": "Stage time",
+  "performance.col.lastPlayed": "Last played",
+  "performance.col.actions": "Actions",
+  "performance.never": "Never",
+  "performance.view": "View history",
+  "performance.byGenre": "By genre",
+  "performance.noGenre": "No genre",
+  "performance.close": "Close",
+  "performance.underservedFlag": "Under-served"
 }
