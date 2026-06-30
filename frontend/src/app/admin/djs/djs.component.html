@@ -1,6 +1,8 @@
-<div class="page">
-  <h1 class="page-title mb-6">{{ 'djs.title' | translate }}</h1>
-
+<app-admin-shell
+  activeNav="djs"
+  [title]="'djs.title' | translate"
+  [breadcrumb]="'shell.workspace' | translate"
+>
   <div class="card card-body mb-6">
     <h2 class="section-title mb-4">{{ 'djs.new' | translate }}</h2>
     <div class="form-group">
@@ -111,4 +113,4 @@
       </div>
     </aside>
   }
-</div>
+</app-admin-shell>
