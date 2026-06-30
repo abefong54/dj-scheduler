@@ -94,13 +94,21 @@
   .form-actions { @apply flex gap-3; }
   .form-grid-2 { @apply grid grid-cols-2 gap-4; }
 
-  /* Buttons */
-  .btn-primary { @apply bg-violet-600 hover:bg-violet-700 text-white font-medium px-4 py-2 rounded-lg transition-colors; }
-  .btn-secondary { @apply border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium px-4 py-2 rounded-lg transition-colors; }
-  .btn-sm { @apply bg-violet-600 hover:bg-violet-700 text-white font-medium px-3 py-1.5 rounded-md text-sm transition-colors; }
-  .btn-sm-outline { @apply border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium px-3 py-1.5 rounded-md text-sm transition-colors; }
-  .btn-green { @apply bg-green-500 hover:bg-green-600 text-white font-medium px-3 py-1.5 rounded-md text-sm transition-colors; }
-  .btn-danger { @apply text-red-500 hover:text-red-700 text-sm font-medium transition-colors; }
+  /* Buttons — the EventLineup button standard.
+     Compose: base `.btn` + a colour variant + a size. The `<app-button>`
+     component (src/app/shared/button.component.ts) applies these, and
+     button-styled `<a>` links reuse the same names so the look is defined once.
+     Variants are colour-only; sizes are padding/type-scale only. */
+  .btn { @apply inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-violet-400 disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn-primary { @apply bg-violet-600 hover:bg-violet-700 text-white; }
+  .btn-secondary { @apply border border-gray-300 text-gray-700 hover:bg-gray-50; }
+  .btn-danger { @apply border border-red-300 text-red-600 hover:bg-red-50; }
+  .btn-success { @apply bg-green-500 hover:bg-green-600 text-white; }
+  .btn-ghost { @apply text-gray-600 hover:bg-gray-100; }
+  .btn-md { @apply px-4 py-2 text-sm; }
+  .btn-sm { @apply px-3 py-1.5 text-sm; }
+  .btn-xs { @apply px-2.5 py-1 text-xs; }
+  .btn-icon { @apply p-1.5 rounded-md; }
 
   /* Modals */
   .modal-overlay { @apply fixed inset-0 z-50 flex items-center justify-center bg-black/40; }
@@ -305,13 +313,40 @@
   .events-tab-btn { @apply pb-3 text-sm font-medium transition-colors; }
   .events-tab-active { @apply border-b-2 border-violet-600 text-violet-600; }
   .events-tab-inactive { @apply text-gray-500 hover:text-gray-700; }
+
+  /* Console restyle (EL-064): stat tiles + data table on the light surface. */
+  .events-stats { @apply grid grid-cols-1 gap-4 mb-8 sm:grid-cols-2 lg:grid-cols-3; }
+  .events-table-wrap {
+    @apply overflow-hidden rounded-xl border;
+    background: var(--card);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .events-table { @apply w-full border-collapse text-sm; }
+  .events-th { @apply px-5 py-3; border-bottom: 1px solid var(--border); }
+  .events-th-actions { @apply text-right; }
+  .events-row { transition: background-color 0.12s ease; }
+  .events-row:not(:last-child) .events-td { border-bottom: 1px solid var(--border); }
+  .events-row:hover { background: var(--surface); }
+  .events-td { @apply px-5 py-3 align-middle; color: var(--ink); }
+  .events-name-link { @apply inline-flex items-center gap-2.5; }
+  .events-name { @apply font-medium; color: var(--ink); }
+  .events-name-link:hover .events-name { color: var(--violet); }
+  .events-dot { @apply h-2.5 w-2.5 flex-shrink-0 rounded-full; }
+  .events-dot-live { background: var(--live); }
+  .events-dot-upcoming { background: var(--violet); }
+  .events-dot-past { background: var(--muted); }
+  .events-venue, .events-dates, .events-genres { color: var(--muted); }
+  .events-dates { font-family: var(--font-mono); @apply text-xs; }
+  .events-status-muted { color: var(--muted); }
+  .events-td-actions { @apply flex items-center justify-end gap-2; }
+
   .event-list { @apply space-y-3; }
   .event-card { @apply bg-white border border-gray-200 rounded-lg p-4 shadow-sm; }
   .event-card-past { @apply bg-white border border-gray-200 rounded-lg p-4 shadow-sm opacity-75; }
   .event-name { @apply font-semibold text-gray-900; }
   .event-meta { @apply text-sm text-gray-500 mt-0.5; }
   .event-actions { @apply flex items-center gap-3 mt-3; }
-  .event-delete-btn { @apply ml-auto; }
 
   /* Event form — event-new.component */
   .event-form { @apply bg-white border border-gray-200 rounded-lg p-6; }
@@ -327,7 +362,6 @@
   .dialog-title { @apply text-base font-semibold text-gray-900 mb-2; }
   .dialog-message { @apply text-sm text-gray-600 mb-5 leading-relaxed; }
   .dialog-actions { @apply flex justify-end gap-3; }
-  .btn-confirm-danger { @apply bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-colors; }
 
   /* Shared data table — data-table.component */
   .dt-wrap { @apply w-full; }
@@ -350,7 +384,6 @@
   .schedule-event-name { @apply text-lg font-bold text-gray-900 leading-tight; }
   .schedule-venue { @apply text-sm text-gray-500 mt-0.5; }
   .schedule-body { @apply max-w-5xl mx-auto px-4 py-4; }
-  .share-btn { @apply w-full sm:w-auto mb-4 flex items-center justify-center gap-2; }
   .schedule-back-link { @apply shrink-0; }
   .date-tabs { @apply flex gap-2 flex-wrap mb-4; }
   .date-tab { @apply px-4 py-2 rounded-full text-sm font-medium transition-colors; }
@@ -545,4 +578,69 @@
     @apply mx-auto w-full px-8 py-8;
     max-width: 1200px;
   }
+}
+
+/* ── EL-065 Console form (New event) ──────────────────────────────────────
+   Reusable form primitives for the light Console workspace (design-system §6).
+   Lives here (not the component CSS) so the violet-focus + cyan-glow box-shadow
+   and token-driven rules don't @apply-inflate the per-component style budget. */
+@layer components {
+  .console-card {
+    @apply mx-auto w-full;
+    max-width: 760px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-6);
+  }
+  .console-field { @apply mb-5; }
+  .console-grid-2 { @apply grid grid-cols-1 gap-4 sm:grid-cols-2; }
+  .console-label {
+    @apply mb-2 block text-xs;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .console-input {
+    @apply w-full;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-input);
+    padding: 10px 14px;
+    font-family: var(--font-body);
+    color: var(--ink);
+    transition:
+      border-color 150ms ease,
+      box-shadow 150ms ease;
+  }
+  .console-input::placeholder { color: var(--muted); }
+  .console-input:focus {
+    outline: none;
+    border-color: var(--violet);
+    box-shadow:
+      0 0 0 3px rgba(124, 58, 237, 0.18),
+      0 0 14px rgba(34, 211, 238, 0.25);
+  }
+  .console-actions {
+    @apply mt-6 flex items-center justify-end gap-3 pt-5;
+    border-top: 1px solid var(--border);
+  }
+  .console-btn-primary {
+    @apply font-medium text-white transition-colors;
+    background: var(--violet);
+    border-radius: var(--radius-input);
+    padding: 10px 18px;
+  }
+  .console-btn-primary:hover { background: var(--violet-deep); }
+  .console-btn-secondary {
+    @apply font-medium transition-colors;
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-input);
+    padding: 10px 18px;
+  }
+  .console-btn-secondary:hover { background: var(--surface); }
 }

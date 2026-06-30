@@ -13,7 +13,8 @@
       <input [ngModel]="newDJGenres()" (ngModelChange)="newDJGenres.set($event)"
         name="genres" type="text" class="form-input" placeholder="genre1, genre2, genre3" data-testid="dj-genres-input" />
     </div>
-    <button (click)="addDJ()" class="btn-primary" data-testid="dj-add-btn">+ {{ 'actions.add' | translate }}</button>
+    <app-button variant="primary" icon="plus" [label]="'actions.add' | translate"
+      testId="dj-add-btn" (click)="addDJ()" />
   </div>
 
   <app-data-table [columns]="djColumns()" [data]="djsAsRows()">
@@ -34,15 +35,18 @@
       }
     </ng-template>
     <ng-template appColumnDef="actions" let-row="row">
-      <button (click)="openEdit(row)" class="btn-sm-outline" [attr.data-testid]="'dj-edit-' + rowId(row)">
-        {{ 'actions.edit' | translate }}
-      </button>
-      <button (click)="copyPortalLink(rowId(row))" class="btn-sm-outline">
-        {{ (copiedDJId() === rowId(row) ? 'dj.copy_portal_link.copied' : 'dj.copy_portal_link') | translate }}
-      </button>
-      <button (click)="deleteDJ(rowId(row))" class="btn-danger" [attr.data-testid]="'dj-delete-' + rowId(row)">
-        {{ 'actions.delete' | translate }}
-      </button>
+      <div class="row-actions">
+        <app-button variant="secondary" size="icon" icon="edit" [iconOnly]="true"
+          [label]="'actions.edit' | translate" [testId]="'dj-edit-' + rowId(row)"
+          (click)="openEdit(row)" />
+        <app-button variant="secondary" size="icon"
+          [icon]="copiedDJId() === rowId(row) ? 'check' : 'link'" [iconOnly]="true"
+          [label]="(copiedDJId() === rowId(row) ? 'dj.copy_portal_link.copied' : 'dj.copy_portal_link') | translate"
+          [testId]="'dj-copy-' + rowId(row)" (click)="copyPortalLink(rowId(row))" />
+        <app-button variant="danger" size="icon" icon="trash" [iconOnly]="true"
+          [label]="'actions.delete' | translate" [testId]="'dj-delete-' + rowId(row)"
+          (click)="deleteDJ(rowId(row))" />
+      </div>
     </ng-template>
   </app-data-table>
 
@@ -61,14 +65,12 @@
       <div class="form-group">
         <label class="form-label">{{ 'djs.status' | translate }}</label>
         <div class="flex gap-2">
-          <button type="button" (click)="editIsStudent.set(true)"
-            [class]="editIsStudent() ? 'btn-primary' : 'btn-sm-outline'" data-testid="dj-edit-student">
-            {{ 'djs.student' | translate }}
-          </button>
-          <button type="button" (click)="editIsStudent.set(false)"
-            [class]="!editIsStudent() ? 'btn-primary' : 'btn-sm-outline'" data-testid="dj-edit-graduate">
-            {{ 'djs.graduate' | translate }}
-          </button>
+          <app-button size="sm" [variant]="editIsStudent() ? 'primary' : 'secondary'"
+            [label]="'djs.student' | translate" testId="dj-edit-student"
+            (click)="editIsStudent.set(true)" />
+          <app-button size="sm" [variant]="!editIsStudent() ? 'primary' : 'secondary'"
+            [label]="'djs.graduate' | translate" testId="dj-edit-graduate"
+            (click)="editIsStudent.set(false)" />
         </div>
       </div>
 
@@ -76,11 +78,11 @@
         <label class="form-label">{{ 'djs.certifications' | translate }}</label>
         <div class="flex flex-wrap gap-2">
           @for (opt of certOptions; track opt) {
-            <button type="button" (click)="toggleCert(opt)"
-              [class]="isCertSelected(opt) ? 'btn-primary' : 'btn-sm-outline'"
-              [attr.data-testid]="'dj-edit-cert-' + opt">
-              {{ isCertSelected(opt) ? '✓ ' : '' }}{{ opt }}
-            </button>
+            <app-button type="button" size="sm"
+              [variant]="isCertSelected(opt) ? 'primary' : 'secondary'"
+              [icon]="isCertSelected(opt) ? 'check' : null"
+              [label]="opt" [testId]="'dj-edit-cert-' + opt"
+              (click)="toggleCert(opt)" />
           }
         </div>
         <!-- custom (free-text) certifications beyond the standard curriculum -->
@@ -96,13 +98,16 @@
           <input [ngModel]="editCustom()" (ngModelChange)="editCustom.set($event)" name="editCustom"
             type="text" class="form-input" placeholder="{{ 'djs.custom_cert' | translate }}"
             (keyup.enter)="addCustomCert()" data-testid="dj-edit-custom" />
-          <button type="button" (click)="addCustomCert()" class="btn-sm-outline">+ {{ 'actions.add' | translate }}</button>
+          <app-button type="button" size="sm" icon="plus"
+            [label]="'actions.add' | translate" (click)="addCustomCert()" />
         </div>
       </div>
 
       <div class="mt-6 flex gap-2">
-        <button (click)="saveEdit()" class="btn-primary" data-testid="dj-edit-save">{{ 'actions.save' | translate }}</button>
-        <button (click)="cancelEdit()" class="btn-sm-outline" data-testid="dj-edit-cancel">{{ 'actions.cancel' | translate }}</button>
+        <app-button variant="primary" [label]="'actions.save' | translate"
+          testId="dj-edit-save" (click)="saveEdit()" />
+        <app-button [label]="'actions.cancel' | translate"
+          testId="dj-edit-cancel" (click)="cancelEdit()" />
       </div>
     </aside>
   }

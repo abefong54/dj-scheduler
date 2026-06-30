@@ -2,8 +2,8 @@
   activeNav="events"
   [title]="event()?.name ?? ''"
   [breadcrumb]="'shell.nav.events' | translate"
-  [searchValue]="slotSearch()"
-  (searchValueChange)="slotSearch.set($event)"
+  [searchValue]="slotTable.search()"
+  (searchValueChange)="slotTable.search.set($event)"
 >
   <!-- Topbar secondary actions (left of the avatar) -->
   <a shell-actions routerLink="/admin/events" class="detail-topbtn">← {{ 'actions.back' | translate }}</a>
@@ -70,15 +70,15 @@
           <table class="slot-table">
             <thead>
               <tr class="slot-head-row">
-                <th class="slot-th slot-th-sort" (click)="sortSlots('stage_name')">
-                  {{ 'slots.stage' | translate }}{{ sortIndicator('stage_name') }}
+                <th class="slot-th slot-th-sort" (click)="slotTable.toggle('stage_name')">
+                  {{ 'slots.stage' | translate }}@if (slotTable.indicator('stage_name'); as ind) { {{ ind }}}
                 </th>
-                <th class="slot-th slot-th-sort" (click)="sortSlots('dj_name')">
-                  {{ 'slots.dj' | translate }}{{ sortIndicator('dj_name') }}
+                <th class="slot-th slot-th-sort" (click)="slotTable.toggle('dj_name')">
+                  {{ 'slots.dj' | translate }}@if (slotTable.indicator('dj_name'); as ind) { {{ ind }}}
                 </th>
                 <th class="slot-th">{{ 'slots.genre' | translate }}</th>
-                <th class="slot-th slot-th-num slot-th-sort" (click)="sortSlots('start_time')">
-                  {{ 'slots.start' | translate }}{{ sortIndicator('start_time') }}
+                <th class="slot-th slot-th-num slot-th-sort" (click)="slotTable.toggle('start_time')">
+                  {{ 'slots.start' | translate }}@if (slotTable.indicator('start_time'); as ind) { {{ ind }}}
                 </th>
                 <th class="slot-th slot-th-num">{{ 'slots.duration' | translate }}</th>
                 <th class="slot-th">{{ 'slots.notes' | translate }}</th>
@@ -86,7 +86,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (slot of sortedFilteredSlots(); track slot.id) {
+              @for (slot of slotTable.view(); track slot.id) {
                 @if (editingSlotId() === slot.id) {
                   <tr class="edit-row">
                     <td class="edit-cell">
