@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { provideTranslateService } from '@ngx-translate/core';
@@ -6,6 +7,37 @@ import { provideTranslateService } from '@ngx-translate/core';
 import { DjsComponent } from './djs.component';
 import { ApiService } from '../../services/api.service';
 import { DialogService } from '../../shared/dialog.service';
+
+// The DJs page must wrap itself in the console AdminShell so the left sidebar is
+// always present and shows the DJs nav as active (it previously had no shell, so
+// navigating to DJs dropped the sidebar entirely).
+describe('DjsComponent — Console shell', () => {
+  const apiMock = { getDJs: () => of([]) };
+
+  function render() {
+    TestBed.configureTestingModule({
+      imports: [DjsComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: apiMock },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+      ],
+    });
+    const fixture = TestBed.createComponent(DjsComponent);
+    fixture.detectChanges();
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  it('wraps the page in the AdminShell with the DJs nav active', () => {
+    const root = render();
+    expect(root.querySelector('app-admin-shell')).toBeTruthy();
+    expect(root.querySelector('.shell-sidebar')).toBeTruthy();
+    expect(
+      root.querySelector('[data-nav="djs"]')?.classList.contains('shell-nav-active'),
+    ).toBe(true);
+  });
+});
 
 // US-012: the organizer mints a DJ's portal link and copies it to the clipboard,
 // with a brief "Copied!" flash.

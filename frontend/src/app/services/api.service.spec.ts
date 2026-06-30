@@ -117,4 +117,46 @@ describe('ApiService', () => {
       expect(result).toEqual(SLOT);
     });
   });
+
+  // EL-043/044: verify the exact method+path the backend registers for the three
+  // performance endpoints (the EL-035 contract guard).
+  describe('performance endpoints (EL-043/044)', () => {
+    it('getPerformance GETs /api/performance', () => {
+      api.getPerformance().subscribe();
+      const req = httpMock.expectOne('/api/performance');
+      expect(req.request.method).toBe('GET');
+      req.flush([]);
+    });
+
+    it('getPerformance forwards event_id/from/to as query params', () => {
+      api.getPerformance({ eventId: 'e1', from: '2026-07-01', to: '2026-07-31' }).subscribe();
+      const req = httpMock.expectOne(r => r.url === '/api/performance');
+      expect(req.request.params.get('event_id')).toBe('e1');
+      expect(req.request.params.get('from')).toBe('2026-07-01');
+      expect(req.request.params.get('to')).toBe('2026-07-31');
+      req.flush([]);
+    });
+
+    it('getUnderserved GETs /api/performance/underserved and passes threshold', () => {
+      api.getUnderserved(3).subscribe();
+      const req = httpMock.expectOne(r => r.url === '/api/performance/underserved');
+      expect(req.request.method).toBe('GET');
+      expect(req.request.params.get('threshold')).toBe('3');
+      req.flush([]);
+    });
+
+    it('getUnderserved omits threshold when not provided', () => {
+      api.getUnderserved().subscribe();
+      const req = httpMock.expectOne('/api/performance/underserved');
+      expect(req.request.params.get('threshold')).toBeNull();
+      req.flush([]);
+    });
+
+    it('getDJPerformance GETs /api/djs/:id/performance', () => {
+      api.getDJPerformance('dj-1').subscribe();
+      const req = httpMock.expectOne('/api/djs/dj-1/performance');
+      expect(req.request.method).toBe('GET');
+      req.flush({ dj_id: 'dj-1', dj_name: 'X', reps: 0, total_minutes: 0, last_played: '', by_genre: [] });
+    });
+  });
 });

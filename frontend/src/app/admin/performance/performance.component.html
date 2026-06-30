@@ -1,0 +1,101 @@
+<app-admin-shell
+  activeNav="performance"
+  [title]="'performance.title' | translate"
+  [breadcrumb]="'shell.workspace' | translate"
+>
+  <!-- KPI tiles -->
+  <section class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div class="stat-tile">
+      <div class="stat-tile-number">{{ roster().length }}</div>
+      <div class="stat-tile-caption">{{ 'performance.stat.students' | translate }}</div>
+    </div>
+    <div class="stat-tile" data-testid="stat-underserved">
+      <div class="stat-tile-number">{{ underserved().length }}</div>
+      <div class="stat-tile-caption">{{ 'performance.stat.underserved' | translate }}</div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-tile-number">{{ totalReps() }}</div>
+      <div class="stat-tile-caption">{{ 'performance.stat.totalSets' | translate }}</div>
+    </div>
+  </section>
+
+  <!-- Under-served callout -->
+  <div class="card card-body mb-6" data-testid="underserved-callout">
+    <h2 class="section-title mb-3">{{ 'performance.underserved.title' | translate }}</h2>
+    @if (underserved().length === 0) {
+      <p class="text-sm" style="color: var(--muted)">{{ 'performance.underserved.empty' | translate }}</p>
+    } @else {
+      <ul class="flex flex-col gap-2">
+        @for (u of underserved(); track u.dj_id) {
+          <li class="flex items-center justify-between rounded-lg bg-amber-50 px-3 py-2"
+            [attr.data-testid]="'underserved-' + u.dj_id">
+            <span class="flex items-center gap-2">
+              <span class="inline-block h-2 w-2 flex-shrink-0 rounded-full bg-amber-500"></span>
+              <span class="font-medium">{{ u.dj_name }}</span>
+            </span>
+            <span class="mono-label">{{ 'performance.repsCount' | translate:{ count: u.reps } }}</span>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+  <!-- Per-DJ drill-in -->
+  @if (selectedPerf(); as p) {
+    <div class="card card-body mb-6" data-testid="drill-in">
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="section-title">{{ p.dj_name }}</h2>
+        <app-button variant="secondary" size="sm" [label]="'performance.close' | translate"
+          testId="drill-close" (click)="closeDrill()" />
+      </div>
+      <div class="mb-4 flex gap-8">
+        <div>
+          <div class="mono-label">{{ 'performance.col.reps' | translate }}</div>
+          <div class="text-xl font-semibold">{{ p.reps }}</div>
+        </div>
+        <div>
+          <div class="mono-label">{{ 'performance.col.stageTime' | translate }}</div>
+          <div class="text-xl font-semibold">{{ fmtMinutes(p.total_minutes) }}</div>
+        </div>
+        <div>
+          <div class="mono-label">{{ 'performance.col.lastPlayed' | translate }}</div>
+          <div class="text-xl font-semibold">{{ p.last_played || ('performance.never' | translate) }}</div>
+        </div>
+      </div>
+      <h3 class="mono-label mb-2">{{ 'performance.byGenre' | translate }}</h3>
+      @if (p.by_genre.length === 0) {
+        <p class="text-sm" style="color: var(--muted)">{{ 'performance.never' | translate }}</p>
+      } @else {
+        <ul class="flex flex-col gap-1">
+          @for (g of p.by_genre; track g.genre) {
+            <li class="flex items-center justify-between text-sm">
+              <span>{{ g.genre || ('performance.noGenre' | translate) }}</span>
+              <span class="mono-label">{{ g.reps }} · {{ fmtMinutes(g.total_minutes) }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+
+  <!-- Roster performance table -->
+  <app-data-table [columns]="columns()" [data]="rows()">
+    <ng-template appColumnDef="name" let-row="row">
+      <span class="flex items-center gap-2">
+        @if (row['underserved']) {
+          <span class="inline-block h-2 w-2 flex-shrink-0 rounded-full bg-amber-500"
+            [attr.title]="'performance.underservedFlag' | translate"
+            [attr.data-testid]="'flag-' + row['id']"></span>
+        }
+        <span class="font-medium">{{ row['name'] }}</span>
+      </span>
+    </ng-template>
+    <ng-template appColumnDef="lastPlayed" let-row="row">
+      {{ row['lastPlayed'] || ('performance.never' | translate) }}
+    </ng-template>
+    <ng-template appColumnDef="actions" let-row="row">
+      <app-button variant="secondary" size="sm" [label]="'performance.view' | translate"
+        [testId]="'perf-view-' + row['id']" (click)="viewDj(rowId(row))" />
+    </ng-template>
+  </app-data-table>
+</app-admin-shell>

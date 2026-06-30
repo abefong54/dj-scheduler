@@ -35,11 +35,10 @@ describe('AdminShellComponent', () => {
       fixture.detectChanges();
     });
 
-    it('renders the dark sidebar with wordmark and WORKSPACE label', () => {
+    it('renders the dark sidebar opening at the WORKSPACE label (brand lives in the top bar, not the sidebar)', () => {
       expect(root().querySelector('.shell-sidebar')).toBeTruthy();
-      expect(root().querySelector('.shell-wordmark')?.textContent).toContain(
-        'EventLineup',
-      );
+      // The wordmark was moved to the global top bar so the brand appears once.
+      expect(root().querySelector('.shell-wordmark')).toBeNull();
       expect(
         root().querySelector('.shell-section-label')?.textContent,
       ).toContain('shell.workspace');
@@ -52,11 +51,11 @@ describe('AdminShellComponent', () => {
       );
     });
 
-    it('renders the three nav items (Events / DJs / Schedule)', () => {
+    it('renders the four nav items (Events / DJs / Performance / Schedule)', () => {
       const items = root().querySelectorAll('.shell-nav-item');
-      expect(items.length).toBe(3);
+      expect(items.length).toBe(4);
       const navIds = Array.from(items).map((el) => el.getAttribute('data-nav'));
-      expect(navIds).toEqual(['events', 'djs', 'schedule']);
+      expect(navIds).toEqual(['events', 'djs', 'performance', 'schedule']);
     });
 
     it('projects arbitrary page content into the light surface', () => {
