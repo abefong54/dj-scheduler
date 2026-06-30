@@ -240,6 +240,34 @@
   .events-tab-btn { @apply pb-3 text-sm font-medium transition-colors; }
   .events-tab-active { @apply border-b-2 border-violet-600 text-violet-600; }
   .events-tab-inactive { @apply text-gray-500 hover:text-gray-700; }
+
+  /* Console restyle (EL-064): stat tiles + data table on the light surface. */
+  .events-stats { @apply grid grid-cols-1 gap-4 mb-8 sm:grid-cols-2 lg:grid-cols-3; }
+  .events-table-wrap {
+    @apply overflow-hidden rounded-xl border;
+    background: var(--card);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .events-table { @apply w-full border-collapse text-sm; }
+  .events-th { @apply px-5 py-3; border-bottom: 1px solid var(--border); }
+  .events-th-actions { @apply text-right; }
+  .events-row { transition: background-color 0.12s ease; }
+  .events-row:not(:last-child) .events-td { border-bottom: 1px solid var(--border); }
+  .events-row:hover { background: var(--surface); }
+  .events-td { @apply px-5 py-3 align-middle; color: var(--ink); }
+  .events-name-link { @apply inline-flex items-center gap-2.5; }
+  .events-name { @apply font-medium; color: var(--ink); }
+  .events-name-link:hover .events-name { color: var(--violet); }
+  .events-dot { @apply h-2.5 w-2.5 flex-shrink-0 rounded-full; }
+  .events-dot-live { background: var(--live); }
+  .events-dot-upcoming { background: var(--violet); }
+  .events-dot-past { background: var(--muted); }
+  .events-venue, .events-dates, .events-genres { color: var(--muted); }
+  .events-dates { font-family: var(--font-mono); @apply text-xs; }
+  .events-status-muted { color: var(--muted); }
+  .events-td-actions { @apply flex items-center justify-end gap-2; }
+
   .event-list { @apply space-y-3; }
   .event-card { @apply bg-white border border-gray-200 rounded-lg p-4 shadow-sm; }
   .event-card-past { @apply bg-white border border-gray-200 rounded-lg p-4 shadow-sm opacity-75; }

@@ -1,10 +1,25 @@
-<div class="page">
-  <div class="page-header">
-    <h1 class="page-title">{{ 'events.title' | translate }}</h1>
-    <a routerLink="/admin/events/new" class="btn-sm">
-      + {{ 'events.new' | translate }}
-    </a>
-  </div>
+<app-admin-shell
+  activeNav="events"
+  [title]="'events.title' | translate"
+  [breadcrumb]="'shell.workspace' | translate"
+  [newLabel]="'events.new' | translate"
+  (newClicked)="goToNew()"
+>
+  <!-- Stat tiles: real metrics derived from the loaded events. -->
+  <section class="events-stats">
+    <div class="stat-tile">
+      <span class="stat-tile-number">{{ upcoming().length }}</span>
+      <span class="stat-tile-caption">{{ 'events.stat.upcoming' | translate }}</span>
+    </div>
+    <div class="stat-tile">
+      <span class="stat-tile-number">{{ past().length }}</span>
+      <span class="stat-tile-caption">{{ 'events.stat.past' | translate }}</span>
+    </div>
+    <div class="stat-tile">
+      <span class="stat-tile-number">{{ events().length }}</span>
+      <span class="stat-tile-caption">{{ 'events.stat.total' | translate }}</span>
+    </div>
+  </section>
 
   <div class="events-tabs">
     <button (click)="activeTab.set('upcoming')"
@@ -19,48 +34,60 @@
     </button>
   </div>
 
-  <div class="event-list">
-    @if (activeTab() === 'upcoming') {
-      @if (upcoming().length === 0) {
-        <p class="empty-state">{{ 'events.noUpcoming' | translate }}</p>
-      }
-      @for (e of upcoming(); track e.id) {
-        <div class="event-card" [attr.data-testid]="'event-card-' + e.id">
-          <p class="event-name">{{ e.name }}</p>
-          <p class="event-meta">{{ e.venue_name }} · {{ formatDates(e) }}</p>
-          <div class="event-actions">
-            <a [routerLink]="['/admin/events', e.id]" class="btn-sm-outline" [attr.data-testid]="'event-view-' + e.id">
-              {{ 'events.view' | translate }}
-            </a>
-            <button (click)="clone(e.id)" class="btn-sm-outline" [attr.data-testid]="'event-clone-' + e.id">
-              {{ 'events.clone' | translate }}
-            </button>
-            <button (click)="delete(e.id)" class="btn-danger event-delete-btn" [attr.data-testid]="'event-delete-' + e.id">
-              {{ 'actions.delete' | translate }}
-            </button>
-          </div>
-        </div>
-      }
-    }
+  @let rows = activeTab() === 'upcoming' ? upcoming() : past();
 
-    @if (activeTab() === 'past') {
-      @if (past().length === 0) {
-        <p class="empty-state">{{ 'events.noPast' | translate }}</p>
-      }
-      @for (e of past(); track e.id) {
-        <div class="event-card-past">
-          <p class="event-name">{{ e.name }}</p>
-          <p class="event-meta">{{ e.venue_name }} · {{ formatDates(e) }}</p>
-          <div class="event-actions">
-            <a [routerLink]="['/admin/events', e.id]" class="btn-sm-outline">
-              {{ 'events.view' | translate }}
-            </a>
-            <button (click)="clone(e.id)" class="btn-sm-outline">
-              {{ 'events.clone' | translate }}
-            </button>
-          </div>
-        </div>
-      }
-    }
-  </div>
-</div>
+  @if (rows.length === 0) {
+    <p class="empty-state">
+      {{ (activeTab() === 'upcoming' ? 'events.noUpcoming' : 'events.noPast') | translate }}
+    </p>
+  } @else {
+    <div class="events-table-wrap">
+      <table class="events-table">
+        <thead>
+          <tr>
+            <th class="table-header events-th">{{ 'events.col.event' | translate }}</th>
+            <th class="table-header events-th">{{ 'events.col.venue' | translate }}</th>
+            <th class="table-header events-th">{{ 'events.col.dates' | translate }}</th>
+            <th class="table-header events-th">{{ 'events.col.genres' | translate }}</th>
+            <th class="table-header events-th">{{ 'events.col.status' | translate }}</th>
+            <th class="table-header events-th events-th-actions">{{ 'events.col.actions' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (e of rows; track e.id) {
+            <tr class="events-row" [attr.data-testid]="'event-card-' + e.id">
+              <td class="events-td">
+                <a [routerLink]="['/admin/events', e.id]"
+                  class="events-name-link"
+                  [attr.data-testid]="'event-view-' + e.id">
+                  <span class="events-dot" [class]="'events-dot-' + lifecycle(e)" aria-hidden="true"></span>
+                  <span class="events-name">{{ e.name }}</span>
+                </a>
+              </td>
+              <td class="events-td events-venue">{{ e.venue_name }}</td>
+              <td class="events-td events-dates">{{ formatDates(e) }}</td>
+              <td class="events-td events-genres">{{ e.genres.join(', ') || '—' }}</td>
+              <td class="events-td">
+                @if (isLive(e)) {
+                  <app-status-badge status="live" />
+                } @else {
+                  <span class="events-status-muted">—</span>
+                }
+              </td>
+              <td class="events-td events-td-actions">
+                <button (click)="clone(e.id)" class="btn-sm-outline" [attr.data-testid]="'event-clone-' + e.id">
+                  {{ 'events.clone' | translate }}
+                </button>
+                @if (activeTab() === 'upcoming') {
+                  <button (click)="delete(e.id)" class="btn-danger" [attr.data-testid]="'event-delete-' + e.id">
+                    {{ 'actions.delete' | translate }}
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</app-admin-shell>
