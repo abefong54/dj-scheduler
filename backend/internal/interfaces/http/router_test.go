@@ -15,6 +15,7 @@ import (
 	djuc "eventlineup/internal/usecase/dj"
 	eventuc "eventlineup/internal/usecase/event"
 	linenotifyuc "eventlineup/internal/usecase/linenotify"
+	perfuc "eventlineup/internal/usecase/performance"
 	slotuc "eventlineup/internal/usecase/slot"
 	stageuc "eventlineup/internal/usecase/stage"
 )
@@ -42,7 +43,8 @@ func fullRouter(t *testing.T) *gin.Engine {
 		eventuc.New(database.NewEventRepository(pool)),
 		"http://localhost:4200",
 	)
-	return httphandler.NewRouter("http://localhost:4200", routerTestSecret, pub, share, djPortal, dj, ev, st, sl, line)
+	perf := httphandler.NewPerformanceHandler(perfuc.New(database.NewPerformanceRepository(pool)))
+	return httphandler.NewRouter("http://localhost:4200", routerTestSecret, pub, share, djPortal, dj, ev, st, sl, line, perf)
 }
 
 func mintRouterToken(t *testing.T) string {
