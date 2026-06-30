@@ -1,0 +1,5 @@
+/* Visual styles for the shell live in the global components layer of
+   src/styles.css (.admin-shell, .shell-* classes). Do NOT add @apply rules
+   here — they inflate the per-component anyComponentStyle budget and fail
+   `ng build` (EL-032). Put utilities in the template markup or add a shared
+   class to src/styles.css. */

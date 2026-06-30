@@ -3,12 +3,12 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ApiService } from '../../services/api.service';
-import { ButtonComponent } from '../../shared/button.component';
+import { AdminShellComponent } from '../../shared/admin-shell.component';
 
 @Component({
   selector: 'app-event-new',
   standalone: true,
-  imports: [FormsModule, RouterLink, TranslatePipe, ButtonComponent],
+  imports: [FormsModule, RouterLink, TranslatePipe, AdminShellComponent],
   templateUrl: './event-new.component.html',
   styleUrl: './event-new.component.css',
 })

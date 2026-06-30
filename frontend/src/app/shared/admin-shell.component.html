@@ -1,0 +1,64 @@
+<div class="admin-shell">
+  <aside class="shell-sidebar">
+    <div class="shell-brand">
+      <span class="shell-wordmark">EventLineup</span>
+    </div>
+
+    <p class="shell-section-label mono-label">
+      {{ 'shell.workspace' | translate }}
+    </p>
+
+    <nav class="shell-nav">
+      @for (item of navItems; track item.id) {
+        <a
+          class="shell-nav-item"
+          [routerLink]="item.link"
+          [class.shell-nav-active]="isActive(item.id)"
+          [attr.data-nav]="item.id"
+        >
+          <span class="shell-nav-tick" aria-hidden="true"></span>
+          <span class="shell-nav-label">{{ item.labelKey | translate }}</span>
+        </a>
+      }
+    </nav>
+
+    <div class="shell-footer">
+      <span class="shell-avatar shell-footer-avatar">{{ userInitial() }}</span>
+      <span class="shell-org mono-label">{{ orgName() }}</span>
+    </div>
+  </aside>
+
+  <div class="shell-main">
+    <header class="shell-topbar">
+      <div class="shell-topbar-titles">
+        <h1 class="shell-page-title">
+          <ng-content select="[shell-title]">{{ title() }}</ng-content>
+        </h1>
+        @if (breadcrumb()) {
+          <span class="shell-breadcrumb">{{ breadcrumb() }}</span>
+        }
+      </div>
+
+      <div class="shell-topbar-actions">
+        <input
+          class="shell-search"
+          type="search"
+          [placeholder]="'shell.search' | translate"
+          [value]="searchValue()"
+          (input)="onSearch($event)"
+        />
+        <ng-content select="[shell-actions]"></ng-content>
+        @if (newLabel() !== null) {
+          <button type="button" class="shell-new-btn" (click)="newClicked.emit()">
+            + {{ newLabel() || ('shell.new' | translate) }}
+          </button>
+        }
+        <span class="shell-avatar">{{ userInitial() }}</span>
+      </div>
+    </header>
+
+    <main class="shell-content">
+      <ng-content></ng-content>
+    </main>
+  </div>
+</div>

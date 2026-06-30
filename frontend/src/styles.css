@@ -2,13 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── EL-061 Console design tokens ─────────────────────────────────────────
+   The single source of truth for the Console visual language (design-system
+   §2–4). Page components consume these via `var(--token)` — never hard-code
+   the hex values. */
+:root {
+  /* Core */
+  --ink: #14121c;          /* primary text (near-black, violet undertone) */
+  --muted: #6b6880;        /* secondary text, captions, mono labels */
+  --surface: #f7f7fb;      /* app background (calm light ground) */
+  --card: #ffffff;         /* cards, tables, inputs */
+  --border: #e8e6f0;       /* hairline borders, dividers (violet-tinted) */
+
+  /* Brand */
+  --violet: #7c3aed;       /* primary actions, active states, focus, brand */
+  --violet-deep: #6d28d9;  /* hover / pressed primary */
+  --void: #1a1a2e;         /* sidebar / dark nav base */
+  --void-2: #15131f;       /* sidebar gradient bottom */
+  --cyan: #22d3ee;         /* signal accent — live ticks, focus glow */
+
+  /* Semantic */
+  --success: #10b981;      /* confirmed */
+  --warning: #f59e0b;      /* pending */
+  --danger: #ef4444;       /* declined */
+  --live: #22d3ee;         /* live / now */
+
+  /* Stage palette (vivid presets — assign per stage) */
+  --stage-cyan: #06b6d4;
+  --stage-magenta: #ec4899;
+  --stage-lime: #84cc16;
+  --stage-orange: #f97316;
+  --stage-sky: #0ea5e9;
+  --stage-hot-pink: #ff1f8e;
+  --stage-yellow: #facc15;
+  --stage-teal: #14b8a6;
+
+  /* Radius */
+  --radius-card: 12px;
+  --radius-input: 8px;
+  --radius-pill: 9999px;
+
+  /* Shadow (low and soft) */
+  --shadow-sm: 0 1px 2px rgba(20, 18, 28, 0.06);
+  --shadow-lg: 0 8px 28px rgba(20, 18, 28, 0.1);
+
+  /* Spacing (8px system) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* Type families */
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+}
+
 @layer base {
   body {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: var(--font-body);
+    color: var(--ink);
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-family: var(--font-display);
   }
 }
 
@@ -188,6 +247,34 @@
   .events-tab-btn { @apply pb-3 text-sm font-medium transition-colors; }
   .events-tab-active { @apply border-b-2 border-violet-600 text-violet-600; }
   .events-tab-inactive { @apply text-gray-500 hover:text-gray-700; }
+
+  /* Console restyle (EL-064): stat tiles + data table on the light surface. */
+  .events-stats { @apply grid grid-cols-1 gap-4 mb-8 sm:grid-cols-2 lg:grid-cols-3; }
+  .events-table-wrap {
+    @apply overflow-hidden rounded-xl border;
+    background: var(--card);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .events-table { @apply w-full border-collapse text-sm; }
+  .events-th { @apply px-5 py-3; border-bottom: 1px solid var(--border); }
+  .events-th-actions { @apply text-right; }
+  .events-row { transition: background-color 0.12s ease; }
+  .events-row:not(:last-child) .events-td { border-bottom: 1px solid var(--border); }
+  .events-row:hover { background: var(--surface); }
+  .events-td { @apply px-5 py-3 align-middle; color: var(--ink); }
+  .events-name-link { @apply inline-flex items-center gap-2.5; }
+  .events-name { @apply font-medium; color: var(--ink); }
+  .events-name-link:hover .events-name { color: var(--violet); }
+  .events-dot { @apply h-2.5 w-2.5 flex-shrink-0 rounded-full; }
+  .events-dot-live { background: var(--live); }
+  .events-dot-upcoming { background: var(--violet); }
+  .events-dot-past { background: var(--muted); }
+  .events-venue, .events-dates, .events-genres { color: var(--muted); }
+  .events-dates { font-family: var(--font-mono); @apply text-xs; }
+  .events-status-muted { color: var(--muted); }
+  .events-td-actions { @apply flex items-center justify-end gap-2; }
+
   .event-list { @apply space-y-3; }
   .event-card { @apply bg-white border border-gray-200 rounded-lg p-4 shadow-sm; }
   .event-card-past { @apply bg-white border border-gray-200 rounded-lg p-4 shadow-sm opacity-75; }
@@ -258,4 +345,236 @@
   .grid-stage-name { @apply text-xs font-medium text-gray-800; }
   .grid-cell { @apply border border-gray-200 px-1 py-1 min-w-[5rem] align-top; }
   .grid-slot-block { @apply rounded px-2 py-1 text-white text-xs font-medium leading-tight; }
+}
+
+/* ── EL-061 Console design foundation ─────────────────────────────────────
+   Shared primitives + app-shell chrome. Class names are unique across the app
+   and consumed by AdminShellComponent / StatusBadgeComponent and reused by the
+   page reskins (EL-062…EL-066). Kept global so the per-component
+   anyComponentStyle budget stays clear (no @apply in *.component.css). */
+@layer components {
+  /* ── Reusable metadata primitives ── */
+
+  /* Mono uppercase metadata label (sidebar section labels, captions). */
+  .mono-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+
+  /* Mono uppercase data-table column header cell (design-system §3). */
+  .table-header {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+
+  /* Stat tile: monumental Space Grotesk number + mono caption. */
+  .stat-tile {
+    @apply rounded-xl border p-5;
+    background: var(--card);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .stat-tile-number {
+    font-family: var(--font-display);
+    @apply text-3xl font-bold leading-none;
+    color: var(--ink);
+  }
+  .stat-tile-caption {
+    font-family: var(--font-mono);
+    @apply mt-2 block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+
+  /* ── Status badge (StatusBadgeComponent) ── */
+  .status-badge {
+    font-family: var(--font-mono);
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider;
+  }
+  .status-badge-dot { @apply h-1.5 w-1.5 rounded-full; }
+  .status-confirmed { color: #047857; background: rgba(16, 185, 129, 0.12); }
+  .status-confirmed .status-badge-dot { background: var(--success); }
+  .status-pending { color: #b45309; background: rgba(245, 158, 11, 0.12); }
+  .status-pending .status-badge-dot { background: var(--warning); }
+  .status-declined { color: #b91c1c; background: rgba(239, 68, 68, 0.12); }
+  .status-declined .status-badge-dot { background: var(--danger); }
+  .status-live { color: #0e7490; background: rgba(34, 211, 238, 0.15); }
+  .status-live .status-badge-dot { background: var(--live); }
+
+  /* ── App shell (AdminShellComponent) ── */
+  .admin-shell {
+    @apply grid min-h-dvh;
+    grid-template-columns: 240px 1fr;
+    background: var(--surface);
+  }
+
+  /* Sidebar — dark void gradient. */
+  .shell-sidebar {
+    @apply flex flex-col px-4 py-5;
+    background: linear-gradient(180deg, var(--void) 0%, var(--void-2) 100%);
+  }
+  .shell-brand { @apply relative mb-6 px-2 pt-1; }
+  /* Faint emitted violet bloom behind the wordmark (Luminous Frequency). */
+  .shell-brand::before {
+    content: '';
+    @apply pointer-events-none absolute rounded-full;
+    left: -4px;
+    top: -8px;
+    width: 96px;
+    height: 48px;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.5), transparent 70%);
+    filter: blur(10px);
+  }
+  .shell-wordmark {
+    font-family: var(--font-display);
+    @apply relative z-10 text-lg font-bold text-white;
+  }
+  .shell-section-label { @apply mb-2 px-2; }
+  .shell-nav { @apply flex flex-col gap-1; }
+  .shell-nav-item {
+    @apply relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors;
+    color: rgba(255, 255, 255, 0.72);
+  }
+  .shell-nav-item:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .shell-nav-tick {
+    @apply absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full opacity-0 transition-opacity;
+    background: var(--cyan);
+  }
+  /* Active nav: violet-tinted pill + cyan left tick + faint glow. */
+  .shell-nav-active {
+    color: #fff;
+    background: rgba(124, 58, 237, 0.22);
+    box-shadow: 0 0 18px rgba(124, 58, 237, 0.25);
+  }
+  .shell-nav-active .shell-nav-tick {
+    opacity: 1;
+    box-shadow: 0 0 8px var(--cyan);
+  }
+  .shell-footer {
+    @apply mt-auto flex items-center gap-2 border-t pt-4;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  .shell-org { color: rgba(255, 255, 255, 0.6); }
+
+  /* Main column = topbar + content. */
+  .shell-main { @apply flex min-w-0 flex-col; }
+  .shell-topbar {
+    @apply sticky top-0 z-20 flex items-center justify-between gap-4 border-b px-8 py-4;
+    background: var(--card);
+    border-color: var(--border);
+  }
+  .shell-topbar-titles { @apply flex min-w-0 items-baseline gap-3; }
+  .shell-topbar-actions { @apply flex items-center gap-3; }
+  .shell-page-title {
+    font-family: var(--font-display);
+    @apply truncate text-2xl font-bold;
+    color: var(--ink);
+  }
+  .shell-breadcrumb {
+    font-family: var(--font-mono);
+    @apply whitespace-nowrap text-xs;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .shell-search {
+    @apply rounded-lg border px-3 py-1.5 text-sm;
+    background: var(--card);
+    border-color: var(--border);
+  }
+  .shell-search:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--violet), 0 0 0 4px rgba(34, 211, 238, 0.25);
+  }
+  .shell-new-btn {
+    @apply rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors;
+    background: var(--violet);
+  }
+  .shell-new-btn:hover { background: var(--violet-deep); }
+  .shell-avatar {
+    @apply inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white;
+    background: var(--violet);
+  }
+  .shell-content {
+    @apply mx-auto w-full px-8 py-8;
+    max-width: 1200px;
+  }
+}
+
+/* ── EL-065 Console form (New event) ──────────────────────────────────────
+   Reusable form primitives for the light Console workspace (design-system §6).
+   Lives here (not the component CSS) so the violet-focus + cyan-glow box-shadow
+   and token-driven rules don't @apply-inflate the per-component style budget. */
+@layer components {
+  .console-card {
+    @apply mx-auto w-full;
+    max-width: 760px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-6);
+  }
+  .console-field { @apply mb-5; }
+  .console-grid-2 { @apply grid grid-cols-1 gap-4 sm:grid-cols-2; }
+  .console-label {
+    @apply mb-2 block text-xs;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .console-input {
+    @apply w-full;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-input);
+    padding: 10px 14px;
+    font-family: var(--font-body);
+    color: var(--ink);
+    transition:
+      border-color 150ms ease,
+      box-shadow 150ms ease;
+  }
+  .console-input::placeholder { color: var(--muted); }
+  .console-input:focus {
+    outline: none;
+    border-color: var(--violet);
+    box-shadow:
+      0 0 0 3px rgba(124, 58, 237, 0.18),
+      0 0 14px rgba(34, 211, 238, 0.25);
+  }
+  .console-actions {
+    @apply mt-6 flex items-center justify-end gap-3 pt-5;
+    border-top: 1px solid var(--border);
+  }
+  .console-btn-primary {
+    @apply font-medium text-white transition-colors;
+    background: var(--violet);
+    border-radius: var(--radius-input);
+    padding: 10px 18px;
+  }
+  .console-btn-primary:hover { background: var(--violet-deep); }
+  .console-btn-secondary {
+    @apply font-medium transition-colors;
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-input);
+    padding: 10px 18px;
+  }
+  .console-btn-secondary:hover { background: var(--surface); }
 }
