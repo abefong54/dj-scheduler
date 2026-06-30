@@ -3,11 +3,13 @@ import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ApiService, Event } from '../../services/api.service';
 import { DialogService } from '../../shared/dialog.service';
+import { ButtonComponent } from '../../shared/button.component';
+import { IconComponent } from '../../shared/icon.component';
 
 @Component({
   selector: 'app-events-list',
   standalone: true,
-  imports: [RouterLink, TranslatePipe],
+  imports: [RouterLink, TranslatePipe, ButtonComponent, IconComponent],
   templateUrl: './events-list.component.html',
   styleUrl: './events-list.component.css',
 })

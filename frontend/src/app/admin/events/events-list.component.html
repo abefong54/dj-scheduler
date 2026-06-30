@@ -1,8 +1,9 @@
 <div class="page">
   <div class="page-header">
     <h1 class="page-title">{{ 'events.title' | translate }}</h1>
-    <a routerLink="/admin/events/new" class="btn-sm">
-      + {{ 'events.new' | translate }}
+    <a routerLink="/admin/events/new" class="btn btn-primary btn-sm">
+      <app-icon name="plus" class="w-4 h-4" />
+      {{ 'events.new' | translate }}
     </a>
   </div>
 
@@ -29,15 +30,17 @@
           <p class="event-name">{{ e.name }}</p>
           <p class="event-meta">{{ e.venue_name }} · {{ formatDates(e) }}</p>
           <div class="event-actions">
-            <a [routerLink]="['/admin/events', e.id]" class="btn-sm-outline" [attr.data-testid]="'event-view-' + e.id">
-              {{ 'events.view' | translate }}
+            <a [routerLink]="['/admin/events', e.id]" class="btn btn-secondary btn-icon"
+              [attr.data-testid]="'event-view-' + e.id"
+              [attr.aria-label]="'events.view' | translate" [title]="'events.view' | translate">
+              <app-icon name="eye" class="w-4 h-4" />
             </a>
-            <button (click)="clone(e.id)" class="btn-sm-outline" [attr.data-testid]="'event-clone-' + e.id">
-              {{ 'events.clone' | translate }}
-            </button>
-            <button (click)="delete(e.id)" class="btn-danger event-delete-btn" [attr.data-testid]="'event-delete-' + e.id">
-              {{ 'actions.delete' | translate }}
-            </button>
+            <app-button variant="secondary" size="icon" icon="clone" [iconOnly]="true"
+              [label]="'events.clone' | translate" [testId]="'event-clone-' + e.id"
+              (click)="clone(e.id)" />
+            <app-button class="ml-auto" variant="danger" size="icon" icon="trash" [iconOnly]="true"
+              [label]="'actions.delete' | translate" [testId]="'event-delete-' + e.id"
+              (click)="delete(e.id)" />
           </div>
         </div>
       }
@@ -52,12 +55,12 @@
           <p class="event-name">{{ e.name }}</p>
           <p class="event-meta">{{ e.venue_name }} · {{ formatDates(e) }}</p>
           <div class="event-actions">
-            <a [routerLink]="['/admin/events', e.id]" class="btn-sm-outline">
-              {{ 'events.view' | translate }}
+            <a [routerLink]="['/admin/events', e.id]" class="btn btn-secondary btn-icon"
+              [attr.aria-label]="'events.view' | translate" [title]="'events.view' | translate">
+              <app-icon name="eye" class="w-4 h-4" />
             </a>
-            <button (click)="clone(e.id)" class="btn-sm-outline">
-              {{ 'events.clone' | translate }}
-            </button>
+            <app-button variant="secondary" size="icon" icon="clone" [iconOnly]="true"
+              [label]="'events.clone' | translate" (click)="clone(e.id)" />
           </div>
         </div>
       }

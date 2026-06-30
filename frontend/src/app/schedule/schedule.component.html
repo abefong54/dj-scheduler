@@ -12,10 +12,8 @@
   </div>
 
   <div class="schedule-body">
-    <button (click)="shareViaLine()"
-      class="btn-green share-btn">
-      {{ 'schedule.share' | translate }}
-    </button>
+    <app-button variant="success" icon="share" [fullWidth]="true" class="block mb-4 sm:inline-block sm:w-auto"
+      [label]="'schedule.share' | translate" (click)="shareViaLine()" />
 
     @if (dates().length > 1) {
       <div class="date-tabs">
