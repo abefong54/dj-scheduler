@@ -43,8 +43,6 @@ export class AdminShellComponent {
   breadcrumb = input('');
   /** Organisation name shown in the sidebar footer (mono). */
   orgName = input('');
-  /** Single-letter / short avatar initial. */
-  userInitial = input('');
   /**
    * When non-null, renders the violet `+ New` topbar button. Empty string uses
    * the default translated "New" label; any other string is used verbatim.

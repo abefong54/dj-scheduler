@@ -1,9 +1,7 @@
 <div class="admin-shell">
   <aside class="shell-sidebar">
-    <div class="shell-brand">
-      <span class="shell-wordmark">EventLineup</span>
-    </div>
-
+    <!-- Brand lives once, in the global top bar (app.component). The sidebar
+         opens straight into the workspace nav. -->
     <p class="shell-section-label mono-label">
       {{ 'shell.workspace' | translate }}
     </p>
@@ -23,7 +21,6 @@
     </nav>
 
     <div class="shell-footer">
-      <span class="shell-avatar shell-footer-avatar">{{ userInitial() }}</span>
       <span class="shell-org mono-label">{{ orgName() }}</span>
     </div>
   </aside>
@@ -53,7 +50,6 @@
             + {{ newLabel() || ('shell.new' | translate) }}
           </button>
         }
-        <span class="shell-avatar">{{ userInitial() }}</span>
       </div>
     </header>
 
