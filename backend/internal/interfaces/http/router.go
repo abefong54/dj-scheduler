@@ -11,7 +11,7 @@ import (
 	"eventlineup/internal/interfaces/http/middleware"
 )
 
-func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, share *ShareHandler, djPortal *DJPortalHandler, dj *DJHandler, ev *EventHandler, st *StageHandler, sl *SlotHandler, line *LineHandler) *gin.Engine {
+func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, share *ShareHandler, djPortal *DJPortalHandler, dj *DJHandler, ev *EventHandler, st *StageHandler, sl *SlotHandler, line *LineHandler, perf *PerformanceHandler) *gin.Engine {
 	// gin.New() (not gin.Default()) so we control logging: the default logger
 	// writes the full request URL including query strings, leaking OAuth
 	// code/state and DJ portal tokens into access logs (EL-037). RequestLogger
@@ -39,6 +39,7 @@ func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, share *Shar
 	st.Register(api)
 	sl.Register(api)
 	line.Register(api)
+	perf.Register(api)
 
 	// Server-rendered per-DJ share/OG page (EL-049). Tokenless and public; lives
 	// at the engine root (not /api) because social/LINE crawlers fetch it directly
