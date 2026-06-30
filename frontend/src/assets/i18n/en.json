@@ -125,7 +125,7 @@
   "card.saving": "Saving…",
 
   "slot.confirmation.confirmed": "✓ Confirmed",
-  "slot.confirmation.flagged": "⚠ Flagged",
+  "slot.confirmation.flagged": "Flagged",
   "slot.confirmation.awaiting": "— Awaiting",
   "dj.copy_portal_link": "Copy portal link",
   "dj.copy_portal_link.copied": "Copied!"

@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 
@@ -227,5 +227,61 @@ describe('EventDetailComponent — certification gating (EL-042)', () => {
 
     component.addDjId = 'pro';
     expect(component.addCertWarning()).toBeNull();
+  });
+});
+
+// EL-066: Console restyle — the page renders inside the shared AdminShell with
+// a monumental event name, mono meta readout, mono table headers, and a Console
+// status badge. Presentation only; the behavior suites above guard the logic.
+describe('EventDetailComponent — Console restyle (EL-066)', () => {
+  let fixture: ComponentFixture<EventDetailComponent>;
+  const root = () => fixture.nativeElement as HTMLElement;
+
+  const CONFIRMED_SLOT: Slot = { ...SLOT, dj_confirmation: 'confirmed' } as Slot;
+
+  const apiMock = {
+    getEvent: () => of(EVENT),
+    getStages: () => of(STAGES),
+    getSlots: () => of([CONFIRMED_SLOT]),
+    getDJs: () => of(DJS),
+    createSlot: () => of({}),
+    updateSlot: () => of({}),
+  };
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [EventDetailComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: apiMock },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'evt-1' } } } },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+        { provide: ScheduleExportService, useValue: { download: () => {} } },
+      ],
+    }).compileComponents();
+
+    TestBed.inject(TranslateService).use('en');
+    fixture = TestBed.createComponent(EventDetailComponent);
+    fixture.detectChanges();
+  });
+
+  it('renders inside the AdminShell with the events nav active', () => {
+    expect(root().querySelector('app-admin-shell')).toBeTruthy();
+    expect(root().querySelector('.shell-nav-active')?.getAttribute('data-nav')).toBe('events');
+  });
+
+  it('shows the event name as a monument and a mono meta readout', () => {
+    expect(root().querySelector('.detail-event-name')?.textContent).toContain('Test Event');
+    expect(root().querySelector('.detail-event-meta')?.textContent).toContain('Venue');
+  });
+
+  it('renders mono uppercase column headers and a Console status badge', () => {
+    expect(root().querySelectorAll('.slot-th').length).toBeGreaterThan(0);
+    expect(root().querySelector('app-status-badge .status-badge.status-confirmed')).toBeTruthy();
+  });
+
+  it('keeps the inline add-slot trigger wired', () => {
+    expect(root().querySelector('[data-testid="add-slot-trigger"]')).toBeTruthy();
   });
 });

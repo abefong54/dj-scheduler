@@ -126,73 +126,138 @@
    are unique across the app; the only component-local style that stays is the
    `.tabs` margin override. */
 @layer components {
-  /* Hero header */
-  .detail-hero { @apply flex items-start justify-between mb-4 gap-4 flex-wrap; }
-  .detail-hero-info { @apply flex-1 min-w-0; }
-  .detail-event-name { @apply text-3xl font-bold text-gray-900 leading-tight; }
-  .detail-event-meta { @apply text-sm text-gray-500 mt-1; }
-  .detail-hero-actions { @apply flex items-center gap-2 flex-shrink-0 flex-wrap; }
+  /* Console-restyled event detail (EL-066). Light workspace inside AdminShell:
+     monumental event name (Space Grotesk), mono meta readout, stage color
+     chips, and a mono-header data table. Tokens only — no hard-coded hexes. */
+
+  /* Detail content column */
+  .detail { @apply flex flex-col; gap: var(--space-5); }
+
+  /* Topbar action buttons (projected into the shell [shell-actions] slot) */
+  .detail-topbtn {
+    @apply inline-flex items-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors;
+    background: var(--card);
+    border-color: var(--border);
+    color: var(--ink);
+  }
+  .detail-topbtn:hover { background: var(--surface); }
+  .detail-topbtn-primary {
+    @apply inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium text-white transition-colors;
+    background: var(--violet);
+  }
+  .detail-topbtn-primary:hover { background: var(--violet-deep); }
+
+  /* Monument header */
+  .detail-hero { @apply min-w-0; }
+  .detail-event-name {
+    font-family: var(--font-display);
+    @apply text-4xl font-bold leading-none tracking-tight sm:text-5xl;
+    color: var(--ink);
+  }
+  .detail-event-meta {
+    font-family: var(--font-mono);
+    @apply mt-3 text-sm;
+    color: var(--muted);
+  }
 
   /* Genre pills */
-  .genre-pill-row { @apply flex gap-1 flex-wrap mt-2; }
-  .genre-pill { @apply px-2 py-0.5 bg-violet-50 text-violet-700 rounded-full text-xs font-medium; }
+  .genre-pill-row { @apply mt-3 flex flex-wrap gap-1.5; }
+  .genre-pill {
+    font-family: var(--font-mono);
+    @apply rounded-full px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wider;
+    background: rgba(124, 58, 237, 0.08);
+    color: var(--violet);
+  }
 
   /* Stage chip strip */
-  .stage-strip { @apply flex items-center gap-2 flex-wrap py-2 mb-2; }
-  .stage-chip { @apply flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm; }
-  .stage-chip-dot { @apply w-2.5 h-2.5 rounded-full flex-shrink-0; }
-  .stage-chip-name { @apply font-medium text-gray-800; }
-  .stage-chip-delete { @apply ml-1 text-gray-300 hover:text-red-400 text-base leading-none hidden group-hover:inline transition-colors; }
-  .stage-chip-add { @apply px-3 py-1.5 border border-dashed border-gray-300 rounded-full text-sm text-gray-500 hover:border-violet-400 hover:text-violet-600 transition-colors; }
+  .stage-strip { @apply flex flex-wrap items-center gap-2; }
+  .stage-chip {
+    @apply flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm;
+    background: var(--card);
+    border-color: var(--border);
+  }
+  .stage-chip-dot { @apply h-2.5 w-2.5 flex-shrink-0 rounded-full; }
+  .stage-chip-name { @apply font-medium; color: var(--ink); }
+  .stage-chip-delete { @apply ml-1 hidden text-base leading-none transition-colors group-hover:inline hover:text-red-500; color: var(--muted); }
 
   /* Slots section layout */
-  .slots-section { @apply mt-4; }
-  .slots-section-header { @apply flex items-center justify-between mb-3; }
+  .slots-section { @apply flex flex-col; gap: var(--space-3); }
+  .slots-section-header { @apply flex items-center justify-between; }
 
   /* Slots table card */
-  .slots-card { @apply overflow-hidden; }
+  .slots-card {
+    @apply overflow-hidden rounded-xl border;
+    background: var(--card);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+  }
 
   /* Slot thead row */
-  .slot-head-row { @apply border-b border-gray-200 bg-gray-50; }
+  .slot-head-row { @apply border-b; border-color: var(--border); background: var(--surface); }
 
   /* Slot table */
   .slot-table { @apply w-full text-sm; }
-  .slot-th { @apply text-left px-3 py-2 font-medium text-gray-700; }
-  .slot-row { @apply border-b border-gray-100 last:border-0 hover:bg-gray-50; }
-  .slot-stage-cell { @apply px-3 py-3; }
+  .slot-th {
+    font-family: var(--font-mono);
+    @apply px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider;
+    color: var(--muted);
+  }
+  .slot-th-num { @apply text-right; }
+  .slot-row { @apply border-b transition-colors last:border-0; border-color: var(--border); }
+  .slot-row:hover { background: var(--surface); }
+  .slot-stage-cell { @apply px-4 py-3; color: var(--ink); }
   .slot-stage-inner { @apply flex items-center gap-2; }
-  .slot-stage-dot { @apply w-2.5 h-2.5 rounded-full flex-shrink-0; }
-  .slot-dj-cell { @apply px-3 py-3 font-medium text-gray-900; }
-  .slot-genre-cell { @apply px-3 py-3 text-gray-500; }
-  .slot-time-cell { @apply px-3 py-3 text-gray-700 whitespace-nowrap; }
-  .slot-actions-cell { @apply px-3 py-3 text-right whitespace-nowrap; }
-  .slot-edit-btn { @apply text-gray-500 hover:text-gray-800 text-sm font-medium mr-3; }
+  .slot-stage-dot { @apply h-2.5 w-2.5 flex-shrink-0 rounded-full; }
+  .slot-dj-cell { @apply px-4 py-3; }
+  .slot-dj-name { @apply font-medium; color: var(--ink); }
+  .slot-await { font-family: var(--font-mono); @apply ml-2 text-xs; color: var(--muted); }
+  .slot-genre-cell { @apply px-4 py-3; color: var(--muted); }
+  .slot-time-cell {
+    font-family: var(--font-mono);
+    @apply whitespace-nowrap px-4 py-3 text-right;
+    color: var(--ink);
+  }
+  .slot-actions-cell { @apply whitespace-nowrap px-4 py-3 text-right; }
+  .slot-edit-btn { @apply mr-3 text-sm font-medium transition-colors; color: var(--muted); }
+  .slot-edit-btn:hover { color: var(--ink); }
 
   /* Inline edit row */
-  .edit-row { @apply border-b border-gray-100 bg-violet-50; }
+  .edit-row { @apply border-b; border-color: var(--border); background: rgba(124, 58, 237, 0.05); }
   .edit-cell { @apply px-2 py-2; }
-  .edit-select { @apply w-full text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-400 disabled:bg-gray-50 disabled:text-gray-400; }
-  .edit-time-input { @apply text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-400 w-24; }
-  .edit-dur-input { @apply text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-400 w-16; }
-  .edit-actions-cell { @apply px-2 py-2 text-right whitespace-nowrap; }
-  .btn-save { @apply bg-violet-600 hover:bg-violet-700 text-white text-xs font-medium px-3 py-1 rounded mr-1 transition-colors; }
-  .btn-cancel-edit { @apply border border-gray-300 text-gray-600 hover:bg-gray-50 text-xs font-medium px-3 py-1 rounded transition-colors; }
+  .edit-select { @apply w-full rounded-lg border px-2 py-1 text-sm focus:outline-none; border-color: var(--border); background: var(--card); }
+  .edit-select:focus { box-shadow: 0 0 0 2px var(--violet), 0 0 0 4px rgba(34, 211, 238, 0.2); }
+  .edit-time-input { @apply w-24 rounded-lg border px-2 py-1 text-sm focus:outline-none; border-color: var(--border); background: var(--card); }
+  .edit-time-input:focus { box-shadow: 0 0 0 2px var(--violet), 0 0 0 4px rgba(34, 211, 238, 0.2); }
+  .edit-dur-input { @apply w-16 rounded-lg border px-2 py-1 text-sm focus:outline-none; border-color: var(--border); background: var(--card); }
+  .edit-dur-input:focus { box-shadow: 0 0 0 2px var(--violet), 0 0 0 4px rgba(34, 211, 238, 0.2); }
+  .edit-actions-cell { @apply whitespace-nowrap px-2 py-2 text-right; }
+  .btn-save { @apply mr-1 rounded-lg px-3 py-1 text-xs font-medium text-white transition-colors; background: var(--violet); }
+  .btn-save:hover { background: var(--violet-deep); }
+  .btn-cancel-edit { @apply rounded-lg border px-3 py-1 text-xs font-medium transition-colors; border-color: var(--border); color: var(--muted); }
+  .btn-cancel-edit:hover { background: var(--surface); }
 
   /* Sortable slot headers */
-  .slot-th-sort { @apply cursor-pointer hover:bg-gray-100 select-none; }
-
-  /* Slot search */
-  .slot-search-input { @apply w-52 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400; }
+  .slot-th-sort { @apply cursor-pointer select-none; }
+  .slot-th-sort:hover { color: var(--ink); }
 
   /* Inline add row */
-  .add-row { @apply border-b border-violet-100 bg-violet-50; }
+  .add-row { @apply border-b; border-color: var(--border); background: rgba(124, 58, 237, 0.05); }
   .add-cell { @apply px-2 py-2; }
-  .add-cell-actions { @apply text-right whitespace-nowrap; }
-  .add-trigger-row { @apply hover:bg-violet-50 cursor-pointer transition-colors; }
-  .add-trigger-cell { @apply px-3 py-3 text-sm text-violet-600 font-medium; }
+  .add-cell-actions { @apply whitespace-nowrap text-right; }
+  .add-trigger-row { @apply cursor-pointer transition-colors; }
+  .add-trigger-row:hover { background: rgba(124, 58, 237, 0.05); }
+  .add-trigger-cell {
+    font-family: var(--font-mono);
+    @apply px-4 py-3 text-xs font-medium uppercase tracking-wider;
+    color: var(--violet);
+  }
+
+  /* Date tabs — mono uppercase labels per Console type register */
+  .detail-tabs { @apply gap-2; border-color: var(--border); }
+  .detail-tabs .tab-btn { font-family: var(--font-mono); @apply text-xs uppercase tracking-wider; }
 
   /* Inline conflict warning (slot add / edit) */
-  .conflict-cell { @apply px-3 py-2 text-sm text-red-700 bg-red-50; }
+  .conflict-cell { @apply px-4 py-2 text-sm text-red-700; background: rgba(239, 68, 68, 0.08); }
   .conflict-text { @apply inline-flex items-center gap-1; }
 
   /* Stage modal field wrapper */

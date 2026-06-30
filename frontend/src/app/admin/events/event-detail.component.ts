@@ -8,11 +8,13 @@ import { DialogService } from '../../shared/dialog.service';
 import { ScheduleExportService } from '../../services/schedule-export.service';
 import { slotDurationMins } from '../../shared/slot-time.util';
 import { parseLocalDate } from '../../shared/date.util';
+import { AdminShellComponent } from '../../shared/admin-shell.component';
+import { StatusBadgeComponent } from '../../shared/status-badge.component';
 
 @Component({
   selector: 'app-event-detail',
   standalone: true,
-  imports: [FormsModule, RouterLink, TranslatePipe],
+  imports: [FormsModule, RouterLink, TranslatePipe, AdminShellComponent, StatusBadgeComponent],
   templateUrl: './event-detail.component.html',
   styleUrl: './event-detail.component.css',
 })
