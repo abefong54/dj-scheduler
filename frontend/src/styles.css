@@ -258,7 +258,7 @@
   }
   .events-table { @apply w-full border-collapse text-sm; }
   .events-th { @apply px-5 py-3; border-bottom: 1px solid var(--border); }
-  .events-th-actions { @apply text-right; }
+  .events-th-actions { @apply text-center; }
   .events-row { transition: background-color 0.12s ease; }
   .events-row:not(:last-child) .events-td { border-bottom: 1px solid var(--border); }
   .events-row:hover { background: var(--surface); }
@@ -273,7 +273,7 @@
   .events-venue, .events-dates, .events-genres { color: var(--muted); }
   .events-dates { font-family: var(--font-mono); @apply text-xs; }
   .events-status-muted { color: var(--muted); }
-  .events-td-actions { @apply flex items-center justify-end gap-2; }
+  .events-td-actions { @apply flex items-center justify-center gap-2; }
 
   .event-list { @apply space-y-3; }
   .event-card { @apply bg-white border border-gray-200 rounded-lg p-4 shadow-sm; }
