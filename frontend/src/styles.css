@@ -481,3 +481,68 @@
     max-width: 1200px;
   }
 }
+
+/* ── EL-065 Console form (New event) ──────────────────────────────────────
+   Reusable form primitives for the light Console workspace (design-system §6).
+   Lives here (not the component CSS) so the violet-focus + cyan-glow box-shadow
+   and token-driven rules don't @apply-inflate the per-component style budget. */
+@layer components {
+  .console-card {
+    @apply mx-auto w-full;
+    max-width: 760px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-6);
+  }
+  .console-field { @apply mb-5; }
+  .console-grid-2 { @apply grid grid-cols-1 gap-4 sm:grid-cols-2; }
+  .console-label {
+    @apply mb-2 block text-xs;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .console-input {
+    @apply w-full;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-input);
+    padding: 10px 14px;
+    font-family: var(--font-body);
+    color: var(--ink);
+    transition:
+      border-color 150ms ease,
+      box-shadow 150ms ease;
+  }
+  .console-input::placeholder { color: var(--muted); }
+  .console-input:focus {
+    outline: none;
+    border-color: var(--violet);
+    box-shadow:
+      0 0 0 3px rgba(124, 58, 237, 0.18),
+      0 0 14px rgba(34, 211, 238, 0.25);
+  }
+  .console-actions {
+    @apply mt-6 flex items-center justify-end gap-3 pt-5;
+    border-top: 1px solid var(--border);
+  }
+  .console-btn-primary {
+    @apply font-medium text-white transition-colors;
+    background: var(--violet);
+    border-radius: var(--radius-input);
+    padding: 10px 18px;
+  }
+  .console-btn-primary:hover { background: var(--violet-deep); }
+  .console-btn-secondary {
+    @apply font-medium transition-colors;
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-input);
+    padding: 10px 18px;
+  }
+  .console-btn-secondary:hover { background: var(--surface); }
+}
