@@ -5,6 +5,7 @@ import { toPng } from 'html-to-image';
 import { ApiService, PublicSlot } from '../services/api.service';
 import { environment } from '../../environments/environment';
 import { genreTheme } from './genre-theme';
+import { ButtonComponent } from '../shared/button.component';
 
 // Pilot brand for the card lockup. IMDJ is the beachhead school; this becomes
 // per-school config when EL-045 (configurable curriculum/branding) lands.
@@ -26,7 +27,7 @@ const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', '
 @Component({
   selector: 'app-card',
   standalone: true,
-  imports: [TranslatePipe, RouterLink],
+  imports: [TranslatePipe, RouterLink, ButtonComponent],
   templateUrl: './card.component.html',
   styleUrl: './card.component.css',
 })

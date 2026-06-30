@@ -56,17 +56,17 @@
 
     <!-- Actions (normal page chrome, i18n'd) -->
     <div class="w-full max-w-[480px] mt-5 flex flex-col gap-2">
-      <button (click)="shareViaLine()" class="btn-green w-full" data-testid="share-line">
-        {{ 'card.shareLine' | translate }}
-      </button>
-      <button (click)="saveImage()" [disabled]="exporting()" class="btn-primary w-full disabled:opacity-50" data-testid="save-image">
-        {{ (exporting() ? 'card.saving' : 'card.saveImage') | translate }}
-      </button>
+      <app-button variant="success" icon="share" [fullWidth]="true"
+        [label]="'card.shareLine' | translate" testId="share-line" (click)="shareViaLine()" />
+      <app-button variant="primary" icon="download" [fullWidth]="true" [disabled]="exporting()"
+        [label]="(exporting() ? 'card.saving' : 'card.saveImage') | translate"
+        testId="save-image" (click)="saveImage()" />
       <div class="flex gap-2">
-        <button (click)="copyLink()" class="btn-sm flex-1" data-testid="copy-link">
-          {{ (copied() ? 'card.copied' : 'card.copyLink') | translate }}
-        </button>
-        <a [routerLink]="['/events', eventId()]" class="btn-sm flex-1 text-center">
+        <app-button class="flex-1" [fullWidth]="true"
+          [icon]="copied() ? 'check' : 'link'"
+          [label]="(copied() ? 'card.copied' : 'card.copyLink') | translate"
+          testId="copy-link" (click)="copyLink()" />
+        <a [routerLink]="['/events', eventId()]" class="btn btn-secondary btn-md flex-1 text-center">
           {{ 'card.viewLineup' | translate }}
         </a>
       </div>
