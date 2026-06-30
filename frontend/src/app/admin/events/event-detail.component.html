@@ -16,9 +16,15 @@
       </div>
       <div class="detail-hero-actions">
         <a routerLink="/admin/events" class="back-link">← {{ 'actions.back' | translate }}</a>
-        <button (click)="viewPublic()" class="btn-sm-outline">{{ 'eventDetail.viewPublic' | translate }}</button>
-        <button (click)="shareViaLine()" class="btn-green">{{ 'schedule.share' | translate }}</button>
-        <button (click)="exportXlsx()" class="btn-sm-outline">{{ 'eventDetail.export' | translate }}</button>
+        <app-button variant="secondary" size="icon" icon="eye" [iconOnly]="true"
+          [label]="'eventDetail.viewPublic' | translate" testId="event-view-public"
+          (click)="viewPublic()" />
+        <app-button variant="success" size="icon" icon="share" [iconOnly]="true"
+          [label]="'schedule.share' | translate" testId="event-share"
+          (click)="shareViaLine()" />
+        <app-button variant="secondary" size="icon" icon="download" [iconOnly]="true"
+          [label]="'eventDetail.export' | translate" testId="event-export"
+          (click)="exportXlsx()" />
       </div>
     </div>
 
@@ -142,9 +148,12 @@
                       (keydown.escape)="cancelEdit()" />
                   </td>
                   <td class="edit-actions-cell">
-                    <button (click)="saveEdit(slot.id)" class="btn-save"
-                      [attr.data-testid]="'edit-save-' + slot.id">{{ 'actions.save' | translate }}</button>
-                    <button (click)="cancelEdit()" class="btn-cancel-edit">{{ 'actions.cancel' | translate }}</button>
+                    <div class="edit-actions-inner">
+                      <app-button variant="primary" size="xs" [label]="'actions.save' | translate"
+                        [testId]="'edit-save-' + slot.id" (click)="saveEdit(slot.id)" />
+                      <app-button size="xs" [label]="'actions.cancel' | translate"
+                        (click)="cancelEdit()" />
+                    </div>
                   </td>
                 </tr>
                 @if (editConflictError()) {
@@ -194,12 +203,14 @@
                     }
                   </td>
                   <td class="slot-actions-cell">
-                    <button (click)="startEdit(slot)" class="slot-edit-btn"
-                      [attr.data-testid]="'slot-edit-' + slot.id">{{ 'actions.edit' | translate }}</button>
-                    <button (click)="deleteSlot(slot.id)" class="btn-danger"
-                      [attr.data-testid]="'slot-delete-' + slot.id">
-                      {{ 'actions.delete' | translate }}
-                    </button>
+                    <div class="row-actions">
+                      <app-button variant="secondary" size="icon" icon="edit" [iconOnly]="true"
+                        [label]="'actions.edit' | translate" [testId]="'slot-edit-' + slot.id"
+                        (click)="startEdit(slot)" />
+                      <app-button variant="danger" size="icon" icon="trash" [iconOnly]="true"
+                        [label]="'actions.delete' | translate" [testId]="'slot-delete-' + slot.id"
+                        (click)="deleteSlot(slot.id)" />
+                    </div>
                   </td>
                 </tr>
               }
@@ -263,8 +274,12 @@
                     (keydown.escape)="cancelAddRow()" />
                 </td>
                 <td class="add-cell add-cell-actions">
-                  <button (click)="submitAddRow()" class="btn-save" data-testid="add-slot-save">{{ 'actions.save' | translate }}</button>
-                  <button (click)="cancelAddRow()" class="btn-cancel-edit">{{ 'actions.cancel' | translate }}</button>
+                  <div class="edit-actions-inner">
+                    <app-button variant="primary" size="xs" [label]="'actions.save' | translate"
+                      testId="add-slot-save" (click)="submitAddRow()" />
+                    <app-button size="xs" [label]="'actions.cancel' | translate"
+                      (click)="cancelAddRow()" />
+                  </div>
                 </td>
               </tr>
               @if (addConflictError()) {
@@ -320,12 +335,10 @@
         </div>
       </div>
       <div class="form-actions">
-        <button type="button" (click)="submitNewStage()" class="btn-primary" data-testid="stage-create-btn">
-          {{ 'actions.create' | translate }}
-        </button>
-        <button type="button" (click)="cancelStage()" class="btn-secondary">
-          {{ 'actions.cancel' | translate }}
-        </button>
+        <app-button type="button" variant="primary" [label]="'actions.create' | translate"
+          testId="stage-create-btn" (click)="submitNewStage()" />
+        <app-button type="button" [label]="'actions.cancel' | translate"
+          (click)="cancelStage()" />
       </div>
     </div>
   </div>

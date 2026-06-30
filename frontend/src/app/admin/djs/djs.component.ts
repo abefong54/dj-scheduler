@@ -7,6 +7,7 @@ import { DialogService } from '../../shared/dialog.service';
 import { LanguageService } from '../../services/language.service';
 import { DataTableComponent, TableColumn } from '../../shared/data-table.component';
 import { ColumnDefDirective } from '../../shared/column-def.directive';
+import { ButtonComponent } from '../../shared/button.component';
 
 // CERT_OPTIONS are the school's standard curriculum genres (EL-020). DJs can
 // also have custom (free-text) certifications beyond this list.
@@ -15,7 +16,7 @@ export const CERT_OPTIONS = ['House', 'Hip Hop', 'Pop', 'Techno', 'Trance', 'Dru
 @Component({
   selector: 'app-djs',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, DataTableComponent, ColumnDefDirective],
+  imports: [FormsModule, TranslatePipe, DataTableComponent, ColumnDefDirective, ButtonComponent],
   templateUrl: './djs.component.html',
   styleUrl: './djs.component.css',
 })

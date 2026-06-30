@@ -7,18 +7,15 @@
 
       <div class="dialog-actions">
         @if (dialog.state()!.type === 'confirm') {
-          <button (click)="dialog.respond(false)" class="btn-secondary" data-testid="dialog-cancel-btn">
-            {{ dialog.state()!.cancelLabel ?? ('actions.cancel' | translate) }}
-          </button>
-          <button (click)="dialog.respond(true)"
-            [class]="dialog.state()!.variant === 'danger' ? 'btn-confirm-danger' : 'btn-primary'"
-            data-testid="dialog-confirm-btn">
-            {{ dialog.state()!.confirmLabel ?? ('actions.confirm' | translate) }}
-          </button>
+          <app-button [label]="dialog.state()!.cancelLabel ?? ('actions.cancel' | translate)"
+            testId="dialog-cancel-btn" (click)="dialog.respond(false)" />
+          <app-button [variant]="dialog.state()!.variant === 'danger' ? 'danger' : 'primary'"
+            [label]="dialog.state()!.confirmLabel ?? ('actions.confirm' | translate)"
+            testId="dialog-confirm-btn" (click)="dialog.respond(true)" />
         } @else {
-          <button (click)="dialog.respond(true)" class="btn-primary" data-testid="dialog-ok-btn">
-            {{ dialog.state()!.confirmLabel ?? ('actions.ok' | translate) }}
-          </button>
+          <app-button variant="primary"
+            [label]="dialog.state()!.confirmLabel ?? ('actions.ok' | translate)"
+            testId="dialog-ok-btn" (click)="dialog.respond(true)" />
         }
       </div>
 

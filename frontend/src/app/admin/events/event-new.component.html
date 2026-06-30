@@ -33,8 +33,9 @@
     </div>
 
     <div class="form-actions">
-      <button type="submit" class="btn-primary" data-testid="event-create-btn">{{ 'actions.create' | translate }}</button>
-      <a routerLink="/admin/events" class="btn-secondary">{{ 'actions.cancel' | translate }}</a>
+      <app-button type="submit" variant="primary" [label]="'actions.create' | translate"
+        testId="event-create-btn" />
+      <a routerLink="/admin/events" class="btn btn-secondary btn-md">{{ 'actions.cancel' | translate }}</a>
     </div>
   </form>
 </div>
