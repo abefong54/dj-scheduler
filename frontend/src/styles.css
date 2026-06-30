@@ -504,10 +504,6 @@
     background: var(--violet);
   }
   .shell-new-btn:hover { background: var(--violet-deep); }
-  .shell-avatar {
-    @apply inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white;
-    background: var(--violet);
-  }
   .shell-content {
     @apply mx-auto w-full px-8 py-8;
     max-width: 1200px;
