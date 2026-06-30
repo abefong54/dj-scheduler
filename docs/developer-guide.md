@@ -2,7 +2,7 @@
 
 This guide gets a new engineer productive on **EventLineup (dj-scheduler)**: a full-stack app for planning DJ lineups and running event nights. It covers the architecture, how to run everything locally, the API surface, the auth/multi-tenancy model, the database, and the build/test tooling.
 
-> For a feature-level, non-technical tour of the product, see [users-guide.md](./users-guide.md).
+> For a feature-level, non-technical tour of the product, see [users-guide.html](./users-guide.html) (open in a browser).
 
 ---
 
