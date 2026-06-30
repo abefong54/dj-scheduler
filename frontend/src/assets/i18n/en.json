@@ -3,6 +3,18 @@
   "nav.djs": "DJs",
   "nav.signOut": "Sign out",
 
+  "shell.workspace": "Workspace",
+  "shell.nav.events": "Events",
+  "shell.nav.djs": "DJs",
+  "shell.nav.schedule": "Schedule",
+  "shell.search": "Search…",
+  "shell.new": "New",
+
+  "badge.confirmed": "Confirmed",
+  "badge.pending": "Pending",
+  "badge.declined": "Declined",
+  "badge.live": "Live",
+
   "auth.signInTitle": "Sign in to EventLineup",
   "auth.signInWithGoogle": "Sign in with Google",
 

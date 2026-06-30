@@ -3,6 +3,18 @@
   "nav.djs": "DJ",
   "nav.signOut": "登出",
 
+  "shell.workspace": "工作區",
+  "shell.nav.events": "活動",
+  "shell.nav.djs": "DJ",
+  "shell.nav.schedule": "時間表",
+  "shell.search": "搜尋…",
+  "shell.new": "新增",
+
+  "badge.confirmed": "已確認",
+  "badge.pending": "待回覆",
+  "badge.declined": "已婉拒",
+  "badge.live": "進行中",
+
   "auth.signInTitle": "登入 EventLineup",
   "auth.signInWithGoogle": "使用 Google 登入",
   "events.title": "活動",
