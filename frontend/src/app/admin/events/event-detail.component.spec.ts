@@ -229,3 +229,66 @@ describe('EventDetailComponent — certification gating (EL-042)', () => {
     expect(component.addCertWarning()).toBeNull();
   });
 });
+
+// EL-028: slots table search + sort via the shared TableSort engine.
+describe('EventDetailComponent — slot search & sort (EL-028)', () => {
+  const slots: Slot[] = [
+    { ...SLOT, id: 's-a', dj_name: 'DJ Alpha', stage_name: 'Main Stage', genre: 'House', start_time: '21:00' } as Slot,
+    { ...SLOT, id: 's-b', dj_name: 'DJ Beta', stage_name: 'Side Stage', genre: 'Techno', start_time: '19:00' } as Slot,
+    { ...SLOT, id: 's-c', dj_name: 'MC Gamma', stage_name: 'Main Stage', genre: 'House', start_time: '20:00' } as Slot,
+  ];
+
+  const apiMock = {
+    getEvent: () => of(EVENT),
+    getStages: () => of(STAGES),
+    getSlots: () => of(slots),
+    getDJs: () => of(DJS),
+    createSlot: () => of({}),
+    updateSlot: () => of({}),
+  };
+
+  let component: EventDetailComponent;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [EventDetailComponent],
+      providers: [
+        provideTranslateService(),
+        { provide: ApiService, useValue: apiMock },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'evt-1' } } } },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+        { provide: ScheduleExportService, useValue: { download: () => {} } },
+      ],
+    }).compileComponents();
+
+    component = TestBed.createComponent(EventDetailComponent).componentInstance;
+  });
+
+  it('defaults to ascending start_time order', () => {
+    expect(component.slotTable.view().map(s => s.id)).toEqual(['s-b', 's-c', 's-a']);
+    expect(component.slotTable.indicator('start_time')).toBe('↑');
+  });
+
+  it('filters across dj, stage, and genre case-insensitively', () => {
+    component.slotTable.search.set('side');
+    expect(component.slotTable.view().map(s => s.id)).toEqual(['s-b']);
+
+    component.slotTable.search.set('techno');
+    expect(component.slotTable.view().map(s => s.id)).toEqual(['s-b']);
+  });
+
+  it('toggles a column to sort and reverses on a second click', () => {
+    component.slotTable.toggle('dj_name');
+    expect(component.slotTable.view().map(s => s.dj_name)).toEqual(['DJ Alpha', 'DJ Beta', 'MC Gamma']);
+    component.slotTable.toggle('dj_name');
+    expect(component.slotTable.view().map(s => s.dj_name)).toEqual(['MC Gamma', 'DJ Beta', 'DJ Alpha']);
+    expect(component.slotTable.indicator('dj_name')).toBe('↓');
+  });
+
+  it('sorts only the filtered rows when search and sort compose', () => {
+    component.slotTable.search.set('dj '); // DJ Alpha + DJ Beta
+    component.slotTable.toggle('dj_name');
+    component.slotTable.sortDir.set('desc');
+    expect(component.slotTable.view().map(s => s.dj_name)).toEqual(['DJ Beta', 'DJ Alpha']);
+  });
+});

@@ -43,8 +43,8 @@
         <h2 class="section-title">{{ 'slots.title' | translate }}</h2>
         <input
           type="text"
-          [ngModel]="slotSearch()"
-          (ngModelChange)="slotSearch.set($event)"
+          [ngModel]="slotTable.search()"
+          (ngModelChange)="slotTable.search.set($event)"
           class="slot-search-input"
           [placeholder]="'table.search' | translate"
         />
@@ -72,15 +72,15 @@
         <table class="slot-table">
           <thead>
             <tr class="slot-head-row">
-              <th class="slot-th slot-th-sort" (click)="sortSlots('stage_name')">
-                {{ 'slots.stage' | translate }}{{ sortIndicator('stage_name') }}
+              <th class="slot-th slot-th-sort" (click)="slotTable.toggle('stage_name')">
+                {{ 'slots.stage' | translate }}@if (slotTable.indicator('stage_name'); as ind) { {{ ind }}}
               </th>
-              <th class="slot-th slot-th-sort" (click)="sortSlots('dj_name')">
-                {{ 'slots.dj' | translate }}{{ sortIndicator('dj_name') }}
+              <th class="slot-th slot-th-sort" (click)="slotTable.toggle('dj_name')">
+                {{ 'slots.dj' | translate }}@if (slotTable.indicator('dj_name'); as ind) { {{ ind }}}
               </th>
               <th class="slot-th">{{ 'slots.genre' | translate }}</th>
-              <th class="slot-th slot-th-sort" (click)="sortSlots('start_time')">
-                {{ 'slots.start' | translate }}{{ sortIndicator('start_time') }}
+              <th class="slot-th slot-th-sort" (click)="slotTable.toggle('start_time')">
+                {{ 'slots.start' | translate }}@if (slotTable.indicator('start_time'); as ind) { {{ ind }}}
               </th>
               <th class="slot-th">{{ 'slots.duration' | translate }}</th>
               <th class="slot-th">{{ 'slots.notes' | translate }}</th>
@@ -88,7 +88,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (slot of sortedFilteredSlots(); track slot.id) {
+            @for (slot of slotTable.view(); track slot.id) {
               @if (editingSlotId() === slot.id) {
                 <tr class="edit-row">
                   <td class="edit-cell">
