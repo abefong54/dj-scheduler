@@ -35,11 +35,10 @@ describe('AdminShellComponent', () => {
       fixture.detectChanges();
     });
 
-    it('renders the dark sidebar with wordmark and WORKSPACE label', () => {
+    it('renders the dark sidebar opening at the WORKSPACE label (brand lives in the top bar, not the sidebar)', () => {
       expect(root().querySelector('.shell-sidebar')).toBeTruthy();
-      expect(root().querySelector('.shell-wordmark')?.textContent).toContain(
-        'EventLineup',
-      );
+      // The wordmark was moved to the global top bar so the brand appears once.
+      expect(root().querySelector('.shell-wordmark')).toBeNull();
       expect(
         root().querySelector('.shell-section-label')?.textContent,
       ).toContain('shell.workspace');
