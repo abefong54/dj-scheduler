@@ -1,10 +1,15 @@
-<div class="min-h-screen bg-gray-100 flex flex-col items-center px-4 py-8">
+<!-- EL-082 Soundcheck reskin: the page chrome (this wrapper + loading / not-found
+     states) moves onto the dark "booth" surface via tokens. The promo card
+     artifact below keeps its own screenprint palette (retuned to the Soundcheck
+     brand in card.component.css) so the html-to-image PNG export (EL-053) still
+     renders exactly as designed. Skin only — behaviour is unchanged. -->
+<div class="min-h-screen flex flex-col items-center px-4 py-8" style="background: var(--surface)">
 
   @if (loading()) {
-    <p class="text-gray-400 py-24">…</p>
+    <p class="py-24" style="color: var(--muted)">…</p>
   } @else if (notFound()) {
     <div class="text-center py-24">
-      <p class="text-lg font-medium text-gray-700">{{ 'card.notFound' | translate }}</p>
+      <p class="text-lg font-medium" style="color: var(--ink)">{{ 'card.notFound' | translate }}</p>
     </div>
   } @else {
 
