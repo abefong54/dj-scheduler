@@ -76,12 +76,13 @@
   .page { @apply max-w-4xl mx-auto px-6 py-8; }
   .page-sm { @apply max-w-2xl mx-auto px-6 py-8; }
   .page-header { @apply flex items-center justify-between mb-6; }
-  .page-title { @apply text-2xl font-semibold text-gray-900; }
-  .section-title { @apply text-lg font-semibold text-gray-900; }
-  .back-link { @apply text-violet-600 hover:text-violet-700 text-sm font-medium; }
+  .page-title { @apply text-2xl font-semibold; color: var(--ink); }
+  .section-title { @apply text-lg font-semibold; color: var(--ink); }
+  .back-link { @apply text-sm font-medium; color: var(--violet); }
+  .back-link:hover { color: var(--violet-deep); }
 
   /* Card */
-  .card { @apply bg-white border border-gray-200 rounded-lg; }
+  .card { @apply border rounded-lg; background: var(--card); border-color: var(--border); }
   .card-body { @apply p-6; }
   .card-header { @apply flex items-center justify-between mb-4; }
 
@@ -112,19 +113,20 @@
 
   /* Modals */
   .modal-overlay { @apply fixed inset-0 z-50 flex items-center justify-center bg-black/40; }
-  .modal-box-md { @apply bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4; }
-  .modal-box-sm { @apply bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4; }
-  .modal-title { @apply text-lg font-semibold text-gray-900 mb-4; }
+  .modal-box-md { @apply rounded-xl shadow-xl p-6 w-full max-w-md mx-4; background: var(--card); }
+  .modal-box-sm { @apply rounded-xl shadow-xl p-6 w-full max-w-sm mx-4; background: var(--card); }
+  .modal-title { @apply text-lg font-semibold mb-4; color: var(--ink); }
   .modal-actions { @apply flex gap-3 mt-5; }
 
   /* Tabs */
-  .tabs { @apply flex gap-1 border-b border-gray-200; }
+  .tabs { @apply flex gap-1 border-b; border-color: var(--border); }
   .tab-btn { @apply pb-2 px-1 text-sm font-medium border-b-2 transition-colors; }
-  .tab-active { @apply border-violet-600 text-violet-600; }
-  .tab-inactive { @apply border-transparent text-gray-500 hover:text-gray-700; }
+  .tab-active { border-color: var(--violet); color: var(--violet); }
+  .tab-inactive { @apply border-transparent; color: var(--muted); }
+  .tab-inactive:hover { color: var(--ink); }
 
   /* Empty state */
-  .empty-state { @apply text-gray-500 text-sm py-8 text-center; }
+  .empty-state { @apply text-sm py-8 text-center; color: var(--muted); }
 }
 
 /* ── Event detail / slots table ───────────────────────────────────────────
@@ -274,7 +276,7 @@
   /* Stage modal color swatches */
   .color-swatches { @apply flex gap-2 flex-wrap; }
   .color-swatch { @apply w-7 h-7 rounded-full border-2 transition-all; }
-  .swatch-active { @apply border-gray-900; }
+  .swatch-active { border-color: var(--ink); }
   .swatch-inactive { @apply border-transparent; }
 
   /* Slot notes column */
@@ -355,12 +357,12 @@
   .slot-form { @apply bg-white border border-gray-200 rounded-lg p-6 space-y-4; }
 
   /* DJ roster — djs.component */
-  .genre-tag { @apply inline-block bg-violet-50 text-violet-700 px-2 py-0.5 rounded-full text-xs mr-1 mb-1; }
+  .genre-tag { @apply inline-block px-2 py-0.5 rounded-full text-xs mr-1 mb-1; background: rgba(124, 58, 237, 0.08); color: var(--violet); }
 
   /* Confirm dialog — dialog.component */
-  .dialog-box { @apply bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4; }
-  .dialog-title { @apply text-base font-semibold text-gray-900 mb-2; }
-  .dialog-message { @apply text-sm text-gray-600 mb-5 leading-relaxed; }
+  .dialog-box { @apply rounded-xl shadow-xl p-6 w-full max-w-sm mx-4; background: var(--card); }
+  .dialog-title { @apply text-base font-semibold mb-2; color: var(--ink); }
+  .dialog-message { @apply text-sm mb-5 leading-relaxed; color: var(--muted); }
   .dialog-actions { @apply flex justify-end gap-3; }
 
   /* Shared data table — data-table.component */
