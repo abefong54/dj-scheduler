@@ -21,9 +21,11 @@ export class LandingComponent {
   ];
 
   // Roadmap columns — i18n keys under landing.roadmap.<key>{,.when,.1,.2,.3}.
+  // EL-079: status-dot hues tuned for the dark-booth canvas (Cleared green /
+  // Cue Amber / Deck Cyan) so all three read clearly on Console Slate.
   readonly roadmap = [
-    { key: 'now', dot: 'bg-emerald-500', items: [1, 2, 3] },
-    { key: 'next', dot: 'bg-amber-500', items: [1, 2, 3] },
-    { key: 'later', dot: 'bg-violet-400', items: [1, 2, 3] },
+    { key: 'now', dot: 'bg-emerald-400', items: [1, 2, 3] },
+    { key: 'next', dot: 'bg-amber-400', items: [1, 2, 3] },
+    { key: 'later', dot: 'bg-cyan-400', items: [1, 2, 3] },
   ];
 }
