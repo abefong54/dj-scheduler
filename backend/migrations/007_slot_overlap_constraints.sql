@@ -10,10 +10,11 @@
 -- with a day added when end_time <= start_time (the set runs past midnight —
 -- BUG-004). Using absolute timestamps makes the range comparison handle the
 -- cross-midnight and cross-date cases for free.
-
+-- +goose Up
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
 -- No two slots on the same stage may overlap in real time.
+-- +goose StatementBegin
 ALTER TABLE slots ADD CONSTRAINT slots_stage_no_overlap
     EXCLUDE USING gist (
         stage_id WITH =,
@@ -23,9 +24,11 @@ ALTER TABLE slots ADD CONSTRAINT slots_stage_no_overlap
                 + (CASE WHEN end_time <= start_time THEN INTERVAL '1 day' ELSE INTERVAL '0 day' END)
         ) WITH &&
     );
+-- +goose StatementEnd
 
 -- A DJ may not be booked into two overlapping slots (any stage). Unassigned
 -- slots (dj_id IS NULL) are exempt — an empty slot can't double-book anyone.
+-- +goose StatementBegin
 ALTER TABLE slots ADD CONSTRAINT slots_dj_no_overlap
     EXCLUDE USING gist (
         dj_id WITH =,
@@ -35,3 +38,9 @@ ALTER TABLE slots ADD CONSTRAINT slots_dj_no_overlap
                 + (CASE WHEN end_time <= start_time THEN INTERVAL '1 day' ELSE INTERVAL '0 day' END)
         ) WITH &&
     ) WHERE (dj_id IS NOT NULL);
+-- +goose StatementEnd
+
+-- +goose Down
+-- btree_gist is left installed; only the constraints are removed.
+ALTER TABLE slots DROP CONSTRAINT IF EXISTS slots_dj_no_overlap;
+ALTER TABLE slots DROP CONSTRAINT IF EXISTS slots_stage_no_overlap;

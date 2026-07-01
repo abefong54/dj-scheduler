@@ -2,7 +2,7 @@
 -- DJ self-service portal tokens (US-009). Each DJ can be issued a personal,
 -- expiring portal link. Only the SHA-256 hash of the token is stored — the raw
 -- token is shown to the organizer once and is never persisted.
-
+-- +goose Up
 ALTER TABLE djs ADD COLUMN IF NOT EXISTS portal_token_hash       TEXT;
 ALTER TABLE djs ADD COLUMN IF NOT EXISTS portal_token_expires_at TIMESTAMPTZ;
 
@@ -10,3 +10,8 @@ ALTER TABLE djs ADD COLUMN IF NOT EXISTS portal_token_expires_at TIMESTAMPTZ;
 -- small since most DJs will not have a token issued at any given time.
 CREATE INDEX IF NOT EXISTS idx_djs_portal_token_hash
     ON djs (portal_token_hash) WHERE portal_token_hash IS NOT NULL;
+
+-- +goose Down
+DROP INDEX IF EXISTS idx_djs_portal_token_hash;
+ALTER TABLE djs DROP COLUMN IF EXISTS portal_token_expires_at;
+ALTER TABLE djs DROP COLUMN IF EXISTS portal_token_hash;
