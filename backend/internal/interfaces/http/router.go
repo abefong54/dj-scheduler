@@ -11,7 +11,7 @@ import (
 	"eventlineup/internal/interfaces/http/middleware"
 )
 
-func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, share *ShareHandler, djPortal *DJPortalHandler, dj *DJHandler, ev *EventHandler, st *StageHandler, sl *SlotHandler, line *LineHandler, perf *PerformanceHandler) *gin.Engine {
+func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, share *ShareHandler, djPortal *DJPortalHandler, dj *DJHandler, ev *EventHandler, st *StageHandler, sl *SlotHandler, line *LineHandler, perf *PerformanceHandler, leadHandler *LeadHandler) *gin.Engine {
 	// gin.New() (not gin.Default()) so we control logging: the default logger
 	// writes the full request URL including query strings, leaking OAuth
 	// code/state and DJ portal tokens into access logs (EL-037). RequestLogger
@@ -31,6 +31,7 @@ func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, share *Shar
 	publicAPI := r.Group("/api")
 	public.Register(publicAPI)
 	djPortal.RegisterPublic(publicAPI)
+	leadHandler.Register(publicAPI)
 
 	// Protected routes — every request must carry a valid organizer JWT.
 	api := r.Group("/api")
