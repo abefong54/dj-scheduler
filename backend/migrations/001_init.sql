@@ -1,4 +1,5 @@
 -- backend/migrations/001_init.sql
+-- +goose Up
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 CREATE TABLE IF NOT EXISTS djs (
@@ -41,3 +42,12 @@ CREATE TABLE IF NOT EXISTS slots (
 CREATE INDEX IF NOT EXISTS idx_stages_event ON stages(event_id);
 CREATE INDEX IF NOT EXISTS idx_slots_event  ON slots(event_id);
 CREATE INDEX IF NOT EXISTS idx_slots_date   ON slots(slot_date);
+
+-- +goose Down
+-- Drop in reverse dependency order (slots → stages → events → djs). The indexes
+-- are dropped implicitly with their tables. pgcrypto is left installed — it may
+-- be shared by other databases on the instance and is harmless to keep.
+DROP TABLE IF EXISTS slots;
+DROP TABLE IF EXISTS stages;
+DROP TABLE IF EXISTS events;
+DROP TABLE IF EXISTS djs;
