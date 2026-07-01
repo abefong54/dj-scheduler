@@ -18,6 +18,7 @@ func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, share *Shar
 	// logs the route template instead.
 	r := gin.New()
 	r.Use(gin.Recovery())
+	r.Use(middleware.RequestID())
 	r.Use(middleware.RequestLogger())
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{frontendURL},

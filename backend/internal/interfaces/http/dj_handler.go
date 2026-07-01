@@ -42,7 +42,7 @@ func (h *DJHandler) list(c *gin.Context) {
 	}
 	djs, err := h.uc.List(c.Request.Context(), organizerID, filter)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, djs)
@@ -65,7 +65,7 @@ func (h *DJHandler) get(c *gin.Context) {
 		return
 	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, d)
@@ -97,7 +97,7 @@ func (h *DJHandler) create(c *gin.Context) {
 	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
 	d, err := h.uc.Create(c.Request.Context(), body.Name, body.GenreTags, organizerID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusCreated, d)
@@ -142,7 +142,7 @@ func (h *DJHandler) patch(c *gin.Context) {
 		return
 	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, d)
@@ -158,7 +158,7 @@ func (h *DJHandler) patch(c *gin.Context) {
 func (h *DJHandler) delete(c *gin.Context) {
 	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
 	if err := h.uc.Delete(c.Request.Context(), c.Param("id"), organizerID); err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.Status(http.StatusNoContent)
