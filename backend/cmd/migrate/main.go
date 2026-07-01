@@ -19,6 +19,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
@@ -38,7 +39,9 @@ func main() {
 		log.Fatal("DATABASE_URL not set")
 	}
 
-	db, err := openDB(dbURL)
+	ctx := context.Background()
+
+	db, err := openDB(ctx, dbURL)
 	if err != nil {
 		log.Fatalf("connect: %v", err)
 	}
@@ -49,20 +52,30 @@ func main() {
 		log.Fatalf("init migrations: %v", err)
 	}
 
-	if err := run(context.Background(), provider, cmd, os.Stdout); err != nil {
+	if err := run(ctx, provider, cmd, os.Stdout); err != nil {
 		log.Fatalf("%s: %v", cmd, err)
 	}
 }
 
 // openDB opens a database/sql handle over pgx's stdlib driver — goose speaks
-// database/sql, while the app itself uses a pgxpool. It pings so a bad
-// DATABASE_URL fails here rather than mid-migration.
-func openDB(url string) (*sql.DB, error) {
+// database/sql, while the app itself uses a pgxpool.
+func openDB(ctx context.Context, url string) (*sql.DB, error) {
 	db, err := sql.Open("pgx", url)
 	if err != nil {
 		return nil, err
 	}
-	if err := db.Ping(); err != nil {
+
+	// A one-shot migrator needs only a couple of connections. Keep the cap at or
+	// above 2: the goose session locker pins one connection to hold the advisory
+	// lock while migrations run, so a max of 1 would self-deadlock.
+	db.SetMaxOpenConns(4)
+	db.SetConnMaxLifetime(5 * time.Minute)
+
+	// Bound the initial connectivity check so a bad DATABASE_URL fails fast here
+	// rather than hanging, or surfacing mid-migration.
+	pingCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	if err := db.PingContext(pingCtx); err != nil {
 		db.Close()
 		return nil, err
 	}

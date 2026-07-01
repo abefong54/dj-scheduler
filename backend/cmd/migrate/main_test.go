@@ -18,7 +18,7 @@ func TestMigrateUpDownIdempotent(t *testing.T) {
 		t.Skip("GOOSE_TEST_DATABASE_URL not set")
 	}
 
-	db, err := openDB(url)
+	db, err := openDB(context.Background(), url)
 	if err != nil {
 		t.Fatalf("openDB: %v", err)
 	}
