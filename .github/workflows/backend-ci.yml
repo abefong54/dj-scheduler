@@ -22,7 +22,10 @@ defaults:
     working-directory: backend
 
 jobs:
-  test:
+  # The matrix legs report as `test-matrix (1.26)` / `test-matrix (stable)`.
+  # The branch ruleset requires a single context named `test`, which the gate
+  # job below re-publishes — see its comment.
+  test-matrix:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -83,6 +86,28 @@ jobs:
           total=$(go tool cover -func=coverage.out | awk '/^total:/ {sub(/%/,"",$3); print $3}')
           echo "total coverage: ${total}%"
           awk -v t="$total" 'BEGIN { if (t+0 < 73) { printf "coverage %.1f%% is below floor 73%%\n", t; exit 1 } }'
+
+  # Single required status context. The branch ruleset requires a check named
+  # `test`, but a matrixed job only emits `test (<value>)` per leg — so the bare
+  # `test` context would never report and PRs would deadlock on "Expected —
+  # waiting for status to be reported". This gate collapses the matrix into one
+  # `test` context: it succeeds only if every leg passed. `if: always()` so it
+  # still runs (and reports red) when a leg fails; without checkout it must not
+  # inherit the `backend` working-directory.
+  test:
+    needs: test-matrix
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Require all matrix legs to pass
+        run: |
+          result='${{ needs.test-matrix.result }}'
+          echo "test-matrix result: $result"
+          [ "$result" = 'success' ] || exit 1
 
   lint:
     runs-on: ubuntu-latest
