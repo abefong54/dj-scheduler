@@ -53,12 +53,16 @@ export class LandingComponent {
     { name: 'Aria Chen', cjk: '陳雅', level: 'Level 1', credits: '3', certs: '1 / 3', tone: 'blocked' },
   ] as const;
 
-  /** Stats band — value is sample data; caption is i18n under landing.stats.<key>. */
+  /**
+   * Stats band — qualitative capability copy, NOT metrics. We deliberately do
+   * not ship invented numbers on a public page (EL-075 G4); real pilot figures
+   * can replace these once they exist. Caption is i18n under landing.stats.<key>.
+   */
   readonly stats = [
-    { key: 's1', value: '1,200+', accent: 'amber' },
-    { key: 's2', value: '340', accent: 'cyan' },
-    { key: 's3', value: '86%', accent: 'green' },
-    { key: 's4', value: '3', accent: 'amber' },
+    { key: 's1', value: 'Every set', accent: 'amber' },
+    { key: 's2', value: 'Certified', accent: 'cyan' },
+    { key: 's3', value: 'Gated', accent: 'green' },
+    { key: 's4', value: 'Real gigs', accent: 'amber' },
   ] as const;
 
   /** Footer link columns — labels/links i18n under landing.footer.<col>.{title,<n>}. */
