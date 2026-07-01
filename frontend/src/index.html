@@ -21,7 +21,14 @@
   <!-- EL-038: never send a Referer. Defense-in-depth so a bearer token briefly
        present in a URL can't leak to third parties via the Referer header. -->
   <meta name="referrer" content="no-referrer">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <!-- EL-077: Soundcheck shell branding. SVG favicon is primary (modern browsers);
+       the 16px variant keeps the mark legible at tab size. PWA manifest + theme
+       color paint the install/app-icon chrome Booth Black. -->
+  <link rel="icon" type="image/svg+xml" sizes="any" href="brand/favicon.svg">
+  <link rel="icon" type="image/svg+xml" sizes="16x16" href="brand/favicon-16.svg">
+  <link rel="mask-icon" href="brand/favicon.svg" color="#FF9E2C">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0B0D10">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- EL-072: Noto Sans TC (Traditional Chinese — Taiwan) added to the Soundcheck

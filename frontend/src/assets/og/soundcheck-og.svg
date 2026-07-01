@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="Soundcheck — performance platform for DJ schools">
+  <title>Soundcheck social share card</title>
+  <desc>Source SVG for /assets/og/soundcheck-og.png (EL-077). Raster to a 1200x630 PNG for social unfurls.</desc>
+  <defs>
+    <linearGradient id="scWave" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FF9E2C"/>
+      <stop offset="0.55" stop-color="#FF9E2C"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Booth Black backdrop -->
+  <rect x="0" y="0" width="1200" height="630" fill="#0B0D10"/>
+  <!-- Deck Cyan baseline accent -->
+  <rect x="0" y="626" width="1200" height="4" fill="#22D3EE"/>
+
+  <!-- Mark (waveform-check), scaled from the 64-unit source into a 220px block -->
+  <g transform="translate(490,70) scale(3.4)" fill="url(#scWave)">
+    <rect x="7"  y="38" width="6" height="14" rx="3"/>
+    <rect x="15" y="44" width="6" height="8"  rx="3"/>
+    <rect x="23" y="48" width="6" height="4"  rx="2"/>
+    <rect x="31" y="34" width="6" height="18" rx="3"/>
+    <rect x="39" y="22" width="6" height="30" rx="3"/>
+    <rect x="47" y="10" width="6" height="42" rx="3"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="600" y="430" text-anchor="middle" fill="#F7F8FA"
+        font-family="'Space Grotesk', 'Inter', system-ui, sans-serif"
+        font-size="128" font-weight="600" letter-spacing="-2">soundcheck</text>
+
+  <!-- Tagline -->
+  <text x="600" y="500" text-anchor="middle" fill="#E6EAF0"
+        font-family="'Inter', system-ui, sans-serif"
+        font-size="38" font-weight="500">Performance platform for DJ schools</text>
+</svg>

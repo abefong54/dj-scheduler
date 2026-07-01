@@ -1,0 +1,24 @@
+{
+  "name": "Soundcheck",
+  "short_name": "Soundcheck",
+  "description": "Soundcheck turns practice into stage time — track student reps, certify them stage-ready, and put cleared students on a real lineup.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#0B0D10",
+  "background_color": "#0B0D10",
+  "icons": [
+    {
+      "src": "/brand/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/app-icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

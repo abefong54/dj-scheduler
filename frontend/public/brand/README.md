@@ -23,6 +23,7 @@ founder's call; treat geometry, kerning, and the wordmark outline as not-yet-fin
 | `one-color.svg` | Flat single-color lockup, no gradient | Silkscreen / sticker / hoodie |
 | `favicon.svg` | Crisp full mark on Booth tile | Favicon ≥ 32px |
 | `favicon-16.svg` | Low-detail 4-bar variant | 16px — stays a waveform-check, not a plain tick |
+| `app-icon-maskable.svg` | Full-bleed Booth tile, mark in the maskable safe zone | PWA/app icon (`purpose: maskable`) — EL-077 |
 | `status-cleared.svg` | Green full waveform-check | "Cleared / Certified" status pill |
 | `status-pending.svg` | Amber half-meter | "Pending" status pill |
 | `status-blocked.svg` | Clip Red + clip-ceiling bar | "Blocked / Error" status pill |

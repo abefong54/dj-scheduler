@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Soundcheck">
+  <title>Soundcheck maskable app icon</title>
+  <!-- Full-bleed Booth Black tile (no rounded corners) so platform masks can crop
+       it to any shape. The mark is scaled into the maskable safe zone (~central
+       60%). Same bars as favicon.svg — a background variant, not a new logo. -->
+  <rect x="0" y="0" width="32" height="32" fill="#0B0D10"/>
+  <g transform="translate(4,3.6) scale(0.40)" fill="#FF9E2C">
+    <rect x="7"  y="38" width="6" height="14" rx="3"/>
+    <rect x="15" y="44" width="6" height="8"  rx="3"/>
+    <rect x="23" y="48" width="6" height="4"  rx="2"/>
+    <rect x="31" y="34" width="6" height="18" rx="3"/>
+    <rect x="39" y="22" width="6" height="30" rx="3"/>
+    <rect x="47" y="10" width="6" height="42" rx="3"/>
+  </g>
+</svg>
