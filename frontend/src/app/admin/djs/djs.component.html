@@ -26,15 +26,28 @@
       }
     </ng-template>
     <ng-template appColumnDef="certifications" let-row="row">
-      @if (!isStudent(row)) {
-        <span class="text-xs font-medium text-violet-700 bg-violet-100 px-2 py-0.5 rounded-full">{{ 'djs.graduate' | translate }}</span>
-      }
-      @for (c of certs(row); track c) {
-        <span class="text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded-full ml-1" [attr.data-testid]="'dj-cert-' + rowId(row)">{{ c }}</span>
-      }
-      @if (certs(row).length === 0 && isStudent(row)) {
-        <span class="text-xs text-gray-400">{{ 'djs.no_certs' | translate }}</span>
-      }
+      <div class="cert-cell">
+        @if (!isStudent(row)) {
+          <!-- Graduate = a tier marker (icon + label, token-driven), distinct
+               from the filled "Cleared" certification pills. -->
+          <span class="dj-grad-pill">
+            <svg class="dj-grad-glyph" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+              <path d="M8 3l6 3-6 3-6-3 6-3z" fill="currentColor" />
+              <path d="M3.5 8v2.4c0 .9 2 1.9 4.5 1.9s4.5-1 4.5-1.9V8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+            </svg>
+            <span>{{ 'djs.graduate' | translate }}</span>
+          </span>
+        }
+        @for (c of certs(row); track c) {
+          <!-- A held certification is "Cleared": green status pill, waveform-check
+               glyph + the certification name as the label (never colour alone). -->
+          <app-status-badge status="confirmed" [label]="c" [testId]="'dj-cert-' + rowId(row)" />
+        }
+        @if (certs(row).length === 0 && isStudent(row)) {
+          <!-- No certifications yet → "Pending" status pill. -->
+          <app-status-badge status="pending" [label]="'djs.no_certs' | translate" [testId]="'dj-nocert-' + rowId(row)" />
+        }
+      </div>
     </ng-template>
     <ng-template appColumnDef="actions" let-row="row">
       <div class="row-actions">
@@ -55,7 +68,7 @@
   <!-- EL-020: certifications edit slide-over -->
   @if (editing(); as dj) {
     <div class="fixed inset-0 z-40 bg-black/40" (click)="cancelEdit()"></div>
-    <aside class="fixed inset-y-0 right-0 z-50 w-full max-w-md overflow-y-auto bg-white p-6 shadow-xl" data-testid="dj-edit-panel">
+    <aside class="dj-edit-panel fixed inset-y-0 right-0 z-50 w-full max-w-md overflow-y-auto p-6 shadow-xl" data-testid="dj-edit-panel">
       <h2 class="section-title mb-4">{{ 'djs.edit_title' | translate }}</h2>
 
       <div class="form-group">

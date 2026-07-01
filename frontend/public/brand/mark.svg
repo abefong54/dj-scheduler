@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Soundcheck mark">
+  <title>Soundcheck waveform-check mark</title>
+  <defs>
+    <linearGradient id="scWave" x1="7" y1="0" x2="53" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF9E2C"/>
+      <stop offset="0.55" stop-color="#FF9E2C"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+  </defs>
+  <!-- Waveform-check: bar tops trace a checkmark (down to a low vertex, then a
+       long climb). Reads as an equalizer at the same time. Short arm = two low
+       bars; long arm climbs to the tallest bar. -->
+  <g fill="url(#scWave)">
+    <rect x="7"  y="38" width="6" height="14" rx="3"/>
+    <rect x="15" y="44" width="6" height="8"  rx="3"/>
+    <rect x="23" y="48" width="6" height="4"  rx="2"/>
+    <rect x="31" y="34" width="6" height="18" rx="3"/>
+    <rect x="39" y="22" width="6" height="30" rx="3"/>
+    <rect x="47" y="10" width="6" height="42" rx="3"/>
+  </g>
+</svg>

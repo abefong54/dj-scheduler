@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96" role="img" aria-label="Soundcheck">
+  <title>Soundcheck primary lockup (on dark)</title>
+  <defs>
+    <linearGradient id="scWaveLk" x1="7" y1="0" x2="53" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF9E2C"/>
+      <stop offset="0.55" stop-color="#FF9E2C"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+  </defs>
+  <!-- Booth Black card (dark "booth" mode is the app default). -->
+  <rect x="0" y="0" width="360" height="96" rx="16" fill="#0B0D10"/>
+  <!-- Mark -->
+  <g transform="translate(24,16)" fill="url(#scWaveLk)">
+    <rect x="7"  y="38" width="6" height="14" rx="3"/>
+    <rect x="15" y="44" width="6" height="8"  rx="3"/>
+    <rect x="23" y="48" width="6" height="4"  rx="2"/>
+    <rect x="31" y="34" width="6" height="18" rx="3"/>
+    <rect x="39" y="22" width="6" height="30" rx="3"/>
+    <rect x="47" y="10" width="6" height="42" rx="3"/>
+  </g>
+  <!-- Wordmark -->
+  <text x="97" y="59"
+        font-family="'Space Grotesk', system-ui, sans-serif"
+        font-size="40" font-weight="600" letter-spacing="0.5"
+        fill="#E6EAF0">soundcheck</text>
+  <rect x="124" y="45.5" width="9" height="4" rx="2" fill="#FF9E2C"/>
+</svg>

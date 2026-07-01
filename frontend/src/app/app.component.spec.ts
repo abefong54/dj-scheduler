@@ -49,4 +49,14 @@ describe('AppComponent top bar', () => {
     const signin = el.querySelector<HTMLAnchorElement>('[data-testid="signin"]');
     expect(signin?.getAttribute('href')).toBe('/login');
   });
+
+  it('shows the Soundcheck wordmark with its amber VU-meter detail (EL-078)', async () => {
+    const el = (await build(false)).nativeElement as HTMLElement;
+    const brand = el.querySelector<HTMLElement>('[data-testid="brand-wordmark"]');
+    expect(brand?.textContent).toContain('soundcheck');
+    // The single amber VU detail is an inline SVG, not a dependency on the
+    // finalized logo asset (EL-071).
+    expect(brand?.querySelector('svg.shell-vu')).toBeTruthy();
+    expect(brand?.querySelectorAll('.shell-vu-bar').length).toBe(3);
+  });
 });

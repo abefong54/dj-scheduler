@@ -1,4 +1,48 @@
-<span class="status-badge" [class]="tintClass()">
-  <span class="status-badge-dot"></span>
-  {{ labelKey() | translate }}
+<!--
+  EL-078: Soundcheck status pill. Status is carried by an inline glyph AND a text
+  label — NEVER colour alone — so red/green colour-blind admins can still tell
+  the states apart. Glyphs are inline SVG (no dependency on the external icon
+  set from EL-071/#59). Mapping onto the Cleared/Pending/Blocked/Info semantics:
+    confirmed → Cleared  (waveform-check)
+    pending   → Pending  (half meter)
+    declined  → Blocked  (clip bar)
+    live      → Info/Live (signal dot)
+-->
+<span class="status-badge" [class]="tintClass()" [attr.data-testid]="testId()">
+  <svg
+    class="status-badge-glyph"
+    viewBox="0 0 16 16"
+    width="12"
+    height="12"
+    aria-hidden="true"
+  >
+    @switch (status()) {
+      @case ('confirmed') {
+        <!-- waveform-check: a tick -->
+        <path
+          d="M3 8.5l3 3 7-7.5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      }
+      @case ('pending') {
+        <!-- half meter: a partly-filled bar -->
+        <rect x="2" y="6" width="12" height="4" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" />
+        <rect x="3.25" y="7.25" width="4.5" height="1.5" rx="0.75" fill="currentColor" />
+      }
+      @case ('declined') {
+        <!-- clip bar: a slash through a level -->
+        <path d="M3 13L13 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        <rect x="2.5" y="6" width="11" height="4" rx="1" fill="none" stroke="currentColor" stroke-width="1.5" />
+      }
+      @case ('live') {
+        <!-- signal dot -->
+        <circle cx="8" cy="8" r="3.25" fill="currentColor" />
+      }
+    }
+  </svg>
+  <span class="status-badge-label">{{ label() ?? (labelKey() | translate) }}</span>
 </span>
