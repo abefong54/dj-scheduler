@@ -2,6 +2,7 @@
   "nav.events": "Events",
   "nav.djs": "DJs",
   "nav.signOut": "Sign out",
+  "nav.signIn": "Sign in",
 
   "shell.workspace": "Workspace",
   "shell.nav.events": "Events",

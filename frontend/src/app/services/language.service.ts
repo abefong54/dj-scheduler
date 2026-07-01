@@ -1,9 +1,14 @@
 import { Injectable, signal, effect } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
+/** Languages that ship a translation file under assets/i18n. */
+export const SUPPORTED_LANGS = ['en', 'zh-TW'] as const;
+export type SupportedLang = (typeof SUPPORTED_LANGS)[number];
+const DEFAULT_LANG: SupportedLang = 'en';
+
 @Injectable({ providedIn: 'root' })
 export class LanguageService {
-  currentLang = signal<string>('en');
+  currentLang = signal<string>(DEFAULT_LANG);
 
   constructor(private translate: TranslateService) {
     this.initLanguage();
@@ -11,8 +16,11 @@ export class LanguageService {
   }
 
   private initLanguage() {
-    const saved = localStorage.getItem('lang') || 'en';
-    this.currentLang.set(saved);
+    // Coerce the persisted value to a supported language. A stale/legacy code
+    // (e.g. "zh" from an earlier build) would 404 its translation file and,
+    // with no fallback, leave the entire UI rendering raw keys. The effect
+    // below rewrites localStorage with the normalized value, healing it.
+    this.currentLang.set(normalizeLang(localStorage.getItem('lang')));
   }
 
   private setupLanguageEffect() {
@@ -24,6 +32,12 @@ export class LanguageService {
   }
 
   setLanguage(lang: string) {
-    this.currentLang.set(lang);
+    this.currentLang.set(normalizeLang(lang));
   }
+}
+
+function normalizeLang(lang: string | null): SupportedLang {
+  return (SUPPORTED_LANGS as readonly string[]).includes(lang ?? '')
+    ? (lang as SupportedLang)
+    : DEFAULT_LANG;
 }

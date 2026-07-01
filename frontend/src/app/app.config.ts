@@ -10,7 +10,9 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
-    provideTranslateService({ lang: 'en' }),
+    // fallbackLang ensures that if the active language fails to load or is
+    // missing a key, the UI degrades to English instead of showing raw keys.
+    provideTranslateService({ lang: 'en', fallbackLang: 'en' }),
     ...provideTranslateHttpLoader({ prefix: '/assets/i18n/', suffix: '.json' }),
   ],
 };
