@@ -5,5 +5,8 @@ dockerfilePath = "Dockerfile"
 
 [deploy]
 startCommand = "./server"
-healthcheckPath = "/api/events"
+# /healthz is unauthenticated and returns 200; /api/events is behind the JWT
+# auth middleware and returns 401 without a token, which would fail every
+# Railway health check and mark healthy deploys as unhealthy.
+healthcheckPath = "/healthz"
 healthcheckTimeout = 10
