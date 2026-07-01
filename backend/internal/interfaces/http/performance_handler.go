@@ -52,7 +52,7 @@ func (h *PerformanceHandler) djPerformance(c *gin.Context) {
 		return
 	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, p)
@@ -72,7 +72,7 @@ func (h *PerformanceHandler) roster(c *gin.Context) {
 	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
 	rows, err := h.uc.RosterSummary(c.Request.Context(), organizerID, queryFilter(c))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, rows)
@@ -96,7 +96,7 @@ func (h *PerformanceHandler) underserved(c *gin.Context) {
 	threshold, _ := strconv.Atoi(c.Query("threshold"))
 	rows, err := h.uc.Underserved(c.Request.Context(), organizerID, queryFilter(c), threshold)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, rows)
