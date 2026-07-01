@@ -26,14 +26,27 @@ services:
       - "5433:5432"
     volumes:
       - pgdata_e2e:/var/lib/postgresql/data
-      # Schema only. initdb.d runs once on a fresh volume; fixtures are loaded
-      # afterwards by `make e2e-seed` so they can also be re-applied as a reset.
-      - ./backend/migrations:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U eventlineup"]
       interval: 3s
       timeout: 3s
       retries: 10
+
+  # One-shot goose migrator (EL-056). The old initdb.d mount can't run the
+  # goose-format migrations — postgres would execute the -- +goose Down DROPs
+  # too — so the schema is applied here instead, before the API and the seed.
+  migrate:
+    image: golang:1.26-alpine
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+      - gomodcache_e2e:/go/pkg/mod
+    environment:
+      DATABASE_URL: postgresql://eventlineup:eventlineup@db:5432/eventlineup
+    command: ["go", "run", "./cmd/migrate", "up"]
+    depends_on:
+      db:
+        condition: service_healthy
 
   api:
     build: ./backend
@@ -56,6 +69,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz || exit 1"]
       interval: 3s
@@ -64,3 +79,4 @@ services:
 
 volumes:
   pgdata_e2e:
+  gomodcache_e2e:
