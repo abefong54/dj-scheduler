@@ -59,5 +59,13 @@ export const routes: Routes = [
     loadComponent: () => import('./card/card.component')
       .then(m => m.CardComponent),
   },
-  { path: '', redirectTo: 'admin/events', pathMatch: 'full' },
+  {
+    // Public Soundcheck marketing landing — the branded front door prospects
+    // see before signing in (EL-075). Authenticated users can navigate into the
+    // console from the top bar; auth callbacks still land on /admin/events.
+    path: '',
+    pathMatch: 'full',
+    loadComponent: () => import('./landing/landing.component')
+      .then(m => m.LandingComponent),
+  },
 ];

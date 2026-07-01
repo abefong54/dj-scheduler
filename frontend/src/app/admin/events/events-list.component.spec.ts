@@ -115,6 +115,15 @@ describe('EventsListComponent — Console restyle (EL-064)', () => {
     expect(root().querySelector('[data-testid="event-card-evt-live"]')).toBeFalsy();
   });
 
+  // EL-080: Soundcheck reskin — the tab strip carries the active/inactive hooks
+  // the component CSS re-skins onto the dark-booth palette (amber active accent,
+  // muted inactive). Skin only; this guards the markers stay present.
+  it('renders the reskinned tab strip with active + inactive hooks', () => {
+    expect(root().querySelector('.events-tabs')).toBeTruthy();
+    expect(root().querySelector('.events-tab-active')).toBeTruthy();
+    expect(root().querySelector('.events-tab-inactive')).toBeTruthy();
+  });
+
   it('derives lifecycle purely from dates', () => {
     expect(component.lifecycle(LIVE_EVENT)).toBe('live');
     expect(component.lifecycle(FUTURE_EVENT)).toBe('upcoming');
