@@ -1,6 +1,38 @@
-/* Styles for this component live in the global components layer in
-   src/styles.css (migrated in EL-032). Do NOT add Tailwind apply-directive
-   rules to this file — they expand inline and inflate the component's compiled
-   stylesheet past Angular's per-component anyComponentStyle budget, failing
-   `ng build`. Put utilities in the template markup, or add a shared class to
-   styles.css. Enforced by stylelint + a pre-commit hook. */
+/* Most events-list styling lives in the global components layer in
+   src/styles.css (migrated in EL-032) and is already token-driven, so it
+   inherits the Soundcheck dark-booth palette (EL-078) for free. Do NOT add
+   Tailwind apply-directive rules to this file — they expand inline and inflate
+   the component's compiled stylesheet past Angular's per-component
+   anyComponentStyle budget, failing `ng build`. Put utilities in the template
+   markup, or add a shared class to styles.css. Enforced by stylelint + a
+   pre-commit hook.
+
+   EL-080 reskin: a few shared classes used here still carry hard-coded light
+   literals (gray borders/text, purple accent) from the Console era. They are
+   overridden below with semantic tokens, scoped to this component via Angular
+   view encapsulation so other surfaces are untouched and styles.css stays
+   conflict-free for parallel reskin agents. Plain CSS + var() only — no @apply. */
+
+/* Tab strip hairline: gray-200 read as a bright seam on the dark canvas. */
+.events-tabs {
+  border-bottom-color: var(--border);
+}
+
+/* Active tab: was violet-600 (old Console purple) — now Cue Amber via --violet. */
+.events-tab-active {
+  border-bottom-color: var(--violet);
+  color: var(--violet);
+}
+
+/* Inactive tab: gray-500 darkening to gray-700 on hover vanished on dark. */
+.events-tab-inactive {
+  color: var(--muted);
+}
+.events-tab-inactive:hover {
+  color: var(--ink);
+}
+
+/* Empty state ("no upcoming / no past"): gray-500 → muted token. */
+.empty-state {
+  color: var(--muted);
+}

@@ -286,6 +286,54 @@ describe('EventDetailComponent — Console restyle (EL-066)', () => {
   });
 });
 
+// EL-080: Soundcheck reskin — the page body renders the token-driven surface
+// classes it overrides onto the dark-booth palette. Skin only; these guard that
+// the reskinned hooks (slots heading, dark modal) stay present so the component
+// CSS overrides keep landing. Supersedes the EL-066 Console restyle.
+describe('EventDetailComponent — Soundcheck reskin (EL-080)', () => {
+  let fixture: ComponentFixture<EventDetailComponent>;
+  const root = () => fixture.nativeElement as HTMLElement;
+
+  const apiMock = {
+    getEvent: () => of(EVENT),
+    getStages: () => of(STAGES),
+    getSlots: () => of([SLOT]),
+    getDJs: () => of(DJS),
+    createSlot: () => of({}),
+    updateSlot: () => of({}),
+  };
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [EventDetailComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: apiMock },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'evt-1' } } } },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+        { provide: ScheduleExportService, useValue: { download: () => {} } },
+      ],
+    }).compileComponents();
+
+    TestBed.inject(TranslateService).use('en');
+    fixture = TestBed.createComponent(EventDetailComponent);
+    fixture.detectChanges();
+  });
+
+  it('renders the reskinned slots section heading hook', () => {
+    expect(root().querySelector('.slots-section .section-title')).toBeTruthy();
+  });
+
+  it('renders the add-stage modal on the dark card surface with swatches', () => {
+    fixture.componentInstance.addStage();
+    fixture.detectChanges();
+    expect(root().querySelector('.modal-box-sm')).toBeTruthy();
+    expect(root().querySelector('.modal-box-sm .modal-title')).toBeTruthy();
+    expect(root().querySelectorAll('.color-swatch').length).toBeGreaterThan(0);
+  });
+});
+
 // EL-028: slots table search + sort via the shared TableSort engine. The merged
 // template renders inside the AdminShell (RouterLink), so this suite provides the
 // router too even though it only asserts on the engine.
