@@ -10,12 +10,29 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./backend/migrations:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U eventlineup"]
       interval: 5s
       timeout: 5s
       retries: 5
+
+  # One-shot goose migration runner. Replaces the old
+  # ./backend/migrations:/docker-entrypoint-initdb.d mount, so local dev migrates
+  # by exactly the same goose path as production (EL-056) instead of postgres's
+  # first-boot init hook. Runs `go run` against the embedded migrations; the api
+  # service waits for it to finish successfully before starting.
+  migrate:
+    image: golang:1.26-alpine
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+      - gomodcache:/go/pkg/mod
+    environment:
+      DATABASE_URL: postgresql://eventlineup:eventlineup@db:5432/eventlineup
+    command: ["go", "run", "./cmd/migrate", "up"]
+    depends_on:
+      db:
+        condition: service_healthy
 
   api:
     build: ./backend
@@ -32,6 +49,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
   pgdata:
+  gomodcache:
