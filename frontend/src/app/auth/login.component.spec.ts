@@ -21,12 +21,12 @@ describe('LoginComponent (EL-079 Soundcheck reskin)', () => {
     return fixture;
   }
 
-  it('renders the dark-booth card with the EventLineup wordmark on token surfaces', async () => {
+  it('renders the dark-booth card with the Soundcheck wordmark on token surfaces', async () => {
     const fixture = await build();
     const el = fixture.nativeElement as HTMLElement;
 
     const wordmark = el.querySelector('h1');
-    expect(wordmark?.textContent).toContain('EventLineup');
+    expect(wordmark?.textContent).toContain('Soundcheck');
     expect(wordmark?.className).toContain('font-display');
     // Wordmark uses the semantic ink token (no hard-coded white).
     expect(wordmark?.getAttribute('style')).toContain('var(--ink)');

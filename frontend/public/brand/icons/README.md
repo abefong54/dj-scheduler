@@ -1,4 +1,4 @@
-# EventLineup domain icons (EL-073)
+# Soundcheck domain icons (EL-073)
 
 Branded, domain-specific glyphs that off-the-shelf icon packs don't carry.
 Drawn to match the EL-071 v1 mark (equalizer / waveform bar language) and the

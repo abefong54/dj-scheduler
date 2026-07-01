@@ -27,7 +27,7 @@ import { AuthService } from '../services/auth.service';
       <div
         class="relative w-full max-w-sm rounded-[var(--radius-card)] border px-8 py-10 text-center"
         style="background: var(--card); border-color: var(--border); box-shadow: var(--shadow-lg);">
-        <h1 class="font-display text-3xl font-bold tracking-tight" style="color: var(--ink);">EventLineup</h1>
+        <h1 class="font-display text-3xl font-bold tracking-tight" style="color: var(--ink);">Soundcheck</h1>
 
         <!-- Primary action: reuse the shared Cue-Amber .btn-primary (dark ink +
              Deck-Cyan focus ring come from the token layer). -->
