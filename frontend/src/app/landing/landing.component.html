@@ -1,153 +1,272 @@
-<!-- Public marketing landing page. Utility-only Tailwind (no component CSS → no budget risk). -->
-<div class="font-sans text-slate-700">
+<!-- Soundcheck marketing landing (EL-075). Token-driven; styles in
+     landing.component.css. Text wordmark only (no EL-071 logo dependency). -->
+<div class="lp">
 
-  <!-- Hero -->
-  <section class="bg-gradient-to-br from-violet-600 via-violet-700 to-violet-900 text-white">
-    <div class="max-w-5xl mx-auto px-6 py-20 sm:py-28 text-center">
-      <span class="inline-block text-xs font-semibold uppercase tracking-widest bg-white/15 rounded-full px-4 py-1.5 mb-6">
-        {{ 'landing.hero.badge' | translate }}
-      </span>
-      <h1 class="font-display text-4xl sm:text-5xl font-bold leading-tight mb-5">
-        {{ 'landing.hero.title' | translate }}
-      </h1>
-      <p class="text-lg sm:text-xl text-violet-100 max-w-2xl mx-auto mb-8">
-        {{ 'landing.hero.subtitle' | translate }}
-      </p>
-      <a routerLink="/login"
-         class="inline-block bg-white text-violet-700 font-semibold text-base px-8 py-4 rounded-xl shadow-lg shadow-violet-900/30 hover:bg-violet-50 transition focus:outline-none focus-visible:ring-4 focus-visible:ring-white/40">
-        {{ 'landing.hero.cta' | translate }} →
-      </a>
-      <p class="text-sm text-violet-200 mt-4">{{ 'landing.hero.micro' | translate }}</p>
-    </div>
-  </section>
-
-  <!-- What you get today -->
-  <section id="today" class="bg-white">
-    <div class="max-w-6xl mx-auto px-6 py-16 sm:py-20">
-      <div class="text-center max-w-2xl mx-auto mb-12">
-        <h2 class="font-display text-3xl font-bold text-slate-900 mb-3">{{ 'landing.today.title' | translate }}</h2>
-        <p class="text-slate-500 text-lg">{{ 'landing.today.subtitle' | translate }}</p>
-      </div>
-      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-
-        @for (f of features; track f.key) {
-          <div class="rounded-2xl border border-slate-200 p-6 hover:shadow-md hover:border-violet-200 transition">
-            <div class="w-11 h-11 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mb-4" aria-hidden="true">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7">
-                <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="f.icon" />
-              </svg>
-            </div>
-            <h3 class="font-semibold text-slate-900 mb-1.5">{{ ('landing.feat.' + f.key + '.t') | translate }}</h3>
-            <p class="text-sm text-slate-500 leading-relaxed">{{ ('landing.feat.' + f.key + '.d') | translate }}</p>
+  <!-- ===== HERO ===== -->
+  <header class="lp-hero">
+    <div class="lp-glow" aria-hidden="true"></div>
+    <div class="lp-container">
+      <div class="lp-hgrid">
+        <div class="lp-hero-copy">
+          <span class="lp-eyebrow"><span class="lp-pip"></span>{{ 'landing.hero.eyebrow' | translate }}</span>
+          <h1 class="lp-h1">
+            {{ 'landing.hero.title.a' | translate }}<br />
+            {{ 'landing.hero.title.b' | translate }} <span class="lp-lit">{{ 'landing.hero.title.lit' | translate }}</span>
+          </h1>
+          <p class="lp-sub">{{ 'landing.hero.sub' | translate }}</p>
+          <p class="lp-tagline">{{ 'landing.hero.tagline' | translate }}</p>
+          <div class="lp-cta-row">
+            <a [routerLink]="signInRoute" class="lp-btn lp-btn-amber">{{ 'landing.hero.ctaPrimary' | translate }}</a>
+            <a href="#how" class="lp-btn lp-btn-ghost">{{ 'landing.hero.ctaSecondary' | translate }} ↓</a>
           </div>
-        }
-
-      </div>
-    </div>
-  </section>
-
-  <!-- Roadmap -->
-  <section class="bg-slate-50 border-y border-slate-200">
-    <div class="max-w-6xl mx-auto px-6 py-16 sm:py-20">
-      <div class="text-center max-w-2xl mx-auto mb-12">
-        <h2 class="font-display text-3xl font-bold text-slate-900 mb-3">{{ 'landing.roadmap.title' | translate }}</h2>
-        <p class="text-slate-500 text-lg">{{ 'landing.roadmap.subtitle' | translate }}</p>
-      </div>
-      <div class="grid gap-5 md:grid-cols-3">
-        @for (col of roadmap; track col.key) {
-          <div class="rounded-2xl border border-slate-200 bg-white p-6">
-            <div class="flex items-center gap-2 mb-1">
-              <span class="w-2.5 h-2.5 rounded-full" [ngClass]="col.dot" aria-hidden="true"></span>
-              <h3 class="font-semibold text-slate-900">{{ ('landing.roadmap.' + col.key) | translate }}</h3>
-            </div>
-            <p class="text-xs uppercase tracking-wide text-slate-400 mb-4">{{ ('landing.roadmap.' + col.key + '.when') | translate }}</p>
-            <ul class="space-y-3">
-              @for (i of col.items; track i) {
-                <li class="text-sm text-slate-600 flex gap-2">
-                  <span class="text-violet-400 mt-0.5" aria-hidden="true">•</span>
-                  <span>{{ ('landing.roadmap.' + col.key + '.' + i) | translate }}</span>
-                </li>
-              }
-            </ul>
-          </div>
-        }
-      </div>
-    </div>
-  </section>
-
-  <!-- Comparison -->
-  <section class="bg-white">
-    <div class="max-w-3xl mx-auto px-6 py-16 sm:py-20">
-      <h2 class="font-display text-3xl font-bold text-slate-900 text-center mb-10">{{ 'landing.compare.title' | translate }}</h2>
-      <div class="rounded-2xl border border-slate-200 overflow-hidden">
-        <div class="grid grid-cols-2 bg-violet-50 text-slate-900 font-semibold">
-          <div class="px-5 py-3">{{ 'landing.compare.head.old' | translate }}</div>
-          <div class="px-5 py-3 border-l-2 border-violet-300">{{ 'landing.compare.head.us' | translate }}</div>
+          <p class="lp-micro">{{ 'landing.hero.micro' | translate }}</p>
         </div>
-        @for (r of [1,2,3,4,5]; track r) {
-          <div class="grid grid-cols-2 border-t border-slate-200 text-sm">
-            <div class="px-5 py-4 flex gap-2 text-slate-500">
-              <svg class="w-4 h-4 text-rose-400 flex-none mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
-              <span>{{ ('landing.compare.r' + r + '.old') | translate }}</span>
+
+        <!-- Product card mock (readiness snapshot) -->
+        <div class="lp-card" aria-hidden="true">
+          <div class="lp-card-top">
+            <div class="lp-who">
+              <div class="lp-ph">YK</div>
+              <div>
+                <div class="lp-nm">Yuki Kao</div>
+                <div class="lp-rl">{{ 'landing.hero.card.role' | translate }}</div>
+              </div>
             </div>
-            <div class="px-5 py-4 flex gap-2 text-slate-700 border-l-2 border-violet-100">
-              <svg class="w-4 h-4 text-emerald-500 flex-none mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-              <span>{{ ('landing.compare.r' + r + '.us') | translate }}</span>
+            <span class="lp-pill lp-pill-cleared">
+              <svg viewBox="0 0 24 24" fill="none" width="13" height="13"><path d="M4 13l5 6L21 4" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              {{ 'landing.hero.card.status' | translate }}
+            </span>
+          </div>
+          <div class="lp-lbl">{{ 'landing.hero.card.readiness' | translate }}</div>
+          <div class="lp-meter">
+            <span class="lp-seg on"></span><span class="lp-seg on"></span><span class="lp-seg on"></span>
+            <span class="lp-seg on"></span><span class="lp-seg on"></span><span class="lp-seg on"></span>
+            <span class="lp-seg on"></span><span class="lp-seg amb"></span><span class="lp-seg"></span><span class="lp-seg"></span>
+          </div>
+          <div class="lp-mlabels"><span>{{ 'landing.hero.card.meterLabel' | translate }}</span><span>7.5 / 10</span></div>
+          <div class="lp-stats3">
+            <div class="lp-st"><div class="lp-v amber">18</div><div class="lp-k">{{ 'landing.hero.card.stat1' | translate }}</div></div>
+            <div class="lp-st"><div class="lp-v cyan">4</div><div class="lp-k">{{ 'landing.hero.card.stat2' | translate }}</div></div>
+            <div class="lp-st"><div class="lp-v">Fri</div><div class="lp-k">{{ 'landing.hero.card.stat3' | translate }}</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== TRUST ===== -->
+  <div class="lp-trust">
+    <div class="lp-container lp-trustrow">
+      <span>{{ 'landing.trust.label' | translate }}</span>
+      <div class="lp-names">
+        <span>IMDJ DJ School</span><span>Pioneer DJ School Partners</span><span>Sub Bar Taipei</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== INSIGHT ===== -->
+  <section class="lp-insight">
+    <div class="lp-container">
+      <span class="lp-eyebrow lp-center"><span class="lp-pip"></span>{{ 'landing.insight.eyebrow' | translate }}</span>
+      <p class="lp-big">
+        <span class="lp-mut">{{ 'landing.insight.mut' | translate }}</span>
+        {{ 'landing.insight.main' | translate }} <span class="lp-lit">{{ 'landing.insight.lit' | translate }}</span>
+      </p>
+      <p class="lp-northstar">{{ 'landing.insight.northStar' | translate }}</p>
+    </div>
+  </section>
+
+  <!-- ===== HOW IT WORKS ===== -->
+  <section id="how" class="lp-section">
+    <div class="lp-container">
+      <div class="lp-shead">
+        <span class="lp-eyebrow"><span class="lp-pip"></span>{{ 'landing.how.eyebrow' | translate }}</span>
+        <h2 class="lp-h2">{{ 'landing.how.title' | translate }}</h2>
+        <p class="lp-lead">{{ 'landing.how.subtitle' | translate }}</p>
+      </div>
+      <div class="lp-steps">
+        @for (s of steps; track s; let i = $index) {
+          <div class="lp-step">
+            <div class="lp-no">{{ '0' + (i + 1) }}</div>
+            <div class="lp-ic lp-ic-cyan" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" width="24" height="24"><path d="M4 18V9M9 18V5M14 18v-6M19 18v-9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" /></svg>
             </div>
+            <h3 class="lp-h3">{{ ('landing.how.' + s + '.t') | translate }}</h3>
+            <p class="lp-p">{{ ('landing.how.' + s + '.d') | translate }}</p>
           </div>
         }
       </div>
     </div>
   </section>
 
-  <!-- The proof -->
-  <section class="bg-gradient-to-br from-violet-50 to-violet-100">
-    <div class="max-w-5xl mx-auto px-6 py-16 sm:py-20">
-      <div class="text-center max-w-2xl mx-auto mb-12">
-        <span class="inline-block text-xs font-semibold uppercase tracking-widest text-violet-700 bg-white rounded-full px-4 py-1.5 mb-5">
-          {{ 'landing.proof.badge' | translate }}
-        </span>
-        <h2 class="font-display text-3xl font-bold text-slate-900 mb-3">{{ 'landing.proof.title' | translate }}</h2>
-        <p class="text-slate-500 text-lg">{{ 'landing.proof.subtitle' | translate }}</p>
+  <!-- ===== FEATURES ===== -->
+  <section class="lp-section lp-section-tight">
+    <div class="lp-container">
+      <div class="lp-shead">
+        <span class="lp-eyebrow"><span class="lp-pip"></span>{{ 'landing.feat.eyebrow' | translate }}</span>
+        <h2 class="lp-h2">{{ 'landing.feat.title' | translate }}</h2>
       </div>
-      <div class="grid gap-5 md:grid-cols-3">
-        @for (s of [1,2,3]; track s) {
-          <div class="rounded-2xl bg-white border border-violet-100 p-6">
-            <div class="w-9 h-9 rounded-full bg-violet-600 text-white font-semibold flex items-center justify-center mb-4" aria-hidden="true">{{ s }}</div>
-            <h3 class="font-semibold text-slate-900 mb-1.5">{{ ('landing.proof.s' + s + '.t') | translate }}</h3>
-            <p class="text-sm text-slate-500 leading-relaxed">{{ ('landing.proof.s' + s + '.d') | translate }}</p>
+      <div class="lp-fgrid">
+        @for (f of features; track f.key) {
+          <div class="lp-feat">
+            <div class="lp-ic" [class]="'lp-ic-' + f.accent" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" width="22" height="22"><path d="M4 18V9M9 18V5M14 18v-6M19 18v-9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" /></svg>
+            </div>
+            <h3 class="lp-h3">{{ ('landing.feat.' + f.key + '.t') | translate }}</h3>
+            <p class="lp-p">{{ ('landing.feat.' + f.key + '.d') | translate }}</p>
           </div>
         }
       </div>
-      <p class="text-center text-slate-500 mt-8">{{ 'landing.proof.foot' | translate }}</p>
     </div>
   </section>
 
-  <!-- CTA -->
-  <section id="cta" class="bg-white">
-    <div class="max-w-4xl mx-auto px-6 py-20 text-center">
-      <span class="inline-block text-xs font-semibold uppercase tracking-widest text-violet-700 bg-violet-50 rounded-full px-4 py-1.5 mb-5">
-        {{ 'landing.cta.badge' | translate }}
-      </span>
-      <h2 class="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-4">{{ 'landing.cta.title' | translate }}</h2>
-      <p class="text-lg text-slate-500 max-w-2xl mx-auto mb-8">{{ 'landing.cta.body' | translate }}</p>
-      <div class="flex flex-wrap justify-center gap-3 mb-8">
-        @for (r of [1,2,3,4]; track r) {
-          <span class="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-full px-4 py-2 text-sm font-medium text-slate-700">
-            <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-            {{ ('landing.cta.r' + r) | translate }}
-          </span>
-        }
+  <!-- ===== STATUS SYSTEM ===== -->
+  <div class="lp-statusband">
+    <section class="lp-section">
+      <div class="lp-container lp-statgrid">
+        <div>
+          <span class="lp-eyebrow"><span class="lp-pip"></span>{{ 'landing.status.eyebrow' | translate }}</span>
+          <h2 class="lp-h2 lp-h2-sm">{{ 'landing.status.title' | translate }}</h2>
+          <p class="lp-lead">{{ 'landing.status.body' | translate }}</p>
+        </div>
+        <div class="lp-glyphs">
+          @for (g of glyphs; track g) {
+            <div class="lp-gcell">
+              <div class="lp-gbadge" [class]="'lp-gbadge-' + g" aria-hidden="true">
+                @switch (g) {
+                  @case ('cleared') {
+                    <svg viewBox="0 0 40 40" fill="none" width="30" height="30"><rect x="6" y="23" width="3.4" height="6" rx="1.5" fill="currentColor" /><rect x="12" y="20" width="3.4" height="11" rx="1.5" fill="currentColor" /><path d="M16 24 L24 32 L35 10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                  }
+                  @case ('pending') {
+                    <svg viewBox="0 0 40 40" fill="none" width="30" height="30"><rect x="8" y="24" width="4" height="8" rx="1.8" fill="currentColor" /><rect x="16" y="18" width="4" height="14" rx="1.8" fill="currentColor" /><rect x="24" y="22" width="4" height="10" rx="1.8" fill="currentColor" opacity="0.35" /></svg>
+                  }
+                  @case ('blocked') {
+                    <svg viewBox="0 0 40 40" fill="none" width="30" height="30"><path d="M20 8 V25" stroke="currentColor" stroke-width="4.4" stroke-linecap="round" /><circle cx="20" cy="32" r="2.6" fill="currentColor" /></svg>
+                  }
+                }
+              </div>
+              <div class="lp-gn" [class]="'lp-gn-' + g">{{ ('landing.status.' + g + '.n') | translate }}</div>
+              <div class="lp-gs">{{ ('landing.status.' + g + '.s') | translate }}</div>
+            </div>
+          }
+        </div>
       </div>
-      <a routerLink="/login"
-         class="inline-block bg-violet-600 text-white font-semibold text-base px-8 py-4 rounded-xl shadow-lg shadow-violet-600/30 hover:bg-violet-700 transition focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300">
-        {{ 'landing.cta.button' | translate }} →
-      </a>
+    </section>
+  </div>
+
+  <!-- ===== LIGHT / RECORDS ===== -->
+  <div class="lp-light">
+    <section class="lp-section">
+      <div class="lp-container">
+        <div class="lp-shead">
+          <span class="lp-eyebrow"><span class="lp-pip"></span>{{ 'landing.records.eyebrow' | translate }}</span>
+          <h2 class="lp-h2">{{ 'landing.records.title' | translate }}</h2>
+          <p class="lp-lead">{{ 'landing.records.subtitle' | translate }}</p>
+        </div>
+        <div class="lp-records">
+          <div class="lp-rec-h">
+            <div class="lp-rec-t">{{ 'landing.records.cohort' | translate }}</div>
+            <div class="lp-rec-s">{{ 'landing.records.cohortMeta' | translate }}</div>
+          </div>
+          <div class="lp-table-scroll">
+            <table class="lp-table">
+              <thead>
+                <tr>
+                  <th>{{ 'landing.records.col.student' | translate }}</th>
+                  <th>{{ 'landing.records.col.level' | translate }}</th>
+                  <th>{{ 'landing.records.col.credits' | translate }}</th>
+                  <th>{{ 'landing.records.col.certs' | translate }}</th>
+                  <th>{{ 'landing.records.col.status' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (r of roster; track r.name) {
+                  <tr>
+                    <td><span class="lp-td-nm">{{ r.name }}</span>@if (r.cjk) {<span class="lp-td-cjk">{{ r.cjk }}</span>}</td>
+                    <td>{{ r.level }}</td>
+                    <td><span class="lp-num">{{ r.credits }}</span></td>
+                    <td><span class="lp-num">{{ r.certs }}</span></td>
+                    <td><span class="lp-pill-l" [class]="'lp-pill-l-' + r.tone">{{ ('landing.status.' + r.tone + '.n') | translate }}</span></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===== QUOTE ===== -->
+  <section class="lp-quote">
+    <div class="lp-container">
+      <div class="lp-wordmark lp-wordmark-lg" aria-hidden="true">soundcheck<span class="lp-dot">.</span></div>
+      <p class="lp-q">
+        {{ 'landing.quote.a' | translate }} <span class="lp-lit">{{ 'landing.quote.lit' | translate }}</span> {{ 'landing.quote.b' | translate }}
+      </p>
+      <div class="lp-qwho">
+        <div class="lp-qph" aria-hidden="true"></div>
+        <div class="lp-qt">
+          <div class="lp-nm">{{ 'landing.quote.name' | translate }}</div>
+          <div class="lp-rl">{{ 'landing.quote.role' | translate }}</div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <footer class="bg-slate-900 text-slate-400 text-sm text-center py-8 px-6">
-    {{ 'landing.footer' | translate }}
+  <!-- ===== STATS ===== -->
+  <div class="lp-statsband">
+    <div class="lp-container lp-sb">
+      @for (s of stats; track s.key) {
+        <div>
+          <div class="lp-sbv" [class]="'lp-sbv-' + s.accent">{{ s.value }}</div>
+          <div class="lp-sbk">{{ ('landing.stats.' + s.key) | translate }}</div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ===== CTA ===== -->
+  <div class="lp-cta-band">
+    <div class="lp-container">
+      <div class="lp-cta-card">
+        <div class="lp-cta-inner">
+          <h2 class="lp-h2 lp-cta-title">{{ 'landing.cta.title.a' | translate }} <span class="lp-lit">{{ 'landing.cta.title.lit' | translate }}</span></h2>
+          <p class="lp-cta-body">{{ 'landing.cta.body' | translate }}</p>
+          <div class="lp-cta-row lp-center-row">
+            <a [routerLink]="signInRoute" class="lp-btn lp-btn-amber">{{ 'landing.cta.primary' | translate }}</a>
+            <a [routerLink]="signInRoute" class="lp-btn lp-btn-ghost">{{ 'landing.cta.secondary' | translate }}</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="lp-footer">
+    <div class="lp-container">
+      <div class="lp-frow">
+        <div class="lp-fbrand">
+          <div class="lp-wordmark">soundcheck<span class="lp-dot">.</span></div>
+          <p class="lp-ftagline">{{ 'landing.footer.tagline' | translate }}</p>
+          <p class="lp-fblurb">{{ 'landing.footer.blurb' | translate }}</p>
+        </div>
+        <div class="lp-fcols">
+          @for (c of footerCols; track c.key) {
+            <div class="lp-fcol">
+              <h4>{{ ('landing.footer.' + c.key + '.title') | translate }}</h4>
+              @for (l of c.links; track l) {
+                <a>{{ ('landing.footer.' + c.key + '.' + l) | translate }}</a>
+              }
+            </div>
+          }
+        </div>
+      </div>
+      <div class="lp-fbot">
+        <span>{{ 'landing.footer.copyright' | translate }}</span>
+        <span>{{ 'landing.footer.legal' | translate }}</span>
+      </div>
+    </div>
   </footer>
 
 </div>
