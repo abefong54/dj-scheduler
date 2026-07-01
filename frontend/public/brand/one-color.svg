@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96" role="img" aria-label="Soundcheck">
+  <title>Soundcheck one-color lockup (silkscreen master)</title>
+  <!-- Single flat color, no gradients — survives a one-color silkscreen
+       (hoodie / sticker). Delivered as the "ink" positive on transparent;
+       recolor `fill` per surface. -->
+  <g fill="#0B0D10">
+    <g transform="translate(24,16)">
+      <rect x="7"  y="38" width="6" height="14" rx="3"/>
+      <rect x="15" y="44" width="6" height="8"  rx="3"/>
+      <rect x="23" y="48" width="6" height="4"  rx="2"/>
+      <rect x="31" y="34" width="6" height="18" rx="3"/>
+      <rect x="39" y="22" width="6" height="30" rx="3"/>
+      <rect x="47" y="10" width="6" height="42" rx="3"/>
+    </g>
+    <text x="97" y="59"
+          font-family="'Space Grotesk', system-ui, sans-serif"
+          font-size="40" font-weight="600" letter-spacing="0.5"
+          fill="#0B0D10">soundcheck</text>
+  </g>
+</svg>

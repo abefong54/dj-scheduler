@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Soundcheck">
+  <title>Soundcheck favicon</title>
+  <rect x="0" y="0" width="32" height="32" rx="7" fill="#0B0D10"/>
+  <!-- Crisp full mark, scaled into the tile. Use down to ~32px. -->
+  <g transform="translate(1.5,4) scale(0.46)" fill="#FF9E2C">
+    <rect x="7"  y="38" width="6" height="14" rx="3"/>
+    <rect x="15" y="44" width="6" height="8"  rx="3"/>
+    <rect x="23" y="48" width="6" height="4"  rx="2"/>
+    <rect x="31" y="34" width="6" height="18" rx="3"/>
+    <rect x="39" y="22" width="6" height="30" rx="3"/>
+    <rect x="47" y="10" width="6" height="42" rx="3"/>
+  </g>
+</svg>

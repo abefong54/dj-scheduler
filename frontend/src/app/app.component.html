@@ -14,9 +14,13 @@
       中文
     </button>
     @if (auth.isAuthenticated()) {
-      <button (click)="auth.signOut()" class="lang-btn lang-btn-inactive">
+      <button (click)="auth.signOut()" data-testid="signout" class="lang-btn lang-btn-inactive">
         {{ 'nav.signOut' | translate }}
       </button>
+    } @else {
+      <a routerLink="/login" data-testid="signin" class="lang-btn lang-btn-inactive">
+        {{ 'nav.signIn' | translate }}
+      </a>
     }
   </div>
 </nav>

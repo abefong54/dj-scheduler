@@ -134,72 +134,138 @@
    are unique across the app; the only component-local style that stays is the
    `.tabs` margin override. */
 @layer components {
-  /* Hero header */
-  .detail-hero { @apply flex items-start justify-between mb-4 gap-4 flex-wrap; }
-  .detail-hero-info { @apply flex-1 min-w-0; }
-  .detail-event-name { @apply text-3xl font-bold text-gray-900 leading-tight; }
-  .detail-event-meta { @apply text-sm text-gray-500 mt-1; }
-  .detail-hero-actions { @apply flex items-center gap-2 flex-shrink-0 flex-wrap; }
+  /* Console-restyled event detail (EL-066). Light workspace inside AdminShell:
+     monumental event name (Space Grotesk), mono meta readout, stage color
+     chips, and a mono-header data table. Tokens only — no hard-coded hexes. */
+
+  /* Detail content column */
+  .detail { @apply flex flex-col; gap: var(--space-5); }
+
+  /* Topbar action buttons (projected into the shell [shell-actions] slot) */
+  .detail-topbtn {
+    @apply inline-flex items-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors;
+    background: var(--card);
+    border-color: var(--border);
+    color: var(--ink);
+  }
+  .detail-topbtn:hover { background: var(--surface); }
+  .detail-topbtn-primary {
+    @apply inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium text-white transition-colors;
+    background: var(--violet);
+  }
+  .detail-topbtn-primary:hover { background: var(--violet-deep); }
+
+  /* Monument header */
+  .detail-hero { @apply min-w-0; }
+  .detail-event-name {
+    font-family: var(--font-display);
+    @apply text-4xl font-bold leading-none tracking-tight sm:text-5xl;
+    color: var(--ink);
+  }
+  .detail-event-meta {
+    font-family: var(--font-mono);
+    @apply mt-3 text-sm;
+    color: var(--muted);
+  }
 
   /* Genre pills */
-  .genre-pill-row { @apply flex gap-1 flex-wrap mt-2; }
-  .genre-pill { @apply px-2 py-0.5 bg-violet-50 text-violet-700 rounded-full text-xs font-medium; }
+  .genre-pill-row { @apply mt-3 flex flex-wrap gap-1.5; }
+  .genre-pill {
+    font-family: var(--font-mono);
+    @apply rounded-full px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wider;
+    background: rgba(124, 58, 237, 0.08);
+    color: var(--violet);
+  }
 
   /* Stage chip strip */
-  .stage-strip { @apply flex items-center gap-2 flex-wrap py-2 mb-2; }
-  .stage-chip { @apply flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm; }
-  .stage-chip-dot { @apply w-2.5 h-2.5 rounded-full flex-shrink-0; }
-  .stage-chip-name { @apply font-medium text-gray-800; }
-  .stage-chip-delete { @apply ml-1 text-gray-300 hover:text-red-400 text-base leading-none hidden group-hover:inline transition-colors; }
-  .stage-chip-add { @apply px-3 py-1.5 border border-dashed border-gray-300 rounded-full text-sm text-gray-500 hover:border-violet-400 hover:text-violet-600 transition-colors; }
+  .stage-strip { @apply flex flex-wrap items-center gap-2; }
+  .stage-chip {
+    @apply flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm;
+    background: var(--card);
+    border-color: var(--border);
+  }
+  .stage-chip-dot { @apply h-2.5 w-2.5 flex-shrink-0 rounded-full; }
+  .stage-chip-name { @apply font-medium; color: var(--ink); }
+  .stage-chip-delete { @apply ml-1 hidden text-base leading-none transition-colors group-hover:inline hover:text-red-500; color: var(--muted); }
 
   /* Slots section layout */
-  .slots-section { @apply mt-4; }
-  .slots-section-header { @apply flex items-center justify-between mb-3; }
+  .slots-section { @apply flex flex-col; gap: var(--space-3); }
+  .slots-section-header { @apply flex items-center justify-between; }
 
   /* Slots table card */
-  .slots-card { @apply overflow-hidden; }
+  .slots-card {
+    @apply overflow-hidden rounded-xl border;
+    background: var(--card);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+  }
 
   /* Slot thead row */
-  .slot-head-row { @apply border-b border-gray-200 bg-gray-50; }
+  .slot-head-row { @apply border-b; border-color: var(--border); background: var(--surface); }
 
   /* Slot table */
   .slot-table { @apply w-full text-sm; }
-  .slot-th { @apply text-left px-3 py-2 font-medium text-gray-700; }
-  .slot-row { @apply border-b border-gray-100 last:border-0 hover:bg-gray-50; }
-  .slot-stage-cell { @apply px-3 py-3; }
+  .slot-th {
+    font-family: var(--font-mono);
+    @apply px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider;
+    color: var(--muted);
+  }
+  .slot-th-num { @apply text-right; }
+  .slot-row { @apply border-b transition-colors last:border-0; border-color: var(--border); }
+  .slot-row:hover { background: var(--surface); }
+  .slot-stage-cell { @apply px-4 py-3; color: var(--ink); }
   .slot-stage-inner { @apply flex items-center gap-2; }
-  .slot-stage-dot { @apply w-2.5 h-2.5 rounded-full flex-shrink-0; }
-  .slot-dj-cell { @apply px-3 py-3 font-medium text-gray-900; }
-  .slot-genre-cell { @apply px-3 py-3 text-gray-500; }
-  .slot-time-cell { @apply px-3 py-3 text-gray-700 whitespace-nowrap; }
-  .slot-actions-cell { @apply px-3 py-3 text-right whitespace-nowrap; }
-  .row-actions { @apply flex items-center justify-end gap-1.5; }
+  .slot-stage-dot { @apply h-2.5 w-2.5 flex-shrink-0 rounded-full; }
+  .slot-dj-cell { @apply px-4 py-3; }
+  .slot-dj-name { @apply font-medium; color: var(--ink); }
+  .slot-await { font-family: var(--font-mono); @apply ml-2 text-xs; color: var(--muted); }
+  .slot-genre-cell { @apply px-4 py-3; color: var(--muted); }
+  .slot-time-cell {
+    font-family: var(--font-mono);
+    @apply whitespace-nowrap px-4 py-3 text-right;
+    color: var(--ink);
+  }
+  .slot-actions-cell { @apply whitespace-nowrap px-4 py-3 text-right; }
+  .slot-edit-btn { @apply mr-3 text-sm font-medium transition-colors; color: var(--muted); }
+  .slot-edit-btn:hover { color: var(--ink); }
 
   /* Inline edit row */
-  .edit-row { @apply border-b border-gray-100 bg-violet-50; }
+  .edit-row { @apply border-b; border-color: var(--border); background: rgba(124, 58, 237, 0.05); }
   .edit-cell { @apply px-2 py-2; }
-  .edit-select { @apply w-full text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-400 disabled:bg-gray-50 disabled:text-gray-400; }
-  .edit-time-input { @apply text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-400 w-24; }
-  .edit-dur-input { @apply text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-400 w-20; }
-  .edit-actions-cell { @apply px-2 py-2 text-right whitespace-nowrap; }
-  .edit-actions-inner { @apply flex items-center justify-end gap-1.5; }
+  .edit-select { @apply w-full rounded-lg border px-2 py-1 text-sm focus:outline-none; border-color: var(--border); background: var(--card); }
+  .edit-select:focus { box-shadow: 0 0 0 2px var(--violet), 0 0 0 4px rgba(34, 211, 238, 0.2); }
+  .edit-time-input { @apply w-24 rounded-lg border px-2 py-1 text-sm focus:outline-none; border-color: var(--border); background: var(--card); }
+  .edit-time-input:focus { box-shadow: 0 0 0 2px var(--violet), 0 0 0 4px rgba(34, 211, 238, 0.2); }
+  .edit-dur-input { @apply w-16 rounded-lg border px-2 py-1 text-sm focus:outline-none; border-color: var(--border); background: var(--card); }
+  .edit-dur-input:focus { box-shadow: 0 0 0 2px var(--violet), 0 0 0 4px rgba(34, 211, 238, 0.2); }
+  .edit-actions-cell { @apply whitespace-nowrap px-2 py-2 text-right; }
+  .btn-save { @apply mr-1 rounded-lg px-3 py-1 text-xs font-medium text-white transition-colors; background: var(--violet); }
+  .btn-save:hover { background: var(--violet-deep); }
+  .btn-cancel-edit { @apply rounded-lg border px-3 py-1 text-xs font-medium transition-colors; border-color: var(--border); color: var(--muted); }
+  .btn-cancel-edit:hover { background: var(--surface); }
 
   /* Sortable slot headers */
-  .slot-th-sort { @apply cursor-pointer hover:bg-gray-100 select-none; }
-
-  /* Slot search */
-  .slot-search-input { @apply w-52 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400; }
+  .slot-th-sort { @apply cursor-pointer select-none; }
+  .slot-th-sort:hover { color: var(--ink); }
 
   /* Inline add row */
-  .add-row { @apply border-b border-violet-100 bg-violet-50; }
+  .add-row { @apply border-b; border-color: var(--border); background: rgba(124, 58, 237, 0.05); }
   .add-cell { @apply px-2 py-2; }
-  .add-cell-actions { @apply text-right whitespace-nowrap; }
-  .add-trigger-row { @apply hover:bg-violet-50 cursor-pointer transition-colors; }
-  .add-trigger-cell { @apply px-3 py-3 text-sm text-violet-600 font-medium; }
+  .add-cell-actions { @apply whitespace-nowrap text-right; }
+  .add-trigger-row { @apply cursor-pointer transition-colors; }
+  .add-trigger-row:hover { background: rgba(124, 58, 237, 0.05); }
+  .add-trigger-cell {
+    font-family: var(--font-mono);
+    @apply px-4 py-3 text-xs font-medium uppercase tracking-wider;
+    color: var(--violet);
+  }
+
+  /* Date tabs — mono uppercase labels per Console type register */
+  .detail-tabs { @apply gap-2; border-color: var(--border); }
+  .detail-tabs .tab-btn { font-family: var(--font-mono); @apply text-xs uppercase tracking-wider; }
 
   /* Inline conflict warning (slot add / edit) */
-  .conflict-cell { @apply px-3 py-2 text-sm text-red-700 bg-red-50; }
+  .conflict-cell { @apply px-4 py-2 text-sm text-red-700; background: rgba(239, 68, 68, 0.08); }
   .conflict-text { @apply inline-flex items-center gap-1; }
 
   /* Stage modal field wrapper */
@@ -573,4 +639,96 @@
     padding: 10px 18px;
   }
   .console-btn-secondary:hover { background: var(--surface); }
+}
+
+/* ── EL-072 Soundcheck design tokens (SOURCE OF TRUTH — additive, opt-in) ──
+   The Soundcheck brand token foundation from the visual-identity direction
+   (§3/§4). This is an ADDITIVE, NON-BREAKING layer: the Console (violet) tokens
+   above stay the live default. NOTHING here applies unless a `[data-brand=
+   "soundcheck"]` attribute is set on a host element, so the current look is
+   unchanged. EL-078 will flip the default over to these.
+
+   Namespacing: every token is prefixed `--sc-*` so it can never collide with or
+   override a Console `--token`. Values are the brand's "starting points" — tune
+   against real screens before the reskin (EL-078).
+
+   Two modes, one accent/status system:
+     • dark "booth" mode  → default when [data-brand="soundcheck"] is set
+     • light "admin" mode → [data-brand="soundcheck"][data-mode="light"]
+   Same accent + status hues across both; only the canvas (surface/text) flips.
+
+   Type: Space Grotesk = display/headings/wordmark/big numbers · Inter = UI/body
+   (tabular figures on) · Noto Sans TC = Traditional Chinese (Taiwan, NOT
+   Simplified). Loaded in index.html + wired into Tailwind fallback stacks.
+
+   STATUS IS NEVER COLOR-ALONE. Each status token pairs with a required icon +
+   text label so it survives deuteranopia/protanopia. Convention (components in
+   later tickets must honour this — here we only define the tokens):
+     • cleared   → check/waveform-check glyph + label "Certified/Cleared" (green)
+     • pending   → clock/hourglass glyph      + label "Pending"           (amber)
+     • blocked   → slash/x glyph              + label "Blocked/Error"      (red)
+     • info/live → dot/info glyph             + label "Live/Info"          (cyan)
+   Cue Amber contrast trap: never amber TEXT on white — use amber as a FILL
+   behind dark text on light surfaces. `--sc-on-amber` is that dark ink. */
+
+/* Brand accents + status — identical hues in both modes (defined once, on the
+   opt-in root; the mode blocks below only override the canvas + neutral ink). */
+[data-brand='soundcheck'] {
+  /* Brand accents */
+  --sc-cue-amber: #ff9e2c;        /* primary accent — CTAs, active, brand */
+  --sc-deck-cyan: #22d3ee;        /* alt accent — links, focus ring, info */
+  --sc-foglight-magenta: #e0469b; /* secondary, used rarely */
+  --sc-on-amber: #0b0d10;         /* dark ink to sit ON a Cue Amber fill */
+
+  /* Neutral ramp (dark-mode ladder — shared scale, both modes reference it) */
+  --sc-neutral-950: #0b0d10;      /* Booth Black — darkest */
+  --sc-neutral-900: #171b21;      /* Console Slate — raised dark surface */
+  --sc-neutral-700: #2c333c;      /* borders / dividers on dark */
+  --sc-neutral-400: #8a94a3;      /* muted text */
+  --sc-neutral-100: #e6eaf0;      /* light text on dark / light hairlines */
+
+  /* Named brand surfaces (from the palette) */
+  --sc-booth-black: #0b0d10;      /* dark base / default app surface */
+  --sc-console-slate: #171b21;    /* raised dark surface (cards, panels) */
+  --sc-stage-white: #f7f8fa;      /* light admin base */
+
+  /* Status — same hues in both modes; pair with icon + label (see header). */
+  --sc-status-cleared: #34d399;   /* certified / cleared — green */
+  --sc-status-pending: #f5b544;   /* pending — amber, distinct from Cue Amber */
+  --sc-status-blocked: #f4505b;   /* Clip Red — error / blocked */
+  --sc-status-info: #22d3ee;      /* info / live — Deck Cyan */
+
+  /* Focus ring — Deck Cyan, 2px (see WCAG note in ticket) */
+  --sc-focus-ring: #22d3ee;
+  --sc-focus-ring-width: 2px;
+
+  /* Type families — CJK-safe stacks (Noto Sans TC for Traditional Chinese) */
+  --sc-font-display: 'Space Grotesk', 'Noto Sans TC', system-ui, sans-serif;
+  --sc-font-body: 'Inter', 'Noto Sans TC', system-ui, sans-serif;
+  --sc-font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+  /* Inter tabular figures on for aligned numbers (durations, credits, counts) */
+  --sc-font-numeric-feature: 'tnum' 1, 'lnum' 1;
+
+  /* ── Dark "booth" mode (the intended eventual default) ── */
+  --sc-bg: var(--sc-booth-black);         /* app canvas */
+  --sc-surface: var(--sc-console-slate);  /* raised cards / panels */
+  --sc-border: var(--sc-neutral-700);     /* hairlines, dividers */
+  --sc-text: var(--sc-neutral-100);       /* body text — AA (4.5:1) on booth */
+  --sc-text-muted: var(--sc-neutral-400); /* captions, secondary */
+  --sc-primary: var(--sc-cue-amber);      /* primary accent for this mode */
+  --sc-on-primary: var(--sc-on-amber);    /* ink on the amber fill */
+  --sc-link: var(--sc-deck-cyan);         /* links / interactive text */
+}
+
+/* ── Light "admin" mode — flips ONLY the canvas + neutral ink; the accent and
+   status hues are inherited unchanged from the block above. Cue Amber stays a
+   FILL (never text) on the white surface — dark `--sc-on-primary` rides on it. */
+[data-brand='soundcheck'][data-mode='light'] {
+  --sc-bg: var(--sc-stage-white);  /* light admin canvas */
+  --sc-surface: #ffffff;           /* raised cards on the light base */
+  --sc-border: #d9dee6;            /* hairlines on light */
+  --sc-text: #0b0d10;              /* dark body text on white — AA+ */
+  --sc-text-muted: #5b6472;        /* muted text tuned for white bg */
+  /* --sc-primary stays Cue Amber but is used as a fill; text on white must be
+     `--sc-on-primary` (dark) sitting on the amber, never amber text on white. */
 }
