@@ -1,107 +1,147 @@
+// Command migrate applies the embedded goose migrations to the database named
+// by DATABASE_URL.
+//
+// Usage:
+//
+//	migrate [up|down|status|version]
+//
+// The default subcommand is "up". Migrations are embedded in the binary
+// (eventlineup/migrations), so no migrations/ directory is needed at runtime.
+// A Postgres session advisory lock (goose session locker) makes concurrent
+// "up" runs safe: exactly one instance applies, the rest are clean no-ops —
+// which is what lets migrations run on every deploy across multiple instances.
 package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"io"
 	"log"
 	"os"
-	"path/filepath"
-	"sort"
+	"time"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/pressly/goose/v3"
+	"github.com/pressly/goose/v3/lock"
+
+	"eventlineup/migrations"
 )
 
 func main() {
+	cmd := "up"
+	if len(os.Args) > 1 {
+		cmd = os.Args[1]
+	}
+
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
 		log.Fatal("DATABASE_URL not set")
 	}
 
-	migrationsDir := os.Getenv("MIGRATIONS_DIR")
-	if migrationsDir == "" {
-		migrationsDir = "migrations"
-	}
-
 	ctx := context.Background()
 
-	pool, err := pgxpool.New(ctx, dbURL)
+	db, err := openDB(ctx, dbURL)
 	if err != nil {
 		log.Fatalf("connect: %v", err)
 	}
-	defer pool.Close()
+	defer db.Close()
 
-	if err := ensureMigrationsTable(ctx, pool); err != nil {
-		log.Fatalf("ensure migrations table: %v", err)
-	}
-
-	files, err := filepath.Glob(filepath.Join(migrationsDir, "*.sql"))
+	provider, err := newProvider(db)
 	if err != nil {
-		log.Fatalf("glob migrations: %v", err)
-	}
-	sort.Strings(files)
-
-	applied := 0
-	for _, f := range files {
-		name := filepath.Base(f)
-		already, err := isApplied(ctx, pool, name)
-		if err != nil {
-			log.Fatalf("check %s: %v", name, err)
-		}
-		if already {
-			fmt.Printf("  skip  %s\n", name)
-			continue
-		}
-
-		sql, err := os.ReadFile(f)
-		if err != nil {
-			log.Fatalf("read %s: %v", name, err)
-		}
-
-		if err := apply(ctx, pool, name, string(sql)); err != nil {
-			log.Fatalf("apply %s: %v", name, err)
-		}
-		fmt.Printf("  apply %s\n", name)
-		applied++
+		log.Fatalf("init migrations: %v", err)
 	}
 
-	if applied == 0 {
-		fmt.Println("nothing to migrate")
-	} else {
-		fmt.Printf("%d migration(s) applied\n", applied)
+	if err := run(ctx, provider, cmd, os.Stdout); err != nil {
+		log.Fatalf("%s: %v", cmd, err)
 	}
 }
 
-func ensureMigrationsTable(ctx context.Context, pool *pgxpool.Pool) error {
-	_, err := pool.Exec(ctx, `
-		CREATE TABLE IF NOT EXISTS schema_migrations (
-			name       TEXT PRIMARY KEY,
-			applied_at TIMESTAMPTZ DEFAULT now()
-		)`)
-	return err
-}
-
-func isApplied(ctx context.Context, pool *pgxpool.Pool, name string) (bool, error) {
-	var exists bool
-	err := pool.QueryRow(ctx,
-		`SELECT EXISTS(SELECT 1 FROM schema_migrations WHERE name = $1)`, name).
-		Scan(&exists)
-	return exists, err
-}
-
-func apply(ctx context.Context, pool *pgxpool.Pool, name, sql string) error {
-	tx, err := pool.BeginTx(ctx, pgx.TxOptions{})
+// openDB opens a database/sql handle over pgx's stdlib driver — goose speaks
+// database/sql, while the app itself uses a pgxpool.
+func openDB(ctx context.Context, url string) (*sql.DB, error) {
+	db, err := sql.Open("pgx", url)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer func() { _ = tx.Rollback(ctx) }()
 
-	if _, err := tx.Exec(ctx, sql); err != nil {
-		return err
+	// A one-shot migrator needs only a couple of connections. Keep the cap at or
+	// above 2: the goose session locker pins one connection to hold the advisory
+	// lock while migrations run, so a max of 1 would self-deadlock.
+	db.SetMaxOpenConns(4)
+	db.SetConnMaxLifetime(5 * time.Minute)
+
+	// Bound the initial connectivity check so a bad DATABASE_URL fails fast here
+	// rather than hanging, or surfacing mid-migration.
+	pingCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	if err := db.PingContext(pingCtx); err != nil {
+		db.Close()
+		return nil, err
 	}
-	if _, err := tx.Exec(ctx,
-		`INSERT INTO schema_migrations (name) VALUES ($1)`, name); err != nil {
-		return err
+	return db, nil
+}
+
+// newProvider builds a goose provider over the embedded migrations, guarded by a
+// Postgres session advisory lock so concurrent runs don't race.
+func newProvider(db *sql.DB) (*goose.Provider, error) {
+	locker, err := lock.NewPostgresSessionLocker()
+	if err != nil {
+		return nil, err
 	}
-	return tx.Commit(ctx)
+	return goose.NewProvider(goose.DialectPostgres, db, migrations.FS,
+		goose.WithSessionLocker(locker))
+}
+
+// run dispatches a subcommand against the provider and reports what it did.
+func run(ctx context.Context, p *goose.Provider, cmd string, out io.Writer) error {
+	switch cmd {
+	case "up":
+		results, err := p.Up(ctx)
+		if err != nil {
+			return err
+		}
+		if len(results) == 0 {
+			fmt.Fprintln(out, "nothing to migrate")
+			return nil
+		}
+		for _, r := range results {
+			fmt.Fprintf(out, "  applied  %s\n", r.Source.Path)
+		}
+		fmt.Fprintf(out, "%d migration(s) applied\n", len(results))
+		return nil
+
+	case "down":
+		r, err := p.Down(ctx)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "  reverted  %s\n", r.Source.Path)
+		return nil
+
+	case "status":
+		st, err := p.Status(ctx)
+		if err != nil {
+			return err
+		}
+		for _, s := range st {
+			state := "pending"
+			if s.State == goose.StateApplied {
+				state = "applied"
+			}
+			fmt.Fprintf(out, "  %-8s %s\n", state, s.Source.Path)
+		}
+		return nil
+
+	case "version":
+		v, err := p.GetDBVersion(ctx)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "current version: %d\n", v)
+		return nil
+
+	default:
+		return fmt.Errorf("unknown command %q (want up|down|status|version)", cmd)
+	}
 }
