@@ -1,58 +1,64 @@
-<div class="min-h-screen bg-gray-50 px-4 py-8">
+<!-- EL-082 Soundcheck reskin: hard-coded light utilities (bg-gray-*, bg-white,
+     text-gray-*, text-violet-*) swapped for design tokens via inline styles so
+     the DJ confirmation portal sits on the dark "booth" surface. Layout,
+     copy, testids and confirm/flag behaviour are unchanged — skin only. -->
+<div class="min-h-screen px-4 py-8" style="background: var(--surface)">
   <div class="mx-auto max-w-2xl">
 
     @if (loading()) {
-      <p class="text-center text-gray-400 py-16">…</p>
+      <p class="text-center py-16" style="color: var(--muted)">…</p>
     } @else if (error()) {
       <div class="text-center py-16">
-        <p class="text-lg font-medium text-gray-700">{{ 'dj.portal.error.expired' | translate }}</p>
+        <p class="text-lg font-medium" style="color: var(--ink)">{{ 'dj.portal.error.expired' | translate }}</p>
       </div>
     } @else {
       <!-- Header: DJ name + genre tags -->
       <header class="mb-8">
-        <p class="text-sm uppercase tracking-wide text-violet-600 font-medium">{{ 'dj.portal.title' | translate }}</p>
-        <h1 class="text-2xl font-bold text-gray-900 mt-1">{{ dj()?.name }}</h1>
+        <p class="text-sm uppercase tracking-wide font-medium" style="color: var(--violet)">{{ 'dj.portal.title' | translate }}</p>
+        <h1 class="text-2xl font-bold mt-1" style="color: var(--ink)">{{ dj()?.name }}</h1>
         @if (dj()?.genre_tags?.length) {
           <div class="flex flex-wrap gap-1.5 mt-2">
             @for (tag of dj()!.genre_tags; track tag) {
-              <span class="text-xs font-medium text-violet-700 bg-violet-100 px-2 py-0.5 rounded-full">{{ tag }}</span>
+              <span class="text-xs font-medium px-2 py-0.5 rounded-full"
+                style="color: var(--violet); background: color-mix(in srgb, var(--violet) 15%, transparent)">{{ tag }}</span>
             }
           </div>
         }
       </header>
 
       @if (slots().length === 0) {
-        <p class="text-center text-gray-400 py-12">{{ 'dj.portal.no_slots' | translate }}</p>
+        <p class="text-center py-12" style="color: var(--muted)">{{ 'dj.portal.no_slots' | translate }}</p>
       } @else {
         @for (group of slotsByEvent(); track group.eventName) {
           <section class="mb-6">
-            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">{{ group.eventName }}</h2>
+            <h2 class="text-sm font-semibold uppercase tracking-wide mb-2" style="color: var(--muted)">{{ group.eventName }}</h2>
             <div class="space-y-3">
               @for (slot of group.slots; track slot.id) {
-                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+                <div class="rounded-lg shadow-sm border p-4" style="background: var(--card); border-color: var(--border)">
                   <div class="flex items-baseline justify-between gap-2">
-                    <p class="font-medium text-gray-900">{{ slot.slot_date }}</p>
-                    <p class="text-sm text-gray-600">{{ slot.start_time }}–{{ slot.end_time }}</p>
+                    <p class="font-medium" style="color: var(--ink)">{{ slot.slot_date }}</p>
+                    <p class="text-sm" style="color: var(--muted)">{{ slot.start_time }}–{{ slot.end_time }}</p>
                   </div>
-                  <p class="text-sm text-gray-600 mt-0.5">{{ slot.stage_name }}@if (slot.genre) { · {{ slot.genre }} }</p>
+                  <p class="text-sm mt-0.5" style="color: var(--muted)">{{ slot.stage_name }}@if (slot.genre) { · {{ slot.genre }} }</p>
                   @if (slot.notes) {
-                    <p class="text-sm text-gray-500 mt-1 italic">{{ slot.notes }}</p>
+                    <p class="text-sm mt-1 italic" style="color: var(--muted)">{{ slot.notes }}</p>
                   }
 
                   <div class="flex items-center gap-2 mt-3">
                     <a [routerLink]="['/card', slot.id]"
                       [attr.data-testid]="'share-card-' + slot.id"
-                      class="text-sm font-medium text-violet-700 hover:underline underline-offset-2">
+                      class="text-sm font-medium hover:underline underline-offset-2"
+                      style="color: var(--violet)">
                       {{ 'dj.portal.shareCard' | translate }}
                     </a>
                     @switch (slot.dj_confirmation) {
                       @case ('confirmed') {
                         <span [attr.data-testid]="'slot-status-' + slot.id"
-                          class="text-sm font-medium text-green-700">{{ 'dj.portal.confirmed' | translate }}</span>
+                          class="text-sm font-medium" style="color: var(--success)">{{ 'dj.portal.confirmed' | translate }}</span>
                       }
                       @case ('flagged') {
                         <span [attr.data-testid]="'slot-status-' + slot.id"
-                          class="text-sm font-medium text-amber-700">{{ 'dj.portal.flagged' | translate }}</span>
+                          class="text-sm font-medium" style="color: var(--warning)">{{ 'dj.portal.flagged' | translate }}</span>
                       }
                     }
                     <div class="ml-auto flex gap-2">

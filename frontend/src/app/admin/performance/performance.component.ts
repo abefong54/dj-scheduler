@@ -19,6 +19,7 @@ import { AdminShellComponent } from '../../shared/admin-shell.component';
   standalone: true,
   imports: [TranslatePipe, DataTableComponent, ColumnDefDirective, ButtonComponent, AdminShellComponent],
   templateUrl: './performance.component.html',
+  styleUrl: './performance.component.css',
 })
 export class PerformanceComponent implements OnDestroy {
   private api = inject(ApiService);
