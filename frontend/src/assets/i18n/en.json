@@ -183,7 +183,7 @@
   "landing.hero.card.stat2": "Certifications",
   "landing.hero.card.stat3": "Next slot booked",
 
-  "landing.trust.label": "Trusted by the schools building the next generation of DJs",
+  "landing.trust.label": "Built with the DJ school shaping the next generation of DJs",
 
   "landing.insight.eyebrow": "Not another scheduler",
   "landing.insight.mut": "A gradebook can't tell you if a student can hold a room. A calendar just tells you when.",
@@ -240,13 +240,13 @@
   "landing.quote.a": "\"Our whole mission is turning classroom hours into real stage time. Soundcheck is the first tool that",
   "landing.quote.lit": "measures the part that actually matters",
   "landing.quote.b": "— and tells a student, honestly, when they're ready.\"",
-  "landing.quote.name": "Founder, IMDJ DJSchool",
-  "landing.quote.role": "Taipei · design partner",
+  "landing.quote.name": "Why we built Soundcheck",
+  "landing.quote.role": "with our design partner, IMDJ DJSchool · Taipei",
 
-  "landing.stats.s1": "Sets logged as credits",
-  "landing.stats.s2": "Certifications cleared",
-  "landing.stats.s3": "Cleared students who got a real gig",
-  "landing.stats.s4": "Partner venues on the lineup",
+  "landing.stats.s1": "logged as a performance credit",
+  "landing.stats.s2": "skills signed off before booking",
+  "landing.stats.s3": "no clearance, no slot",
+  "landing.stats.s4": "school nights & partner venues",
 
   "landing.cta.title.a": "Stop guessing who's",
   "landing.cta.title.lit": "ready.",
