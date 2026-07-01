@@ -37,6 +37,12 @@ export const routes: Routes = [
       .then(m => m.DjsComponent),
   },
   {
+    path: 'admin/performance',
+    canActivate: [authGuard],
+    loadComponent: () => import('./admin/performance/performance.component')
+      .then(m => m.PerformanceComponent),
+  },
+  {
     path: 'events/:id',
     loadComponent: () => import('./schedule/schedule.component')
       .then(m => m.ScheduleComponent),
@@ -47,5 +53,19 @@ export const routes: Routes = [
     loadComponent: () => import('./dj-portal/dj-portal.component')
       .then(m => m.DJPortalComponent),
   },
-  { path: '', redirectTo: 'admin/events', pathMatch: 'full' },
+  {
+    // Public per-DJ share card (no auth guard) — the link a DJ shares (EL-049).
+    path: 'card/:slotId',
+    loadComponent: () => import('./card/card.component')
+      .then(m => m.CardComponent),
+  },
+  {
+    // Public Soundcheck marketing landing — the branded front door prospects
+    // see before signing in (EL-075). Authenticated users can navigate into the
+    // console from the top bar; auth callbacks still land on /admin/events.
+    path: '',
+    pathMatch: 'full',
+    loadComponent: () => import('./landing/landing.component')
+      .then(m => m.LandingComponent),
+  },
 ];

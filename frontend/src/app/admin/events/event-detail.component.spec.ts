@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 
@@ -227,5 +227,175 @@ describe('EventDetailComponent — certification gating (EL-042)', () => {
 
     component.addDjId = 'pro';
     expect(component.addCertWarning()).toBeNull();
+  });
+});
+
+// EL-066: Console restyle — the page renders inside the shared AdminShell with
+// a monumental event name, mono meta readout, mono table headers, and a Console
+// status badge. Presentation only; the behavior suites above guard the logic.
+describe('EventDetailComponent — Console restyle (EL-066)', () => {
+  let fixture: ComponentFixture<EventDetailComponent>;
+  const root = () => fixture.nativeElement as HTMLElement;
+
+  const CONFIRMED_SLOT: Slot = { ...SLOT, dj_confirmation: 'confirmed' } as Slot;
+
+  const apiMock = {
+    getEvent: () => of(EVENT),
+    getStages: () => of(STAGES),
+    getSlots: () => of([CONFIRMED_SLOT]),
+    getDJs: () => of(DJS),
+    createSlot: () => of({}),
+    updateSlot: () => of({}),
+  };
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [EventDetailComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: apiMock },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'evt-1' } } } },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+        { provide: ScheduleExportService, useValue: { download: () => {} } },
+      ],
+    }).compileComponents();
+
+    TestBed.inject(TranslateService).use('en');
+    fixture = TestBed.createComponent(EventDetailComponent);
+    fixture.detectChanges();
+  });
+
+  it('renders inside the AdminShell with the events nav active', () => {
+    expect(root().querySelector('app-admin-shell')).toBeTruthy();
+    expect(root().querySelector('.shell-nav-active')?.getAttribute('data-nav')).toBe('events');
+  });
+
+  it('shows the event name as a monument and a mono meta readout', () => {
+    expect(root().querySelector('.detail-event-name')?.textContent).toContain('Test Event');
+    expect(root().querySelector('.detail-event-meta')?.textContent).toContain('Venue');
+  });
+
+  it('renders mono uppercase column headers and a Console status badge', () => {
+    expect(root().querySelectorAll('.slot-th').length).toBeGreaterThan(0);
+    expect(root().querySelector('app-status-badge .status-badge.status-confirmed')).toBeTruthy();
+  });
+
+  it('keeps the inline add-slot trigger wired', () => {
+    expect(root().querySelector('[data-testid="add-slot-trigger"]')).toBeTruthy();
+  });
+});
+
+// EL-080: Soundcheck reskin — the page body renders the token-driven surface
+// classes it overrides onto the dark-booth palette. Skin only; these guard that
+// the reskinned hooks (slots heading, dark modal) stay present so the component
+// CSS overrides keep landing. Supersedes the EL-066 Console restyle.
+describe('EventDetailComponent — Soundcheck reskin (EL-080)', () => {
+  let fixture: ComponentFixture<EventDetailComponent>;
+  const root = () => fixture.nativeElement as HTMLElement;
+
+  const apiMock = {
+    getEvent: () => of(EVENT),
+    getStages: () => of(STAGES),
+    getSlots: () => of([SLOT]),
+    getDJs: () => of(DJS),
+    createSlot: () => of({}),
+    updateSlot: () => of({}),
+  };
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [EventDetailComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: apiMock },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'evt-1' } } } },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+        { provide: ScheduleExportService, useValue: { download: () => {} } },
+      ],
+    }).compileComponents();
+
+    TestBed.inject(TranslateService).use('en');
+    fixture = TestBed.createComponent(EventDetailComponent);
+    fixture.detectChanges();
+  });
+
+  it('renders the reskinned slots section heading hook', () => {
+    expect(root().querySelector('.slots-section .section-title')).toBeTruthy();
+  });
+
+  it('renders the add-stage modal on the dark card surface with swatches', () => {
+    fixture.componentInstance.addStage();
+    fixture.detectChanges();
+    expect(root().querySelector('.modal-box-sm')).toBeTruthy();
+    expect(root().querySelector('.modal-box-sm .modal-title')).toBeTruthy();
+    expect(root().querySelectorAll('.color-swatch').length).toBeGreaterThan(0);
+  });
+});
+
+// EL-028: slots table search + sort via the shared TableSort engine. The merged
+// template renders inside the AdminShell (RouterLink), so this suite provides the
+// router too even though it only asserts on the engine.
+describe('EventDetailComponent — slot search & sort (EL-028)', () => {
+  const slots: Slot[] = [
+    { ...SLOT, id: 's-a', dj_name: 'DJ Alpha', stage_name: 'Main Stage', genre: 'House', start_time: '21:00' } as Slot,
+    { ...SLOT, id: 's-b', dj_name: 'DJ Beta', stage_name: 'Side Stage', genre: 'Techno', start_time: '19:00' } as Slot,
+    { ...SLOT, id: 's-c', dj_name: 'MC Gamma', stage_name: 'Main Stage', genre: 'House', start_time: '20:00' } as Slot,
+  ];
+
+  const apiMock = {
+    getEvent: () => of(EVENT),
+    getStages: () => of(STAGES),
+    getSlots: () => of(slots),
+    getDJs: () => of(DJS),
+    createSlot: () => of({}),
+    updateSlot: () => of({}),
+  };
+
+  let component: EventDetailComponent;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [EventDetailComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: apiMock },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'evt-1' } } } },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+        { provide: ScheduleExportService, useValue: { download: () => {} } },
+      ],
+    }).compileComponents();
+
+    component = TestBed.createComponent(EventDetailComponent).componentInstance;
+  });
+
+  it('defaults to ascending start_time order', () => {
+    expect(component.slotTable.view().map(s => s.id)).toEqual(['s-b', 's-c', 's-a']);
+    expect(component.slotTable.indicator('start_time')).toBe('↑');
+  });
+
+  it('filters across dj, stage, and genre case-insensitively', () => {
+    component.slotTable.search.set('side');
+    expect(component.slotTable.view().map(s => s.id)).toEqual(['s-b']);
+
+    component.slotTable.search.set('techno');
+    expect(component.slotTable.view().map(s => s.id)).toEqual(['s-b']);
+  });
+
+  it('toggles a column to sort and reverses on a second click', () => {
+    component.slotTable.toggle('dj_name');
+    expect(component.slotTable.view().map(s => s.dj_name)).toEqual(['DJ Alpha', 'DJ Beta', 'MC Gamma']);
+    component.slotTable.toggle('dj_name');
+    expect(component.slotTable.view().map(s => s.dj_name)).toEqual(['MC Gamma', 'DJ Beta', 'DJ Alpha']);
+    expect(component.slotTable.indicator('dj_name')).toBe('↓');
+  });
+
+  it('sorts only the filtered rows when search and sort compose', () => {
+    component.slotTable.search.set('dj '); // DJ Alpha + DJ Beta
+    component.slotTable.toggle('dj_name');
+    component.slotTable.sortDir.set('desc');
+    expect(component.slotTable.view().map(s => s.dj_name)).toEqual(['DJ Beta', 'DJ Alpha']);
   });
 });

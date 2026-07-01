@@ -36,7 +36,7 @@ func (h *EventHandler) list(c *gin.Context) {
 	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
 	events, err := h.uc.List(c.Request.Context(), organizerID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, events)
@@ -86,7 +86,7 @@ func (h *EventHandler) create(c *gin.Context) {
 	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
 	e, err := h.uc.Create(c.Request.Context(), body, organizerID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusCreated, e)
@@ -128,7 +128,7 @@ func (h *EventHandler) patch(c *gin.Context) {
 		return
 	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, e)
@@ -144,7 +144,7 @@ func (h *EventHandler) patch(c *gin.Context) {
 func (h *EventHandler) delete(c *gin.Context) {
 	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
 	if err := h.uc.Delete(c.Request.Context(), c.Param("id"), organizerID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondError(c, err)
 		return
 	}
 	c.Status(http.StatusNoContent)

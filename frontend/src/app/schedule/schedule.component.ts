@@ -7,11 +7,12 @@ import { slotDurationMins, toMinutes } from '../shared/slot-time.util';
 import { addDays } from '../shared/date.util';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { ButtonComponent } from '../shared/button.component';
 
 @Component({
   selector: 'app-schedule',
   standalone: true,
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, ButtonComponent],
   templateUrl: './schedule.component.html',
   styleUrl: './schedule.component.css',
 })

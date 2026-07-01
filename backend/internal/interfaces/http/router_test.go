@@ -14,7 +14,9 @@ import (
 	"eventlineup/internal/interfaces/http/middleware"
 	djuc "eventlineup/internal/usecase/dj"
 	eventuc "eventlineup/internal/usecase/event"
+	leaduc "eventlineup/internal/usecase/lead"
 	linenotifyuc "eventlineup/internal/usecase/linenotify"
+	perfuc "eventlineup/internal/usecase/performance"
 	slotuc "eventlineup/internal/usecase/slot"
 	stageuc "eventlineup/internal/usecase/stage"
 )
@@ -37,7 +39,14 @@ func fullRouter(t *testing.T) *gin.Engine {
 		slotuc.New(database.NewSlotRepository(pool)),
 	)
 	line := httphandler.NewLineHandler(linenotifyuc.New(database.NewEventRepository(pool), lineTestKey))
-	return httphandler.NewRouter("http://localhost:4200", routerTestSecret, pub, djPortal, dj, ev, st, sl, line)
+	share := httphandler.NewShareHandler(
+		slotuc.New(database.NewSlotRepository(pool)),
+		eventuc.New(database.NewEventRepository(pool)),
+		"http://localhost:4200",
+	)
+	perf := httphandler.NewPerformanceHandler(perfuc.New(database.NewPerformanceRepository(pool)))
+	lead := httphandler.NewLeadHandler(leaduc.New(database.NewLeadRepository(pool)))
+	return httphandler.NewRouter("http://localhost:4200", routerTestSecret, pub, share, djPortal, dj, ev, st, sl, line, perf, lead)
 }
 
 func mintRouterToken(t *testing.T) string {

@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { provideTranslateService } from '@ngx-translate/core';
@@ -6,6 +7,37 @@ import { provideTranslateService } from '@ngx-translate/core';
 import { DjsComponent } from './djs.component';
 import { ApiService } from '../../services/api.service';
 import { DialogService } from '../../shared/dialog.service';
+
+// The DJs page must wrap itself in the console AdminShell so the left sidebar is
+// always present and shows the DJs nav as active (it previously had no shell, so
+// navigating to DJs dropped the sidebar entirely).
+describe('DjsComponent — Console shell', () => {
+  const apiMock = { getDJs: () => of([]) };
+
+  function render() {
+    TestBed.configureTestingModule({
+      imports: [DjsComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: apiMock },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+      ],
+    });
+    const fixture = TestBed.createComponent(DjsComponent);
+    fixture.detectChanges();
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  it('wraps the page in the AdminShell with the DJs nav active', () => {
+    const root = render();
+    expect(root.querySelector('app-admin-shell')).toBeTruthy();
+    expect(root.querySelector('.shell-sidebar')).toBeTruthy();
+    expect(
+      root.querySelector('[data-nav="djs"]')?.classList.contains('shell-nav-active'),
+    ).toBe(true);
+  });
+});
 
 // US-012: the organizer mints a DJ's portal link and copies it to the clipboard,
 // with a brief "Copied!" flash.
@@ -117,5 +149,55 @@ describe('DjsComponent — certifications edit panel (EL-020)', () => {
       is_student: false,
     });
     expect(c.editing()).toBeNull();
+  });
+});
+
+// EL-081: the records reskin renders certification status as icon + label status
+// pills (Cleared / Pending) — never colour alone — so the roster passes a
+// red/green colour-blindness check.
+describe('DjsComponent — certification status pills (EL-081)', () => {
+  function render(djs: unknown[]) {
+    TestBed.configureTestingModule({
+      imports: [DjsComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: { getDJs: () => of(djs) } },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+      ],
+    });
+    const fixture = TestBed.createComponent(DjsComponent);
+    fixture.detectChanges();
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  it('renders a held certification as a "Cleared" pill carrying BOTH an icon glyph and the label', () => {
+    const root = render([
+      { id: 'dj-1', name: 'Mia', genre_tags: ['House'], certifications: ['House'], is_student: true },
+    ]);
+    const pill = root.querySelector('[data-testid="dj-cert-dj-1"]') as HTMLElement;
+    expect(pill).toBeTruthy();
+    expect(pill.classList).toContain('status-confirmed'); // Cleared semantics
+    expect(pill.querySelector('svg.status-badge-glyph')).toBeTruthy(); // icon, not colour alone
+    expect(pill.textContent).toContain('House'); // label
+  });
+
+  it('shows a "Pending" status pill (icon + label) for a student with no certifications', () => {
+    const root = render([
+      { id: 'dj-2', name: 'Ada', genre_tags: ['Techno'], certifications: [], is_student: true },
+    ]);
+    const pill = root.querySelector('[data-testid="dj-nocert-dj-2"]') as HTMLElement;
+    expect(pill).toBeTruthy();
+    expect(pill.classList).toContain('status-pending');
+    expect(pill.querySelector('svg.status-badge-glyph')).toBeTruthy();
+  });
+
+  it('marks a graduate with an icon + label tier pill', () => {
+    const root = render([
+      { id: 'dj-3', name: 'Rex', genre_tags: [], certifications: [], is_student: false },
+    ]);
+    const pill = root.querySelector('.dj-grad-pill') as HTMLElement;
+    expect(pill).toBeTruthy();
+    expect(pill.querySelector('svg.dj-grad-glyph')).toBeTruthy();
   });
 });

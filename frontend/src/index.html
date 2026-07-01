@@ -1,9 +1,22 @@
 <!doctype html>
-<html lang="en">
+<!-- EL-078: Soundcheck design system is the app's active default. `data-brand`
+     activates the Soundcheck token scope (see src/styles.css); the absence of
+     `data-mode` = the dark "booth" mode default. ThemeService can flip the
+     document to `data-mode="light"` (admin mode) at runtime. -->
+<html lang="en" data-brand="soundcheck">
 <head>
   <meta charset="utf-8">
-  <title>Frontend</title>
+  <title>Soundcheck — performance platform for DJ schools</title>
   <base href="/">
+  <!-- EL-075: base OG / social meta hooks for the marketing landing. The landing
+       component (LandingComponent) refreshes these per-route via Meta/Title; the
+       share image asset (og:image) is a placeholder filled by EL-077. -->
+  <meta name="description" content="Soundcheck turns practice into stage time. Track every student's reps, certify them stage-ready, and put cleared students on a real lineup.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Soundcheck — performance platform for DJ schools">
+  <meta property="og:description" content="Soundcheck turns practice into stage time. Track every student's reps, certify them stage-ready, and put cleared students on a real lineup.">
+  <meta property="og:image" content="/assets/og/soundcheck-og.png">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- EL-038: never send a Referer. Defense-in-depth so a bearer token briefly
        present in a URL can't leak to third parties via the Referer header. -->
@@ -11,7 +24,9 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- EL-072: Noto Sans TC (Traditional Chinese — Taiwan) added to the Soundcheck
+       type system alongside Space Grotesk / Inter / JetBrains Mono. -->
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <app-root></app-root>

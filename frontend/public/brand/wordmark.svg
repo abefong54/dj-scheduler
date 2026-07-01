@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 64" role="img" aria-label="soundcheck">
+  <title>soundcheck wordmark</title>
+  <!-- Space Grotesk (loaded by the app). For final delivery this should be
+       converted to outlines + a manual kern pass; live text is used for the
+       v1 draft so it stays editable. -->
+  <text x="8" y="45"
+        font-family="'Space Grotesk', system-ui, sans-serif"
+        font-size="40" font-weight="600" letter-spacing="0.5"
+        fill="#E6EAF0">soundcheck</text>
+  <!-- Functional detail: the counter of the "o" carries a single lit VU-meter
+       segment in Cue Amber. Position is tuned to Space Grotesk metrics. -->
+  <rect x="35" y="31.5" width="9" height="4" rx="2" fill="#FF9E2C"/>
+</svg>

@@ -1,0 +1,81 @@
+<!-- EL-082 Soundcheck reskin: the page chrome (this wrapper + loading / not-found
+     states) moves onto the dark "booth" surface via tokens. The promo card
+     artifact below keeps its own screenprint palette (retuned to the Soundcheck
+     brand in card.component.css) so the html-to-image PNG export (EL-053) still
+     renders exactly as designed. Skin only — behaviour is unchanged. -->
+<div class="min-h-screen flex flex-col items-center px-4 py-8" style="background: var(--surface)">
+
+  @if (loading()) {
+    <p class="py-24" style="color: var(--muted)">…</p>
+  } @else if (notFound()) {
+    <div class="text-center py-24">
+      <p class="text-lg font-medium" style="color: var(--ink)">{{ 'card.notFound' | translate }}</p>
+    </div>
+  } @else {
+
+    <!-- The fixed-ratio card. Everything inside is sized in container-query units
+         (cqw) so it scales with the card width and exports at full resolution. -->
+    <div class="card-stage">
+      <div #cardEl class="card" [class]="themeClass()" data-testid="share-card">
+        <div class="card__inner">
+
+          <div class="card__top">
+            <span>{{ year() }} — {{ brand }} SET</span>
+            <span class="rule"></span>
+            <span>{{ genre() }}</span>
+          </div>
+
+          <div class="card__name" [style.font-size.cqw]="nameSizeCqw()">
+            <span class="back" aria-hidden="true">{{ djName() }}</span>
+            <span class="front">{{ djName() }}</span>
+          </div>
+
+          <div class="card__row">
+            <span class="card__pill">{{ stage() }}</span>
+            <span class="card__datetime">{{ dateLabel() }} · {{ time() }}</span>
+          </div>
+
+          <div class="card__panel">
+            <span class="card__nowplaying">NOW PLAYING</span>
+            <span class="card__genre">{{ genre() }}</span>
+            <!-- fill/stroke as presentation attributes (not CSS) so the spiral
+                 survives the html-to-image PNG export (EL-053). -->
+            <svg class="card__spiral" viewBox="-110 -110 220 220" aria-hidden="true">
+              <polyline [attr.points]="spiralPoints()" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="0.8" />
+            </svg>
+          </div>
+
+          <div class="card__event">{{ eventName() }}</div>
+          <div class="card__venue">{{ venue() }}</div>
+
+          <div class="card__lockup">
+            <span class="brand">{{ brand }}</span>
+            <span class="x">✕</span>
+            <span>{{ venue() }}</span>
+          </div>
+
+          <div class="card__foot">MADE WITH EVENTLINEUP</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions (normal page chrome, i18n'd) -->
+    <div class="w-full max-w-[480px] mt-5 flex flex-col gap-2">
+      <app-button variant="success" icon="share" [fullWidth]="true"
+        [label]="'card.shareLine' | translate" testId="share-line" (click)="shareViaLine()" />
+      <app-button variant="primary" icon="download" [fullWidth]="true" [disabled]="exporting()"
+        [label]="(exporting() ? 'card.saving' : 'card.saveImage') | translate"
+        testId="save-image" (click)="saveImage()" />
+      <div class="flex gap-2">
+        <app-button class="flex-1" [fullWidth]="true"
+          [icon]="copied() ? 'check' : 'link'"
+          [label]="(copied() ? 'card.copied' : 'card.copyLink') | translate"
+          testId="copy-link" (click)="copyLink()" />
+        <a [routerLink]="['/events', eventId()]" class="btn btn-secondary btn-md flex-1 text-center">
+          {{ 'card.viewLineup' | translate }}
+        </a>
+      </div>
+    </div>
+
+  }
+</div>

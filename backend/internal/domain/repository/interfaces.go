@@ -56,6 +56,30 @@ type StageRepository interface {
 	Delete(ctx context.Context, id, eventID, organizerID string) error
 }
 
+// PerformanceFilter narrows a roster-wide performance summary to a window and/or
+// a single event (EL-043). Empty fields mean "no bound".
+type PerformanceFilter struct {
+	EventID string // restrict to one event; "" = all events
+	From    string // inclusive slot_date lower bound "YYYY-MM-DD"; "" = no lower bound
+	To      string // inclusive slot_date upper bound; "" = no upper bound
+}
+
+// PerformanceRepository aggregates played slots into performance reps, always
+// scoped to the organizer who owns the parent events (EL-036/EL-043).
+type PerformanceRepository interface {
+	// DJPerformance aggregates one DJ's reps across the organizer's events with a
+	// by-genre breakdown. Returns apperrors.ErrNotFound if the DJ isn't the
+	// organizer's; an owned DJ who never played returns a zero-rep summary.
+	DJPerformance(ctx context.Context, djID, organizerID string) (model.DJPerformance, error)
+	// RosterSummary returns every active student (is_student=true) of the
+	// organizer with their rep count in the window, including zero-rep students.
+	RosterSummary(ctx context.Context, organizerID string, filter PerformanceFilter) ([]model.RosterPerformance, error)
+}
+
+type LeadRepository interface {
+	Create(ctx context.Context, lead model.Lead) (model.Lead, error)
+}
+
 type OrganizerRepository interface {
 	FindByGoogleID(ctx context.Context, googleID string) (model.Organizer, error)
 	Create(ctx context.Context, email, name, googleID string) (model.Organizer, error)
@@ -67,6 +91,9 @@ type SlotRepository interface {
 	List(ctx context.Context, eventID, organizerID string) ([]model.Slot, error)
 	// ListPublic is unscoped, for the public schedule endpoint only.
 	ListPublic(ctx context.Context, eventID string) ([]model.Slot, error)
+	// GetPublicByID looks up a slot by id alone, without organizer/event scoping,
+	// for the public per-DJ share card (EL-049).
+	GetPublicByID(ctx context.Context, id string) (model.Slot, error)
 	Get(ctx context.Context, id, eventID, organizerID string) (model.Slot, error)
 	Create(ctx context.Context, s model.Slot, eventID, organizerID string) (model.Slot, error)
 	Update(ctx context.Context, s model.Slot, eventID, organizerID string) (model.Slot, error)
