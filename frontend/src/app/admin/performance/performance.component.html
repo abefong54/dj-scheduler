@@ -27,10 +27,10 @@
     } @else {
       <ul class="flex flex-col gap-2">
         @for (u of underserved(); track u.dj_id) {
-          <li class="flex items-center justify-between rounded-lg bg-amber-50 px-3 py-2"
+          <li class="underserved-row flex items-center justify-between rounded-lg px-3 py-2"
             [attr.data-testid]="'underserved-' + u.dj_id">
             <span class="flex items-center gap-2">
-              <span class="inline-block h-2 w-2 flex-shrink-0 rounded-full bg-amber-500"></span>
+              <span class="underserved-dot inline-block h-2 w-2 flex-shrink-0 rounded-full"></span>
               <span class="font-medium">{{ u.dj_name }}</span>
             </span>
             <span class="mono-label">{{ 'performance.repsCount' | translate:{ count: u.reps } }}</span>
@@ -83,7 +83,7 @@
     <ng-template appColumnDef="name" let-row="row">
       <span class="flex items-center gap-2">
         @if (row['underserved']) {
-          <span class="inline-block h-2 w-2 flex-shrink-0 rounded-full bg-amber-500"
+          <span class="underserved-dot inline-block h-2 w-2 flex-shrink-0 rounded-full"
             [attr.title]="'performance.underservedFlag' | translate"
             [attr.data-testid]="'flag-' + row['id']"></span>
         }

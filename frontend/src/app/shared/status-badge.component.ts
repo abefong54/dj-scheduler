@@ -21,6 +21,18 @@ export class StatusBadgeComponent {
   /** One of CONFIRMED / PENDING / DECLINED / LIVE. */
   status = input.required<BadgeStatus>();
 
+  /**
+   * Optional visible-label override. When unset the pill shows the translated
+   * `badge.<status>` copy (existing behaviour). EL-081 uses this to reuse the
+   * status-pill discipline for certification chips — a "Cleared" pill whose
+   * label is the certification name — so cert status carries icon + label and
+   * is never conveyed by colour alone (deuteranopia/protanopia safe).
+   */
+  label = input<string | null>(null);
+
+  /** Optional data-testid applied to the pill root. */
+  testId = input<string | null>(null);
+
   protected readonly tintClass = computed(() => `status-${this.status()}`);
   protected readonly labelKey = computed(() => `badge.${this.status()}`);
 }

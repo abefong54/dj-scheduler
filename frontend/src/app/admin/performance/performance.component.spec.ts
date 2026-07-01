@@ -72,6 +72,17 @@ describe('PerformanceComponent — roster + under-served (EL-044)', () => {
     const root = render().nativeElement as HTMLElement;
     expect(root.querySelector('[data-testid="underserved-a"]')).toBeTruthy();
   });
+
+  // EL-081: the fairness signal sits on token-driven Soundcheck surfaces — the
+  // hard-coded light-amber wrapper is gone, replaced by the reskin classes.
+  it('renders the under-served signal on token-driven surfaces (no hard-coded light amber)', () => {
+    const root = render().nativeElement as HTMLElement;
+    const row = root.querySelector('[data-testid="underserved-a"]') as HTMLElement;
+    expect(row).toBeTruthy();
+    expect(row.classList).toContain('underserved-row');
+    expect(row.classList.contains('bg-amber-50')).toBe(false);
+    expect(row.querySelector('.underserved-dot')).toBeTruthy();
+  });
 });
 
 describe('PerformanceComponent — drill-in', () => {

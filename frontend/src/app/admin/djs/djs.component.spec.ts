@@ -151,3 +151,53 @@ describe('DjsComponent — certifications edit panel (EL-020)', () => {
     expect(c.editing()).toBeNull();
   });
 });
+
+// EL-081: the records reskin renders certification status as icon + label status
+// pills (Cleared / Pending) — never colour alone — so the roster passes a
+// red/green colour-blindness check.
+describe('DjsComponent — certification status pills (EL-081)', () => {
+  function render(djs: unknown[]) {
+    TestBed.configureTestingModule({
+      imports: [DjsComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: { getDJs: () => of(djs) } },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+      ],
+    });
+    const fixture = TestBed.createComponent(DjsComponent);
+    fixture.detectChanges();
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  it('renders a held certification as a "Cleared" pill carrying BOTH an icon glyph and the label', () => {
+    const root = render([
+      { id: 'dj-1', name: 'Mia', genre_tags: ['House'], certifications: ['House'], is_student: true },
+    ]);
+    const pill = root.querySelector('[data-testid="dj-cert-dj-1"]') as HTMLElement;
+    expect(pill).toBeTruthy();
+    expect(pill.classList).toContain('status-confirmed'); // Cleared semantics
+    expect(pill.querySelector('svg.status-badge-glyph')).toBeTruthy(); // icon, not colour alone
+    expect(pill.textContent).toContain('House'); // label
+  });
+
+  it('shows a "Pending" status pill (icon + label) for a student with no certifications', () => {
+    const root = render([
+      { id: 'dj-2', name: 'Ada', genre_tags: ['Techno'], certifications: [], is_student: true },
+    ]);
+    const pill = root.querySelector('[data-testid="dj-nocert-dj-2"]') as HTMLElement;
+    expect(pill).toBeTruthy();
+    expect(pill.classList).toContain('status-pending');
+    expect(pill.querySelector('svg.status-badge-glyph')).toBeTruthy();
+  });
+
+  it('marks a graduate with an icon + label tier pill', () => {
+    const root = render([
+      { id: 'dj-3', name: 'Rex', genre_tags: [], certifications: [], is_student: false },
+    ]);
+    const pill = root.querySelector('.dj-grad-pill') as HTMLElement;
+    expect(pill).toBeTruthy();
+    expect(pill.querySelector('svg.dj-grad-glyph')).toBeTruthy();
+  });
+});
