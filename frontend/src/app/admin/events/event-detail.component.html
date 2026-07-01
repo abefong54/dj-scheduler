@@ -7,9 +7,9 @@
 >
   <!-- Topbar secondary actions (left of the avatar) -->
   <a shell-actions routerLink="/admin/events" class="detail-topbtn">← {{ 'actions.back' | translate }}</a>
-  <button shell-actions (click)="viewPublic()" class="detail-topbtn">{{ 'eventDetail.viewPublic' | translate }}</button>
-  <button shell-actions (click)="shareViaLine()" class="detail-topbtn">{{ 'schedule.share' | translate }}</button>
-  <button shell-actions (click)="exportXlsx()" class="detail-topbtn">{{ 'eventDetail.export' | translate }}</button>
+  <button shell-actions (click)="viewPublic()" class="detail-topbtn" data-testid="event-view-public">{{ 'eventDetail.viewPublic' | translate }}</button>
+  <button shell-actions (click)="shareViaLine()" class="detail-topbtn" data-testid="event-share">{{ 'schedule.share' | translate }}</button>
+  <button shell-actions (click)="exportXlsx()" class="detail-topbtn" data-testid="event-export">{{ 'eventDetail.export' | translate }}</button>
   <button shell-actions (click)="addStage()" class="detail-topbtn-primary" data-testid="add-stage-btn">
     + {{ 'stages.new' | translate }}
   </button>
@@ -194,12 +194,14 @@
                       }
                     </td>
                     <td class="slot-actions-cell">
-                      <button (click)="startEdit(slot)" class="slot-edit-btn"
-                        [attr.data-testid]="'slot-edit-' + slot.id">{{ 'actions.edit' | translate }}</button>
-                      <button (click)="deleteSlot(slot.id)" class="btn-danger"
-                        [attr.data-testid]="'slot-delete-' + slot.id">
-                        {{ 'actions.delete' | translate }}
-                      </button>
+                      <div class="row-actions">
+                        <app-button variant="secondary" size="icon" icon="edit" [iconOnly]="true"
+                          [label]="'actions.edit' | translate" [testId]="'slot-edit-' + slot.id"
+                          (click)="startEdit(slot)" />
+                        <app-button variant="danger" size="icon" icon="trash" [iconOnly]="true"
+                          [label]="'actions.delete' | translate" [testId]="'slot-delete-' + slot.id"
+                          (click)="deleteSlot(slot.id)" />
+                      </div>
                     </td>
                   </tr>
                 }

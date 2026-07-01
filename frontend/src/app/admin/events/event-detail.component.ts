@@ -10,12 +10,13 @@ import { slotDurationMins } from '../../shared/slot-time.util';
 import { parseLocalDate } from '../../shared/date.util';
 import { AdminShellComponent } from '../../shared/admin-shell.component';
 import { StatusBadgeComponent } from '../../shared/status-badge.component';
+import { ButtonComponent } from '../../shared/button.component';
 import { TableSort } from '../../shared/table-sort';
 
 @Component({
   selector: 'app-event-detail',
   standalone: true,
-  imports: [FormsModule, RouterLink, TranslatePipe, AdminShellComponent, StatusBadgeComponent],
+  imports: [FormsModule, RouterLink, TranslatePipe, AdminShellComponent, StatusBadgeComponent, ButtonComponent],
   templateUrl: './event-detail.component.html',
   styleUrl: './event-detail.component.css',
 })
