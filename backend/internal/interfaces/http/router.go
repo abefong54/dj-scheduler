@@ -11,12 +11,18 @@ import (
 	"eventlineup/internal/interfaces/http/middleware"
 )
 
-func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, share *ShareHandler, djPortal *DJPortalHandler, dj *DJHandler, ev *EventHandler, st *StageHandler, sl *SlotHandler, line *LineHandler, perf *PerformanceHandler) *gin.Engine {
+func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, share *ShareHandler, djPortal *DJPortalHandler, dj *DJHandler, ev *EventHandler, st *StageHandler, sl *SlotHandler, line *LineHandler, perf *PerformanceHandler, leadHandler *LeadHandler) *gin.Engine {
 	// gin.New() (not gin.Default()) so we control logging: the default logger
 	// writes the full request URL including query strings, leaking OAuth
 	// code/state and DJ portal tokens into access logs (EL-037). RequestLogger
 	// logs the route template instead.
 	r := gin.New()
+	// Don't trust X-Forwarded-For from any proxy: c.ClientIP() is only used for
+	// the request log line, never for auth or rate-limiting, so trusting forwarded
+	// headers would just let a client spoof the logged IP. nil = trust none (the
+	// direct peer, i.e. Railway's edge). Also silences Gin's "trusted all proxies"
+	// warning. If a real client IP is ever needed, trust the platform's proxy hop.
+	_ = r.SetTrustedProxies(nil)
 	r.Use(gin.Recovery())
 	r.Use(middleware.RequestID())
 	r.Use(middleware.RequestLogger())
@@ -31,6 +37,7 @@ func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, share *Shar
 	publicAPI := r.Group("/api")
 	public.Register(publicAPI)
 	djPortal.RegisterPublic(publicAPI)
+	leadHandler.Register(publicAPI)
 
 	// Protected routes — every request must carry a valid organizer JWT.
 	api := r.Group("/api")

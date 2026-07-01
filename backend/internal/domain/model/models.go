@@ -49,6 +49,16 @@ type Slot struct {
 	DJConfirmation *string `json:"dj_confirmation"`
 }
 
+type Lead struct {
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	Organization string `json:"organization"`
+	Email        string `json:"email"`
+	Message      string `json:"message"`
+	Source       string `json:"source"`
+	CreatedAt    string `json:"created_at"`
+}
+
 // PortalSlot is a single booking as seen from a DJ's self-service portal: it
 // spans events, so it carries the event and stage names directly (US-009).
 type PortalSlot struct {

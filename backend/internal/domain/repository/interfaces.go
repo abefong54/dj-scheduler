@@ -76,6 +76,10 @@ type PerformanceRepository interface {
 	RosterSummary(ctx context.Context, organizerID string, filter PerformanceFilter) ([]model.RosterPerformance, error)
 }
 
+type LeadRepository interface {
+	Create(ctx context.Context, lead model.Lead) (model.Lead, error)
+}
+
 type OrganizerRepository interface {
 	FindByGoogleID(ctx context.Context, googleID string) (model.Organizer, error)
 	Create(ctx context.Context, email, name, googleID string) (model.Organizer, error)
