@@ -9,7 +9,9 @@ import { AuthService } from '../services/auth.service';
 @Component({
   selector: 'app-auth-callback',
   standalone: true,
-  template: `<p class="p-8 text-center text-gray-500">Signing you in…</p>`,
+  // EL-079: muted text via the semantic token so this sign-in entry reads on
+  // the Soundcheck dark-booth canvas instead of a hard-coded light-mode gray.
+  template: `<p class="p-8 text-center" style="color: var(--muted);">Signing you in…</p>`,
 })
 export class AuthCallbackComponent {
   private route = inject(ActivatedRoute);
