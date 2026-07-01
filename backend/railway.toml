@@ -5,8 +5,8 @@ dockerfilePath = "Dockerfile"
 
 [deploy]
 startCommand = "./server"
-# /healthz is unauthenticated and returns 200; /api/events is behind the JWT
-# auth middleware and returns 401 without a token, which would fail every
-# Railway health check and mark healthy deploys as unhealthy.
+# /healthz is the unauthenticated liveness probe (router.go). The previous value
+# /api/events sits behind the organizer JWT middleware and always 401s with no
+# token, so Railway would mark every healthy deploy as failing (EL-017).
 healthcheckPath = "/healthz"
 healthcheckTimeout = 10
