@@ -732,3 +732,304 @@
   /* --sc-primary stays Cue Amber but is used as a fill; text on white must be
      `--sc-on-primary` (dark) sitting on the amber, never amber text on white. */
 }
+
+/* ── EL-078 THE FLIP — Soundcheck is now the app's active default ──────────────
+   Strategy (per ticket): the Console tokens above are SEMANTIC (`--ink` text,
+   `--surface` bg, `--violet` brand/primary, `--success/--warning/--danger`,
+   `--border`, `--card`, …) and every component already reads them via `var()`.
+   So instead of touching hundreds of components, we RE-POINT those semantic
+   token *values* to the Soundcheck palette inside the active `[data-brand=
+   "soundcheck"]` scope (set on <html> in index.html). Existing `var(--…)`
+   references then adopt the dark-booth look for free. The original Console
+   `:root` values are KEPT as the fallback when the brand attr is absent.
+
+   Most Soundcheck semantics (`--sc-bg`, `--sc-surface`, `--sc-text`, …) already
+   flip between dark "booth" and light "admin" mode above, so mapping onto them
+   makes the Console tokens mode-aware automatically.
+
+   NOTE: a later cleanup can rename these variables (e.g. `--violet` → `--amber`);
+   this ticket only flips the *look*, not the identifiers.
+
+   Everything below is intentionally UNLAYERED (outside @layer) and prefixed with
+   the `[data-brand='soundcheck']` scope so it reliably wins over the layered
+   Console `@apply` utilities without per-component edits. */
+[data-brand='soundcheck'] {
+  --sc-cue-amber-hover: #e98a1c; /* pressed/hover shade of Cue Amber */
+
+  /* Neutrals / canvas → Soundcheck (mode-aware via the --sc-* semantics) */
+  --surface: var(--sc-bg); /* Booth Black (dark) / Stage White (light) */
+  --card: var(--sc-surface); /* Console Slate (dark) / white (light) */
+  --ink: var(--sc-text); /* neutral-100 (dark) / near-black (light) */
+  --muted: var(--sc-text-muted); /* neutral-400 (dark) */
+  --border: var(--sc-border); /* neutral-700 (dark) */
+
+  /* Brand + signal accents */
+  --violet: var(--sc-primary); /* Cue Amber — primary/brand/active */
+  --violet-deep: var(--sc-cue-amber-hover); /* hover/pressed amber */
+  --cyan: var(--sc-deck-cyan); /* Deck Cyan — focus/live */
+  --live: var(--sc-status-info); /* Deck Cyan */
+  --void: var(--sc-neutral-950); /* sidebar gradient top — Booth Black */
+  --void-2: #05070a; /* sidebar gradient bottom — deeper */
+
+  /* Status */
+  --success: var(--sc-status-cleared); /* Cleared */
+  --warning: var(--sc-status-pending); /* Pending */
+  --danger: var(--sc-status-blocked); /* Clip Red / Blocked */
+
+  /* Shadows read deeper on a dark canvas */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 34px rgba(0, 0, 0, 0.55);
+}
+
+/* Global dark canvas so even not-yet-reskinned surfaces sit on booth black. */
+[data-brand='soundcheck'] body {
+  background: var(--sc-bg);
+  color: var(--ink);
+}
+[data-brand='soundcheck'] .app-main {
+  background: var(--surface);
+}
+
+/* ── Global top bar / wordmark ── */
+[data-brand='soundcheck'] .navbar {
+  background-color: var(--sc-booth-black);
+  border-bottom: 1px solid var(--sc-border);
+}
+/* Soundcheck wordmark: lowercase display face + single amber VU-meter detail. */
+.shell-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.shell-vu {
+  flex-shrink: 0;
+}
+.shell-vu-bar {
+  fill: var(--sc-cue-amber, var(--violet));
+}
+
+/* ── App shell chrome: amber gel replaces the violet bloom ── */
+[data-brand='soundcheck'] .shell-brand::before {
+  background: radial-gradient(circle, rgba(255, 158, 44, 0.32), transparent 70%);
+}
+[data-brand='soundcheck'] .shell-nav-active {
+  background: rgba(255, 158, 44, 0.16);
+  box-shadow: 0 0 18px rgba(255, 158, 44, 0.16);
+}
+
+/* ── Buttons: primary = Cue Amber with dark ink; cyan focus ring ── */
+[data-brand='soundcheck'] .btn,
+[data-brand='soundcheck'] .form-input,
+[data-brand='soundcheck'] .form-select,
+[data-brand='soundcheck'] .form-textarea,
+[data-brand='soundcheck'] .dt-search,
+[data-brand='soundcheck'] .edit-notes-input {
+  --tw-ring-color: var(--sc-deck-cyan); /* Deck Cyan focus ring */
+}
+[data-brand='soundcheck'] .btn-primary {
+  background: var(--sc-cue-amber);
+  color: var(--sc-on-amber);
+}
+[data-brand='soundcheck'] .btn-primary:hover {
+  background: var(--sc-cue-amber-hover);
+}
+[data-brand='soundcheck'] .btn-secondary {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--ink);
+}
+[data-brand='soundcheck'] .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+[data-brand='soundcheck'] .btn-success {
+  background: var(--sc-status-cleared);
+  color: var(--sc-on-amber); /* dark ink on the light green fill */
+}
+[data-brand='soundcheck'] .btn-success:hover {
+  filter: brightness(0.94);
+}
+[data-brand='soundcheck'] .btn-danger {
+  background: transparent;
+  border-color: rgba(244, 80, 91, 0.5);
+  color: var(--sc-status-blocked);
+}
+[data-brand='soundcheck'] .btn-danger:hover {
+  background: rgba(244, 80, 91, 0.14);
+}
+[data-brand='soundcheck'] .btn-ghost {
+  color: var(--muted);
+}
+[data-brand='soundcheck'] .btn-ghost:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+}
+/* Amber-fill buttons that shipped with white text → dark ink (contrast trap). */
+[data-brand='soundcheck'] .shell-new-btn,
+[data-brand='soundcheck'] .console-btn-primary,
+[data-brand='soundcheck'] .detail-topbtn-primary,
+[data-brand='soundcheck'] .btn-save {
+  color: var(--sc-on-amber);
+}
+
+/* ── DataTable (EL-028) + tables: dark records surfaces, tabular figures ── */
+[data-brand='soundcheck'] .dt-table {
+  background: var(--card);
+}
+[data-brand='soundcheck'] .dt-search {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+[data-brand='soundcheck'] .dt-search::placeholder {
+  color: var(--muted);
+}
+[data-brand='soundcheck'] .dt-table-scroll {
+  border-color: var(--border);
+}
+[data-brand='soundcheck'] .dt-head-row {
+  background: var(--surface);
+  border-color: var(--border);
+}
+[data-brand='soundcheck'] .dt-th {
+  color: var(--muted);
+}
+[data-brand='soundcheck'] .dt-th-sortable:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+[data-brand='soundcheck'] .dt-sort-icon {
+  color: var(--violet);
+}
+[data-brand='soundcheck'] .dt-row {
+  border-color: var(--border);
+}
+[data-brand='soundcheck'] .dt-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+[data-brand='soundcheck'] .dt-td {
+  color: var(--ink);
+}
+[data-brand='soundcheck'] .dt-empty {
+  color: var(--muted);
+}
+/* Tabular numerals for aligned records (durations, counts, times). */
+[data-brand='soundcheck'] .dt-td,
+[data-brand='soundcheck'] .slot-time-cell,
+[data-brand='soundcheck'] .events-dates,
+[data-brand='soundcheck'] .stat-tile-number {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Forms: dark inputs, Deck Cyan 2px focus ring ── */
+[data-brand='soundcheck'] .form-label {
+  color: var(--muted);
+}
+[data-brand='soundcheck'] .form-input,
+[data-brand='soundcheck'] .form-select,
+[data-brand='soundcheck'] .form-textarea,
+[data-brand='soundcheck'] .edit-notes-input {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+[data-brand='soundcheck'] .form-input::placeholder,
+[data-brand='soundcheck'] .form-textarea::placeholder {
+  color: var(--muted);
+}
+[data-brand='soundcheck'] .form-select:disabled {
+  background: var(--surface);
+  color: var(--muted);
+}
+[data-brand='soundcheck'] .slot-notes-text {
+  color: var(--muted);
+}
+/* Token-based inputs whose focus glow was amber → make it a clean cyan ring. */
+[data-brand='soundcheck'] .console-input:focus {
+  border-color: var(--sc-deck-cyan);
+  box-shadow: 0 0 0 2px var(--sc-deck-cyan);
+}
+[data-brand='soundcheck'] .shell-search {
+  color: var(--ink);
+}
+[data-brand='soundcheck'] .shell-search::placeholder {
+  color: var(--muted);
+}
+[data-brand='soundcheck'] .shell-search:focus,
+[data-brand='soundcheck'] .edit-select:focus,
+[data-brand='soundcheck'] .edit-time-input:focus,
+[data-brand='soundcheck'] .edit-dur-input:focus {
+  box-shadow: 0 0 0 2px var(--sc-deck-cyan);
+}
+
+/* ── Status pills (StatusBadgeComponent): dark-friendly tint + hue-carrying
+   glyph. The glyph + text label (in the component) mean status never rides on
+   colour alone — deuteranopia/protanopia safe. ── */
+.status-badge-glyph {
+  flex-shrink: 0;
+}
+[data-brand='soundcheck'] .status-confirmed {
+  color: var(--sc-status-cleared);
+  background: rgba(52, 211, 153, 0.14);
+}
+[data-brand='soundcheck'] .status-pending {
+  color: var(--sc-status-pending);
+  background: rgba(245, 181, 68, 0.16);
+}
+[data-brand='soundcheck'] .status-declined {
+  color: var(--sc-status-blocked);
+  background: rgba(244, 80, 91, 0.16);
+}
+[data-brand='soundcheck'] .status-live {
+  color: var(--sc-status-info);
+  background: rgba(34, 211, 238, 0.16);
+}
+
+/* ── Loading / progress convention: "levels, not fades" (LoadingMeterComponent).
+   VU-meter bars that rise/fall instead of a spinner; reduced motion holds a
+   static filled level. ── */
+.vu-loader {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 18px;
+}
+.vu-loader-bar {
+  width: 3px;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--sc-cue-amber, var(--violet));
+  transform-origin: bottom;
+  animation: vu-level 900ms ease-in-out infinite;
+}
+.vu-loader-bar:nth-child(2) {
+  animation-delay: 150ms;
+}
+.vu-loader-bar:nth-child(3) {
+  animation-delay: 300ms;
+}
+.vu-loader-bar:nth-child(4) {
+  animation-delay: 450ms;
+}
+.vu-loader-label {
+  align-self: center;
+  margin-left: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+@keyframes vu-level {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vu-loader-bar {
+    animation: none;
+    transform: scaleY(0.7);
+  }
+}
