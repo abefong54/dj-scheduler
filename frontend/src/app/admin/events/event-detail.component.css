@@ -1,6 +1,56 @@
-/* Styles for this component live in the global components layer in
-   src/styles.css (migrated in EL-032). Do NOT add Tailwind apply-directive
-   rules to this file — they expand inline and inflate the component's compiled
-   stylesheet past Angular's per-component anyComponentStyle budget, failing
-   `ng build`. Put utilities in the template markup, or add a shared class to
-   styles.css. Enforced by stylelint + a pre-commit hook. */
+/* Most event-detail styling lives in the global components layer in
+   src/styles.css (migrated in EL-032) and is already token-driven, so it
+   inherits the Soundcheck dark-booth palette (EL-078) for free. Do NOT add
+   Tailwind apply-directive rules to this file — they expand inline and inflate
+   the component's compiled stylesheet past Angular's per-component
+   anyComponentStyle budget, failing `ng build`. Put utilities in the template
+   markup, or add a shared class to styles.css. Enforced by stylelint + a
+   pre-commit hook.
+
+   EL-080 reskin: the shared classes below still carry Console-era light
+   literals (near-black headings, white modal, gray tab text, dark-red warning,
+   purple accent) that read as light-on-dark on the booth canvas. They are
+   overridden with semantic tokens, scoped to this component via Angular view
+   encapsulation so other surfaces are untouched and styles.css stays
+   conflict-free for parallel reskin agents. Plain CSS + var() only — no @apply. */
+
+/* Slots section heading: text-gray-900 was invisible on the dark canvas. */
+.section-title {
+  color: var(--ink);
+}
+
+/* Date tabs (multi-day events): amber active accent + muted/ink inactive. */
+.tab-active {
+  border-bottom-color: var(--violet);
+  color: var(--violet);
+}
+.tab-inactive {
+  color: var(--muted);
+}
+.tab-inactive:hover {
+  color: var(--ink);
+}
+
+/* Inline conflict / cert warning: red-700 on a faint tint was low-contrast on
+   dark — lift to the Clip Red danger token on a slightly stronger fill. */
+.conflict-cell {
+  color: var(--danger);
+  background: rgba(244, 80, 91, 0.1);
+}
+
+/* Add-stage modal: shipped as a white card with near-black title. Re-skin the
+   surface to the dark card token; the projected form-* / btn-* inside already
+   flip via the EL-078 foundation. */
+.modal-box-sm {
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+.modal-title {
+  color: var(--ink);
+}
+
+/* Colour-swatch selection ring: border-gray-900 vanished against the dark
+   modal — use the cyan focus accent so the active swatch reads clearly. */
+.swatch-active {
+  border-color: var(--cyan);
+}
