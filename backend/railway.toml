@@ -5,6 +5,14 @@ dockerfilePath = "Dockerfile"
 
 [deploy]
 startCommand = "./server"
+# Runs after build, before the new release takes traffic (EL-057). It executes
+# in the deployed image with the service env, so it picks up the Neon
+# DATABASE_URL automatically — no DB creds in CI. goose is idempotent, so a
+# deploy with no new migrations is a clean no-op. If a migration fails the
+# pre-deploy fails, Railway aborts the release, and the previous version keeps
+# serving (no half-migrated schema goes live). Concurrent instances are safe
+# via goose's advisory lock (EL-056).
+preDeployCommand = "./migrate up"
 # /healthz is the unauthenticated liveness probe (router.go). The previous value
 # /api/events sits behind the organizer JWT middleware and always 401s with no
 # token, so Railway would mark every healthy deploy as failing (EL-017).
