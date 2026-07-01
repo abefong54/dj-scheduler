@@ -2,12 +2,18 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ApiService, Event } from '../../services/api.service';
+import { AdminShellComponent } from '../../shared/admin-shell.component';
+import { StatusBadgeComponent } from '../../shared/status-badge.component';
+import { ButtonComponent } from '../../shared/button.component';
 import { DialogService } from '../../shared/dialog.service';
+
+/** Lifecycle state derived purely from an event's start/end dates. */
+type EventLifecycle = 'live' | 'upcoming' | 'past';
 
 @Component({
   selector: 'app-events-list',
   standalone: true,
-  imports: [RouterLink, TranslatePipe],
+  imports: [RouterLink, TranslatePipe, AdminShellComponent, StatusBadgeComponent, ButtonComponent],
   templateUrl: './events-list.component.html',
   styleUrl: './events-list.component.css',
 })
@@ -36,6 +42,25 @@ export class EventsListComponent {
   formatDates(e: Event): string {
     if (e.start_date === e.end_date) return e.start_date;
     return `${e.start_date} – ${e.end_date}`;
+  }
+
+  /** Date-derived lifecycle: live while running, otherwise upcoming or past. */
+  lifecycle(e: Event): EventLifecycle {
+    if (e.start_date <= this.today && this.today <= e.end_date) return 'live';
+    return e.end_date < this.today ? 'past' : 'upcoming';
+  }
+
+  /** Only currently-running events carry a real status badge (no fabricated state). */
+  isLive(e: Event): boolean {
+    return this.lifecycle(e) === 'live';
+  }
+
+  goToNew() {
+    this.router.navigate(['/admin/events/new']);
+  }
+
+  edit(id: string) {
+    this.router.navigate(['/admin/events', id]);
   }
 
   async delete(id: string) {

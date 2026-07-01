@@ -73,6 +73,19 @@ test.describe('admin · slots', () => {
     await expect(page.getByTestId('add-conflict-error')).toContainText('Main Stage');
   });
 
+  // EL-042: an uncertified student DJ is flagged for the target genre with an
+  // inline warning (the teacher can still override by saving).
+  test('warns when assigning an uncertified DJ to a genre', async ({ page }) => {
+    await page.goto(DETAIL);
+    await page.getByTestId('add-slot-trigger').click();
+    // DJ Testa plays house but holds no certifications (seed default), so House
+    // is a genre she isn't cleared for.
+    await page.getByTestId('add-genre-select').selectOption('house');
+    await page.getByTestId('add-dj-select').selectOption(SEED.djTesta.id);
+
+    await expect(page.getByTestId('add-cert-warning')).toContainText(SEED.djTesta.name);
+  });
+
   test('adds a stage', async ({ page }) => {
     await page.goto(DETAIL);
     await page.getByTestId('add-stage-btn').click();

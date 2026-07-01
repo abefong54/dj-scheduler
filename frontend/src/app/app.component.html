@@ -1,15 +1,7 @@
 <nav class="navbar">
-  <div class="navbar-links">
-    <span class="navbar-brand">EventLineup</span>
-    <a routerLink="/admin/events" routerLinkActive="border-b-2 border-violet-500 text-white"
-       class="navbar-link">
-      {{ 'nav.events' | translate }}
-    </a>
-    <a routerLink="/admin/djs" routerLinkActive="border-b-2 border-violet-500 text-white"
-       class="navbar-link">
-      {{ 'nav.djs' | translate }}
-    </a>
-  </div>
+  <span class="navbar-brand">EventLineup</span>
+  <!-- Primary nav (Events/DJs) lives in the console sidebar (AdminShellComponent);
+       the brand stays here so it appears in exactly one place. -->
   <div class="lang-switcher">
     <button (click)="langService.setLanguage('en')"
       class="lang-btn"
@@ -22,9 +14,13 @@
       中文
     </button>
     @if (auth.isAuthenticated()) {
-      <button (click)="auth.signOut()" class="lang-btn lang-btn-inactive">
+      <button (click)="auth.signOut()" data-testid="signout" class="lang-btn lang-btn-inactive">
         {{ 'nav.signOut' | translate }}
       </button>
+    } @else {
+      <a routerLink="/login" data-testid="signin" class="lang-btn lang-btn-inactive">
+        {{ 'nav.signIn' | translate }}
+      </a>
     }
   </div>
 </nav>

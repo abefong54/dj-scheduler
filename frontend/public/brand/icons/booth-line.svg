@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="DJ booth">
+  <title>Booth / deck (line)</title>
+  <!-- EL-073 domain icon. Top-down DJ booth: a console with two jog wheels
+       and a centre mixer strip — a gig / the venue. currentColor for reuse. -->
+  <g fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round">
+    <rect x="2" y="6" width="20" height="13" rx="2.5"/>
+    <circle cx="7" cy="12.5" r="3"/>
+    <circle cx="17" cy="12.5" r="3"/>
+    <line x1="12" y1="9" x2="12" y2="16" stroke-linecap="round"/>
+  </g>
+  <g fill="currentColor">
+    <circle cx="7" cy="12.5" r="0.9"/>
+    <circle cx="17" cy="12.5" r="0.9"/>
+  </g>
+</svg>

@@ -22,9 +22,20 @@ defaults:
     working-directory: backend
 
 jobs:
-  test:
+  # The matrix legs report as `test-matrix (1.26)` / `test-matrix (stable)`.
+  # The branch ruleset requires a single context named `test`, which the gate
+  # job below re-publishes — see its comment.
+  test-matrix:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      # Test the pinned toolchain the module targets AND the current stable Go, so
+      # an upcoming release that breaks us surfaces here instead of on upgrade day.
+      # fail-fast: false so a stable-only regression doesn't cancel the 1.26 leg
+      # (and vice versa) — we want both signals, not the first failure.
+      fail-fast: false
+      matrix:
+        go: ['1.26', 'stable']
     services:
       postgres:
         image: postgres:16-alpine
@@ -42,10 +53,13 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v6
         with:
-          go-version-file: backend/go.mod
+          go-version: ${{ matrix.go }}
           cache-dependency-path: backend/go.sum
 
+      # Version-sensitive: a newer toolchain can rewrite the go directive, so run
+      # the tidy drift check only on the pinned leg to avoid spurious `stable` reds.
       - name: go mod tidy is clean
+        if: matrix.go == '1.26'
         run: go mod tidy && git diff --exit-code
 
       - name: Build
@@ -65,11 +79,35 @@ jobs:
 
       # Floor is set just below current (~75.6%) for headroom against run-to-run
       # noise, while still catching real erosion. Ratchet it up deliberately.
+      # One leg is enough — coverage doesn't vary by toolchain — so gate the pinned one.
       - name: Coverage floor (>= 73%)
+        if: matrix.go == '1.26'
         run: |
           total=$(go tool cover -func=coverage.out | awk '/^total:/ {sub(/%/,"",$3); print $3}')
           echo "total coverage: ${total}%"
           awk -v t="$total" 'BEGIN { if (t+0 < 73) { printf "coverage %.1f%% is below floor 73%%\n", t; exit 1 } }'
+
+  # Single required status context. The branch ruleset requires a check named
+  # `test`, but a matrixed job only emits `test (<value>)` per leg — so the bare
+  # `test` context would never report and PRs would deadlock on "Expected —
+  # waiting for status to be reported". This gate collapses the matrix into one
+  # `test` context: it succeeds only if every leg passed. `if: always()` so it
+  # still runs (and reports red) when a leg fails; without checkout it must not
+  # inherit the `backend` working-directory.
+  test:
+    needs: test-matrix
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Require all matrix legs to pass
+        run: |
+          result='${{ needs.test-matrix.result }}'
+          echo "test-matrix result: $result"
+          [ "$result" = 'success' ] || exit 1
 
   lint:
     runs-on: ubuntu-latest

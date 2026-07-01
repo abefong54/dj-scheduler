@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="Certificate">
+  <title>Certificate badge (filled)</title>
+  <!-- EL-073 domain icon. Filled variant = active/selected. Solid ribbon tails
+       and a solid seal with the check knocked out (fill-rule evenodd).
+       currentColor so it inherits the token colour in use. -->
+  <g fill="currentColor">
+    <path d="M9.2 13.8 L7.4 21 L9.9 19.3 L11 20.4 Z"/>
+    <path d="M14.8 13.8 L16.6 21 L14.1 19.3 L13 20.4 Z"/>
+  </g>
+  <path fill="currentColor" fill-rule="evenodd" d="M12 3 A6 6 0 1 0 12 15 A6 6 0 1 0 12 3 Z M8.5 9.6 L9.5 8.6 L11.4 10.5 L10.4 11.5 Z M11.4 11.49 L10.4 10.51 L14.7 6.11 L15.7 7.09 Z"/>
+</svg>

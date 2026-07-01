@@ -2,13 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── EL-061 Console design tokens ─────────────────────────────────────────
+   The single source of truth for the Console visual language (design-system
+   §2–4). Page components consume these via `var(--token)` — never hard-code
+   the hex values. */
+:root {
+  /* Core */
+  --ink: #14121c;          /* primary text (near-black, violet undertone) */
+  --muted: #6b6880;        /* secondary text, captions, mono labels */
+  --surface: #f7f7fb;      /* app background (calm light ground) */
+  --card: #ffffff;         /* cards, tables, inputs */
+  --border: #e8e6f0;       /* hairline borders, dividers (violet-tinted) */
+
+  /* Brand */
+  --violet: #7c3aed;       /* primary actions, active states, focus, brand */
+  --violet-deep: #6d28d9;  /* hover / pressed primary */
+  --void: #1a1a2e;         /* sidebar / dark nav base */
+  --void-2: #15131f;       /* sidebar gradient bottom */
+  --cyan: #22d3ee;         /* signal accent — live ticks, focus glow */
+
+  /* Semantic */
+  --success: #10b981;      /* confirmed */
+  --warning: #f59e0b;      /* pending */
+  --danger: #ef4444;       /* declined */
+  --live: #22d3ee;         /* live / now */
+
+  /* Stage palette (vivid presets — assign per stage) */
+  --stage-cyan: #06b6d4;
+  --stage-magenta: #ec4899;
+  --stage-lime: #84cc16;
+  --stage-orange: #f97316;
+  --stage-sky: #0ea5e9;
+  --stage-hot-pink: #ff1f8e;
+  --stage-yellow: #facc15;
+  --stage-teal: #14b8a6;
+
+  /* Radius */
+  --radius-card: 12px;
+  --radius-input: 8px;
+  --radius-pill: 9999px;
+
+  /* Shadow (low and soft) */
+  --shadow-sm: 0 1px 2px rgba(20, 18, 28, 0.06);
+  --shadow-lg: 0 8px 28px rgba(20, 18, 28, 0.1);
+
+  /* Spacing (8px system) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* Type families */
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+}
+
 @layer base {
   body {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: var(--font-body);
+    color: var(--ink);
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-family: var(--font-display);
   }
 }
 
@@ -35,13 +94,21 @@
   .form-actions { @apply flex gap-3; }
   .form-grid-2 { @apply grid grid-cols-2 gap-4; }
 
-  /* Buttons */
-  .btn-primary { @apply bg-violet-600 hover:bg-violet-700 text-white font-medium px-4 py-2 rounded-lg transition-colors; }
-  .btn-secondary { @apply border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium px-4 py-2 rounded-lg transition-colors; }
-  .btn-sm { @apply bg-violet-600 hover:bg-violet-700 text-white font-medium px-3 py-1.5 rounded-md text-sm transition-colors; }
-  .btn-sm-outline { @apply border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium px-3 py-1.5 rounded-md text-sm transition-colors; }
-  .btn-green { @apply bg-green-500 hover:bg-green-600 text-white font-medium px-3 py-1.5 rounded-md text-sm transition-colors; }
-  .btn-danger { @apply text-red-500 hover:text-red-700 text-sm font-medium transition-colors; }
+  /* Buttons — the EventLineup button standard.
+     Compose: base `.btn` + a colour variant + a size. The `<app-button>`
+     component (src/app/shared/button.component.ts) applies these, and
+     button-styled `<a>` links reuse the same names so the look is defined once.
+     Variants are colour-only; sizes are padding/type-scale only. */
+  .btn { @apply inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-violet-400 disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn-primary { @apply bg-violet-600 hover:bg-violet-700 text-white; }
+  .btn-secondary { @apply border border-gray-300 text-gray-700 hover:bg-gray-50; }
+  .btn-danger { @apply border border-red-300 text-red-600 hover:bg-red-50; }
+  .btn-success { @apply bg-green-500 hover:bg-green-600 text-white; }
+  .btn-ghost { @apply text-gray-600 hover:bg-gray-100; }
+  .btn-md { @apply px-4 py-2 text-sm; }
+  .btn-sm { @apply px-3 py-1.5 text-sm; }
+  .btn-xs { @apply px-2.5 py-1 text-xs; }
+  .btn-icon { @apply p-1.5 rounded-md; }
 
   /* Modals */
   .modal-overlay { @apply fixed inset-0 z-50 flex items-center justify-center bg-black/40; }
@@ -67,73 +134,138 @@
    are unique across the app; the only component-local style that stays is the
    `.tabs` margin override. */
 @layer components {
-  /* Hero header */
-  .detail-hero { @apply flex items-start justify-between mb-4 gap-4 flex-wrap; }
-  .detail-hero-info { @apply flex-1 min-w-0; }
-  .detail-event-name { @apply text-3xl font-bold text-gray-900 leading-tight; }
-  .detail-event-meta { @apply text-sm text-gray-500 mt-1; }
-  .detail-hero-actions { @apply flex items-center gap-2 flex-shrink-0 flex-wrap; }
+  /* Console-restyled event detail (EL-066). Light workspace inside AdminShell:
+     monumental event name (Space Grotesk), mono meta readout, stage color
+     chips, and a mono-header data table. Tokens only — no hard-coded hexes. */
+
+  /* Detail content column */
+  .detail { @apply flex flex-col; gap: var(--space-5); }
+
+  /* Topbar action buttons (projected into the shell [shell-actions] slot) */
+  .detail-topbtn {
+    @apply inline-flex items-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors;
+    background: var(--card);
+    border-color: var(--border);
+    color: var(--ink);
+  }
+  .detail-topbtn:hover { background: var(--surface); }
+  .detail-topbtn-primary {
+    @apply inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium text-white transition-colors;
+    background: var(--violet);
+  }
+  .detail-topbtn-primary:hover { background: var(--violet-deep); }
+
+  /* Monument header */
+  .detail-hero { @apply min-w-0; }
+  .detail-event-name {
+    font-family: var(--font-display);
+    @apply text-4xl font-bold leading-none tracking-tight sm:text-5xl;
+    color: var(--ink);
+  }
+  .detail-event-meta {
+    font-family: var(--font-mono);
+    @apply mt-3 text-sm;
+    color: var(--muted);
+  }
 
   /* Genre pills */
-  .genre-pill-row { @apply flex gap-1 flex-wrap mt-2; }
-  .genre-pill { @apply px-2 py-0.5 bg-violet-50 text-violet-700 rounded-full text-xs font-medium; }
+  .genre-pill-row { @apply mt-3 flex flex-wrap gap-1.5; }
+  .genre-pill {
+    font-family: var(--font-mono);
+    @apply rounded-full px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wider;
+    background: rgba(124, 58, 237, 0.08);
+    color: var(--violet);
+  }
 
   /* Stage chip strip */
-  .stage-strip { @apply flex items-center gap-2 flex-wrap py-2 mb-2; }
-  .stage-chip { @apply flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm; }
-  .stage-chip-dot { @apply w-2.5 h-2.5 rounded-full flex-shrink-0; }
-  .stage-chip-name { @apply font-medium text-gray-800; }
-  .stage-chip-delete { @apply ml-1 text-gray-300 hover:text-red-400 text-base leading-none hidden group-hover:inline transition-colors; }
-  .stage-chip-add { @apply px-3 py-1.5 border border-dashed border-gray-300 rounded-full text-sm text-gray-500 hover:border-violet-400 hover:text-violet-600 transition-colors; }
+  .stage-strip { @apply flex flex-wrap items-center gap-2; }
+  .stage-chip {
+    @apply flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm;
+    background: var(--card);
+    border-color: var(--border);
+  }
+  .stage-chip-dot { @apply h-2.5 w-2.5 flex-shrink-0 rounded-full; }
+  .stage-chip-name { @apply font-medium; color: var(--ink); }
+  .stage-chip-delete { @apply ml-1 hidden text-base leading-none transition-colors group-hover:inline hover:text-red-500; color: var(--muted); }
 
   /* Slots section layout */
-  .slots-section { @apply mt-4; }
-  .slots-section-header { @apply flex items-center justify-between mb-3; }
+  .slots-section { @apply flex flex-col; gap: var(--space-3); }
+  .slots-section-header { @apply flex items-center justify-between; }
 
   /* Slots table card */
-  .slots-card { @apply overflow-hidden; }
+  .slots-card {
+    @apply overflow-hidden rounded-xl border;
+    background: var(--card);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+  }
 
   /* Slot thead row */
-  .slot-head-row { @apply border-b border-gray-200 bg-gray-50; }
+  .slot-head-row { @apply border-b; border-color: var(--border); background: var(--surface); }
 
   /* Slot table */
   .slot-table { @apply w-full text-sm; }
-  .slot-th { @apply text-left px-3 py-2 font-medium text-gray-700; }
-  .slot-row { @apply border-b border-gray-100 last:border-0 hover:bg-gray-50; }
-  .slot-stage-cell { @apply px-3 py-3; }
+  .slot-th {
+    font-family: var(--font-mono);
+    @apply px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider;
+    color: var(--muted);
+  }
+  .slot-th-num { @apply text-right; }
+  .slot-row { @apply border-b transition-colors last:border-0; border-color: var(--border); }
+  .slot-row:hover { background: var(--surface); }
+  .slot-stage-cell { @apply px-4 py-3; color: var(--ink); }
   .slot-stage-inner { @apply flex items-center gap-2; }
-  .slot-stage-dot { @apply w-2.5 h-2.5 rounded-full flex-shrink-0; }
-  .slot-dj-cell { @apply px-3 py-3 font-medium text-gray-900; }
-  .slot-genre-cell { @apply px-3 py-3 text-gray-500; }
-  .slot-time-cell { @apply px-3 py-3 text-gray-700 whitespace-nowrap; }
-  .slot-actions-cell { @apply px-3 py-3 text-right whitespace-nowrap; }
-  .slot-edit-btn { @apply text-gray-500 hover:text-gray-800 text-sm font-medium mr-3; }
+  .slot-stage-dot { @apply h-2.5 w-2.5 flex-shrink-0 rounded-full; }
+  .slot-dj-cell { @apply px-4 py-3; }
+  .slot-dj-name { @apply font-medium; color: var(--ink); }
+  .slot-await { font-family: var(--font-mono); @apply ml-2 text-xs; color: var(--muted); }
+  .slot-genre-cell { @apply px-4 py-3; color: var(--muted); }
+  .slot-time-cell {
+    font-family: var(--font-mono);
+    @apply whitespace-nowrap px-4 py-3 text-right;
+    color: var(--ink);
+  }
+  .slot-actions-cell { @apply whitespace-nowrap px-4 py-3 text-right; }
+  .slot-edit-btn { @apply mr-3 text-sm font-medium transition-colors; color: var(--muted); }
+  .slot-edit-btn:hover { color: var(--ink); }
 
   /* Inline edit row */
-  .edit-row { @apply border-b border-gray-100 bg-violet-50; }
+  .edit-row { @apply border-b; border-color: var(--border); background: rgba(124, 58, 237, 0.05); }
   .edit-cell { @apply px-2 py-2; }
-  .edit-select { @apply w-full text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-400 disabled:bg-gray-50 disabled:text-gray-400; }
-  .edit-time-input { @apply text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-400 w-24; }
-  .edit-dur-input { @apply text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-400 w-16; }
-  .edit-actions-cell { @apply px-2 py-2 text-right whitespace-nowrap; }
-  .btn-save { @apply bg-violet-600 hover:bg-violet-700 text-white text-xs font-medium px-3 py-1 rounded mr-1 transition-colors; }
-  .btn-cancel-edit { @apply border border-gray-300 text-gray-600 hover:bg-gray-50 text-xs font-medium px-3 py-1 rounded transition-colors; }
+  .edit-select { @apply w-full rounded-lg border px-2 py-1 text-sm focus:outline-none; border-color: var(--border); background: var(--card); }
+  .edit-select:focus { box-shadow: 0 0 0 2px var(--violet), 0 0 0 4px rgba(34, 211, 238, 0.2); }
+  .edit-time-input { @apply w-24 rounded-lg border px-2 py-1 text-sm focus:outline-none; border-color: var(--border); background: var(--card); }
+  .edit-time-input:focus { box-shadow: 0 0 0 2px var(--violet), 0 0 0 4px rgba(34, 211, 238, 0.2); }
+  .edit-dur-input { @apply w-16 rounded-lg border px-2 py-1 text-sm focus:outline-none; border-color: var(--border); background: var(--card); }
+  .edit-dur-input:focus { box-shadow: 0 0 0 2px var(--violet), 0 0 0 4px rgba(34, 211, 238, 0.2); }
+  .edit-actions-cell { @apply whitespace-nowrap px-2 py-2 text-right; }
+  .btn-save { @apply mr-1 rounded-lg px-3 py-1 text-xs font-medium text-white transition-colors; background: var(--violet); }
+  .btn-save:hover { background: var(--violet-deep); }
+  .btn-cancel-edit { @apply rounded-lg border px-3 py-1 text-xs font-medium transition-colors; border-color: var(--border); color: var(--muted); }
+  .btn-cancel-edit:hover { background: var(--surface); }
 
   /* Sortable slot headers */
-  .slot-th-sort { @apply cursor-pointer hover:bg-gray-100 select-none; }
-
-  /* Slot search */
-  .slot-search-input { @apply w-52 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400; }
+  .slot-th-sort { @apply cursor-pointer select-none; }
+  .slot-th-sort:hover { color: var(--ink); }
 
   /* Inline add row */
-  .add-row { @apply border-b border-violet-100 bg-violet-50; }
+  .add-row { @apply border-b; border-color: var(--border); background: rgba(124, 58, 237, 0.05); }
   .add-cell { @apply px-2 py-2; }
-  .add-cell-actions { @apply text-right whitespace-nowrap; }
-  .add-trigger-row { @apply hover:bg-violet-50 cursor-pointer transition-colors; }
-  .add-trigger-cell { @apply px-3 py-3 text-sm text-violet-600 font-medium; }
+  .add-cell-actions { @apply whitespace-nowrap text-right; }
+  .add-trigger-row { @apply cursor-pointer transition-colors; }
+  .add-trigger-row:hover { background: rgba(124, 58, 237, 0.05); }
+  .add-trigger-cell {
+    font-family: var(--font-mono);
+    @apply px-4 py-3 text-xs font-medium uppercase tracking-wider;
+    color: var(--violet);
+  }
+
+  /* Date tabs — mono uppercase labels per Console type register */
+  .detail-tabs { @apply gap-2; border-color: var(--border); }
+  .detail-tabs .tab-btn { font-family: var(--font-mono); @apply text-xs uppercase tracking-wider; }
 
   /* Inline conflict warning (slot add / edit) */
-  .conflict-cell { @apply px-3 py-2 text-sm text-red-700 bg-red-50; }
+  .conflict-cell { @apply px-4 py-2 text-sm text-red-700; background: rgba(239, 68, 68, 0.08); }
   .conflict-text { @apply inline-flex items-center gap-1; }
 
   /* Stage modal field wrapper */
@@ -181,13 +313,40 @@
   .events-tab-btn { @apply pb-3 text-sm font-medium transition-colors; }
   .events-tab-active { @apply border-b-2 border-violet-600 text-violet-600; }
   .events-tab-inactive { @apply text-gray-500 hover:text-gray-700; }
+
+  /* Console restyle (EL-064): stat tiles + data table on the light surface. */
+  .events-stats { @apply grid grid-cols-1 gap-4 mb-8 sm:grid-cols-2 lg:grid-cols-3; }
+  .events-table-wrap {
+    @apply overflow-hidden rounded-xl border;
+    background: var(--card);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .events-table { @apply w-full border-collapse text-sm; }
+  .events-th { @apply px-5 py-3; border-bottom: 1px solid var(--border); }
+  .events-th-actions { @apply text-center; }
+  .events-row { transition: background-color 0.12s ease; }
+  .events-row:not(:last-child) .events-td { border-bottom: 1px solid var(--border); }
+  .events-row:hover { background: var(--surface); }
+  .events-td { @apply px-5 py-3 align-middle; color: var(--ink); }
+  .events-name-link { @apply inline-flex items-center gap-2.5; }
+  .events-name { @apply font-medium; color: var(--ink); }
+  .events-name-link:hover .events-name { color: var(--violet); }
+  .events-dot { @apply h-2.5 w-2.5 flex-shrink-0 rounded-full; }
+  .events-dot-live { background: var(--live); }
+  .events-dot-upcoming { background: var(--violet); }
+  .events-dot-past { background: var(--muted); }
+  .events-venue, .events-dates, .events-genres { color: var(--muted); }
+  .events-dates { font-family: var(--font-mono); @apply text-xs; }
+  .events-status-muted { color: var(--muted); }
+  .events-td-actions { @apply flex items-center justify-center gap-2; }
+
   .event-list { @apply space-y-3; }
   .event-card { @apply bg-white border border-gray-200 rounded-lg p-4 shadow-sm; }
   .event-card-past { @apply bg-white border border-gray-200 rounded-lg p-4 shadow-sm opacity-75; }
   .event-name { @apply font-semibold text-gray-900; }
   .event-meta { @apply text-sm text-gray-500 mt-0.5; }
   .event-actions { @apply flex items-center gap-3 mt-3; }
-  .event-delete-btn { @apply ml-auto; }
 
   /* Event form — event-new.component */
   .event-form { @apply bg-white border border-gray-200 rounded-lg p-6; }
@@ -203,7 +362,6 @@
   .dialog-title { @apply text-base font-semibold text-gray-900 mb-2; }
   .dialog-message { @apply text-sm text-gray-600 mb-5 leading-relaxed; }
   .dialog-actions { @apply flex justify-end gap-3; }
-  .btn-confirm-danger { @apply bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-colors; }
 
   /* Shared data table — data-table.component */
   .dt-wrap { @apply w-full; }
@@ -226,7 +384,6 @@
   .schedule-event-name { @apply text-lg font-bold text-gray-900 leading-tight; }
   .schedule-venue { @apply text-sm text-gray-500 mt-0.5; }
   .schedule-body { @apply max-w-5xl mx-auto px-4 py-4; }
-  .share-btn { @apply w-full sm:w-auto mb-4 flex items-center justify-center gap-2; }
   .schedule-back-link { @apply shrink-0; }
   .date-tabs { @apply flex gap-2 flex-wrap mb-4; }
   .date-tab { @apply px-4 py-2 rounded-full text-sm font-medium transition-colors; }
@@ -254,4 +411,324 @@
   .grid-stage-name { @apply text-xs font-medium text-gray-800; }
   .grid-cell { @apply border border-gray-200 px-1 py-1 min-w-[5rem] align-top; }
   .grid-slot-block { @apply rounded px-2 py-1 text-white text-xs font-medium leading-tight; }
+}
+
+/* ── EL-061 Console design foundation ─────────────────────────────────────
+   Shared primitives + app-shell chrome. Class names are unique across the app
+   and consumed by AdminShellComponent / StatusBadgeComponent and reused by the
+   page reskins (EL-062…EL-066). Kept global so the per-component
+   anyComponentStyle budget stays clear (no @apply in *.component.css). */
+@layer components {
+  /* ── Reusable metadata primitives ── */
+
+  /* Mono uppercase metadata label (sidebar section labels, captions). */
+  .mono-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+
+  /* Mono uppercase data-table column header cell (design-system §3). */
+  .table-header {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+
+  /* Stat tile: monumental Space Grotesk number + mono caption. */
+  .stat-tile {
+    @apply rounded-xl border p-5;
+    background: var(--card);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .stat-tile-number {
+    font-family: var(--font-display);
+    @apply text-3xl font-bold leading-none;
+    color: var(--ink);
+  }
+  .stat-tile-caption {
+    font-family: var(--font-mono);
+    @apply mt-2 block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+
+  /* ── Status badge (StatusBadgeComponent) ── */
+  .status-badge {
+    font-family: var(--font-mono);
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider;
+  }
+  .status-badge-dot { @apply h-1.5 w-1.5 rounded-full; }
+  .status-confirmed { color: #047857; background: rgba(16, 185, 129, 0.12); }
+  .status-confirmed .status-badge-dot { background: var(--success); }
+  .status-pending { color: #b45309; background: rgba(245, 158, 11, 0.12); }
+  .status-pending .status-badge-dot { background: var(--warning); }
+  .status-declined { color: #b91c1c; background: rgba(239, 68, 68, 0.12); }
+  .status-declined .status-badge-dot { background: var(--danger); }
+  .status-live { color: #0e7490; background: rgba(34, 211, 238, 0.15); }
+  .status-live .status-badge-dot { background: var(--live); }
+
+  /* ── App shell (AdminShellComponent) ── */
+  .admin-shell {
+    @apply grid min-h-dvh;
+    grid-template-columns: 240px 1fr;
+    background: var(--surface);
+  }
+
+  /* Sidebar — dark void gradient. */
+  .shell-sidebar {
+    @apply flex flex-col px-4 py-5;
+    background: linear-gradient(180deg, var(--void) 0%, var(--void-2) 100%);
+  }
+  .shell-brand { @apply relative mb-6 px-2 pt-1; }
+  /* Faint emitted violet bloom behind the wordmark (Luminous Frequency). */
+  .shell-brand::before {
+    content: '';
+    @apply pointer-events-none absolute rounded-full;
+    left: -4px;
+    top: -8px;
+    width: 96px;
+    height: 48px;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.5), transparent 70%);
+    filter: blur(10px);
+  }
+  .shell-wordmark {
+    font-family: var(--font-display);
+    @apply relative z-10 text-lg font-bold text-white;
+  }
+  .shell-section-label { @apply mb-2 px-2; }
+  .shell-nav { @apply flex flex-col gap-1; }
+  .shell-nav-item {
+    @apply relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors;
+    color: rgba(255, 255, 255, 0.72);
+  }
+  .shell-nav-item:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .shell-nav-tick {
+    @apply absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full opacity-0 transition-opacity;
+    background: var(--cyan);
+  }
+  /* Active nav: violet-tinted pill + cyan left tick + faint glow. */
+  .shell-nav-active {
+    color: #fff;
+    background: rgba(124, 58, 237, 0.22);
+    box-shadow: 0 0 18px rgba(124, 58, 237, 0.25);
+  }
+  .shell-nav-active .shell-nav-tick {
+    opacity: 1;
+    box-shadow: 0 0 8px var(--cyan);
+  }
+  .shell-footer {
+    @apply mt-auto flex items-center gap-2 border-t pt-4;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  .shell-org { color: rgba(255, 255, 255, 0.6); }
+
+  /* Main column = topbar + content. */
+  .shell-main { @apply flex min-w-0 flex-col; }
+  .shell-topbar {
+    @apply sticky top-0 z-20 flex items-center justify-between gap-4 border-b px-8 py-4;
+    background: var(--card);
+    border-color: var(--border);
+  }
+  .shell-topbar-titles { @apply flex min-w-0 items-baseline gap-3; }
+  .shell-topbar-actions { @apply flex items-center gap-3; }
+  .shell-page-title {
+    font-family: var(--font-display);
+    @apply truncate text-2xl font-bold;
+    color: var(--ink);
+  }
+  .shell-breadcrumb {
+    font-family: var(--font-mono);
+    @apply whitespace-nowrap text-xs;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .shell-search {
+    @apply rounded-lg border px-3 py-1.5 text-sm;
+    background: var(--card);
+    border-color: var(--border);
+  }
+  .shell-search:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--violet), 0 0 0 4px rgba(34, 211, 238, 0.25);
+  }
+  .shell-new-btn {
+    @apply rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors;
+    background: var(--violet);
+  }
+  .shell-new-btn:hover { background: var(--violet-deep); }
+  .shell-content {
+    @apply mx-auto w-full px-8 py-8;
+    max-width: 1200px;
+  }
+}
+
+/* ── EL-065 Console form (New event) ──────────────────────────────────────
+   Reusable form primitives for the light Console workspace (design-system §6).
+   Lives here (not the component CSS) so the violet-focus + cyan-glow box-shadow
+   and token-driven rules don't @apply-inflate the per-component style budget. */
+@layer components {
+  .console-card {
+    @apply mx-auto w-full;
+    max-width: 760px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-6);
+  }
+  .console-field { @apply mb-5; }
+  .console-grid-2 { @apply grid grid-cols-1 gap-4 sm:grid-cols-2; }
+  .console-label {
+    @apply mb-2 block text-xs;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .console-input {
+    @apply w-full;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-input);
+    padding: 10px 14px;
+    font-family: var(--font-body);
+    color: var(--ink);
+    transition:
+      border-color 150ms ease,
+      box-shadow 150ms ease;
+  }
+  .console-input::placeholder { color: var(--muted); }
+  .console-input:focus {
+    outline: none;
+    border-color: var(--violet);
+    box-shadow:
+      0 0 0 3px rgba(124, 58, 237, 0.18),
+      0 0 14px rgba(34, 211, 238, 0.25);
+  }
+  .console-actions {
+    @apply mt-6 flex items-center justify-end gap-3 pt-5;
+    border-top: 1px solid var(--border);
+  }
+  .console-btn-primary {
+    @apply font-medium text-white transition-colors;
+    background: var(--violet);
+    border-radius: var(--radius-input);
+    padding: 10px 18px;
+  }
+  .console-btn-primary:hover { background: var(--violet-deep); }
+  .console-btn-secondary {
+    @apply font-medium transition-colors;
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-input);
+    padding: 10px 18px;
+  }
+  .console-btn-secondary:hover { background: var(--surface); }
+}
+
+/* ── EL-072 Soundcheck design tokens (SOURCE OF TRUTH — additive, opt-in) ──
+   The Soundcheck brand token foundation from the visual-identity direction
+   (§3/§4). This is an ADDITIVE, NON-BREAKING layer: the Console (violet) tokens
+   above stay the live default. NOTHING here applies unless a `[data-brand=
+   "soundcheck"]` attribute is set on a host element, so the current look is
+   unchanged. EL-078 will flip the default over to these.
+
+   Namespacing: every token is prefixed `--sc-*` so it can never collide with or
+   override a Console `--token`. Values are the brand's "starting points" — tune
+   against real screens before the reskin (EL-078).
+
+   Two modes, one accent/status system:
+     • dark "booth" mode  → default when [data-brand="soundcheck"] is set
+     • light "admin" mode → [data-brand="soundcheck"][data-mode="light"]
+   Same accent + status hues across both; only the canvas (surface/text) flips.
+
+   Type: Space Grotesk = display/headings/wordmark/big numbers · Inter = UI/body
+   (tabular figures on) · Noto Sans TC = Traditional Chinese (Taiwan, NOT
+   Simplified). Loaded in index.html + wired into Tailwind fallback stacks.
+
+   STATUS IS NEVER COLOR-ALONE. Each status token pairs with a required icon +
+   text label so it survives deuteranopia/protanopia. Convention (components in
+   later tickets must honour this — here we only define the tokens):
+     • cleared   → check/waveform-check glyph + label "Certified/Cleared" (green)
+     • pending   → clock/hourglass glyph      + label "Pending"           (amber)
+     • blocked   → slash/x glyph              + label "Blocked/Error"      (red)
+     • info/live → dot/info glyph             + label "Live/Info"          (cyan)
+   Cue Amber contrast trap: never amber TEXT on white — use amber as a FILL
+   behind dark text on light surfaces. `--sc-on-amber` is that dark ink. */
+
+/* Brand accents + status — identical hues in both modes (defined once, on the
+   opt-in root; the mode blocks below only override the canvas + neutral ink). */
+[data-brand='soundcheck'] {
+  /* Brand accents */
+  --sc-cue-amber: #ff9e2c;        /* primary accent — CTAs, active, brand */
+  --sc-deck-cyan: #22d3ee;        /* alt accent — links, focus ring, info */
+  --sc-foglight-magenta: #e0469b; /* secondary, used rarely */
+  --sc-on-amber: #0b0d10;         /* dark ink to sit ON a Cue Amber fill */
+
+  /* Neutral ramp (dark-mode ladder — shared scale, both modes reference it) */
+  --sc-neutral-950: #0b0d10;      /* Booth Black — darkest */
+  --sc-neutral-900: #171b21;      /* Console Slate — raised dark surface */
+  --sc-neutral-700: #2c333c;      /* borders / dividers on dark */
+  --sc-neutral-400: #8a94a3;      /* muted text */
+  --sc-neutral-100: #e6eaf0;      /* light text on dark / light hairlines */
+
+  /* Named brand surfaces (from the palette) */
+  --sc-booth-black: #0b0d10;      /* dark base / default app surface */
+  --sc-console-slate: #171b21;    /* raised dark surface (cards, panels) */
+  --sc-stage-white: #f7f8fa;      /* light admin base */
+
+  /* Status — same hues in both modes; pair with icon + label (see header). */
+  --sc-status-cleared: #34d399;   /* certified / cleared — green */
+  --sc-status-pending: #f5b544;   /* pending — amber, distinct from Cue Amber */
+  --sc-status-blocked: #f4505b;   /* Clip Red — error / blocked */
+  --sc-status-info: #22d3ee;      /* info / live — Deck Cyan */
+
+  /* Focus ring — Deck Cyan, 2px (see WCAG note in ticket) */
+  --sc-focus-ring: #22d3ee;
+  --sc-focus-ring-width: 2px;
+
+  /* Type families — CJK-safe stacks (Noto Sans TC for Traditional Chinese) */
+  --sc-font-display: 'Space Grotesk', 'Noto Sans TC', system-ui, sans-serif;
+  --sc-font-body: 'Inter', 'Noto Sans TC', system-ui, sans-serif;
+  --sc-font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+  /* Inter tabular figures on for aligned numbers (durations, credits, counts) */
+  --sc-font-numeric-feature: 'tnum' 1, 'lnum' 1;
+
+  /* ── Dark "booth" mode (the intended eventual default) ── */
+  --sc-bg: var(--sc-booth-black);         /* app canvas */
+  --sc-surface: var(--sc-console-slate);  /* raised cards / panels */
+  --sc-border: var(--sc-neutral-700);     /* hairlines, dividers */
+  --sc-text: var(--sc-neutral-100);       /* body text — AA (4.5:1) on booth */
+  --sc-text-muted: var(--sc-neutral-400); /* captions, secondary */
+  --sc-primary: var(--sc-cue-amber);      /* primary accent for this mode */
+  --sc-on-primary: var(--sc-on-amber);    /* ink on the amber fill */
+  --sc-link: var(--sc-deck-cyan);         /* links / interactive text */
+}
+
+/* ── Light "admin" mode — flips ONLY the canvas + neutral ink; the accent and
+   status hues are inherited unchanged from the block above. Cue Amber stays a
+   FILL (never text) on the white surface — dark `--sc-on-primary` rides on it. */
+[data-brand='soundcheck'][data-mode='light'] {
+  --sc-bg: var(--sc-stage-white);  /* light admin canvas */
+  --sc-surface: #ffffff;           /* raised cards on the light base */
+  --sc-border: #d9dee6;            /* hairlines on light */
+  --sc-text: #0b0d10;              /* dark body text on white — AA+ */
+  --sc-text-muted: #5b6472;        /* muted text tuned for white bg */
+  /* --sc-primary stays Cue Amber but is used as a fill; text on white must be
+     `--sc-on-primary` (dark) sitting on the amber, never amber text on white. */
 }

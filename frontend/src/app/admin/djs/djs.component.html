@@ -1,6 +1,8 @@
-<div class="page">
-  <h1 class="page-title mb-6">{{ 'djs.title' | translate }}</h1>
-
+<app-admin-shell
+  activeNav="djs"
+  [title]="'djs.title' | translate"
+  [breadcrumb]="'shell.workspace' | translate"
+>
   <div class="card card-body mb-6">
     <h2 class="section-title mb-4">{{ 'djs.new' | translate }}</h2>
     <div class="form-group">
@@ -13,7 +15,8 @@
       <input [ngModel]="newDJGenres()" (ngModelChange)="newDJGenres.set($event)"
         name="genres" type="text" class="form-input" placeholder="genre1, genre2, genre3" data-testid="dj-genres-input" />
     </div>
-    <button (click)="addDJ()" class="btn-primary" data-testid="dj-add-btn">+ {{ 'actions.add' | translate }}</button>
+    <app-button variant="primary" icon="plus" [label]="'actions.add' | translate"
+      testId="dj-add-btn" (click)="addDJ()" />
   </div>
 
   <app-data-table [columns]="djColumns()" [data]="djsAsRows()">
@@ -22,13 +25,92 @@
         <span class="genre-tag">{{ g }}</span>
       }
     </ng-template>
+    <ng-template appColumnDef="certifications" let-row="row">
+      @if (!isStudent(row)) {
+        <span class="text-xs font-medium text-violet-700 bg-violet-100 px-2 py-0.5 rounded-full">{{ 'djs.graduate' | translate }}</span>
+      }
+      @for (c of certs(row); track c) {
+        <span class="text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded-full ml-1" [attr.data-testid]="'dj-cert-' + rowId(row)">{{ c }}</span>
+      }
+      @if (certs(row).length === 0 && isStudent(row)) {
+        <span class="text-xs text-gray-400">{{ 'djs.no_certs' | translate }}</span>
+      }
+    </ng-template>
     <ng-template appColumnDef="actions" let-row="row">
-      <button (click)="copyPortalLink(rowId(row))" class="btn-sm-outline">
-        {{ (copiedDJId() === rowId(row) ? 'dj.copy_portal_link.copied' : 'dj.copy_portal_link') | translate }}
-      </button>
-      <button (click)="deleteDJ(rowId(row))" class="btn-danger" [attr.data-testid]="'dj-delete-' + rowId(row)">
-        {{ 'actions.delete' | translate }}
-      </button>
+      <div class="row-actions">
+        <app-button variant="secondary" size="icon" icon="edit" [iconOnly]="true"
+          [label]="'actions.edit' | translate" [testId]="'dj-edit-' + rowId(row)"
+          (click)="openEdit(row)" />
+        <app-button variant="secondary" size="icon"
+          [icon]="copiedDJId() === rowId(row) ? 'check' : 'link'" [iconOnly]="true"
+          [label]="(copiedDJId() === rowId(row) ? 'dj.copy_portal_link.copied' : 'dj.copy_portal_link') | translate"
+          [testId]="'dj-copy-' + rowId(row)" (click)="copyPortalLink(rowId(row))" />
+        <app-button variant="danger" size="icon" icon="trash" [iconOnly]="true"
+          [label]="'actions.delete' | translate" [testId]="'dj-delete-' + rowId(row)"
+          (click)="deleteDJ(rowId(row))" />
+      </div>
     </ng-template>
   </app-data-table>
-</div>
+
+  <!-- EL-020: certifications edit slide-over -->
+  @if (editing(); as dj) {
+    <div class="fixed inset-0 z-40 bg-black/40" (click)="cancelEdit()"></div>
+    <aside class="fixed inset-y-0 right-0 z-50 w-full max-w-md overflow-y-auto bg-white p-6 shadow-xl" data-testid="dj-edit-panel">
+      <h2 class="section-title mb-4">{{ 'djs.edit_title' | translate }}</h2>
+
+      <div class="form-group">
+        <label class="form-label">{{ 'djs.name' | translate }}</label>
+        <input [ngModel]="editName()" (ngModelChange)="editName.set($event)" name="editName"
+          type="text" class="form-input" data-testid="dj-edit-name" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ 'djs.status' | translate }}</label>
+        <div class="flex gap-2">
+          <app-button size="sm" [variant]="editIsStudent() ? 'primary' : 'secondary'"
+            [label]="'djs.student' | translate" testId="dj-edit-student"
+            (click)="editIsStudent.set(true)" />
+          <app-button size="sm" [variant]="!editIsStudent() ? 'primary' : 'secondary'"
+            [label]="'djs.graduate' | translate" testId="dj-edit-graduate"
+            (click)="editIsStudent.set(false)" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ 'djs.certifications' | translate }}</label>
+        <div class="flex flex-wrap gap-2">
+          @for (opt of certOptions; track opt) {
+            <app-button type="button" size="sm"
+              [variant]="isCertSelected(opt) ? 'primary' : 'secondary'"
+              [icon]="isCertSelected(opt) ? 'check' : null"
+              [label]="opt" [testId]="'dj-edit-cert-' + opt"
+              (click)="toggleCert(opt)" />
+          }
+        </div>
+        <!-- custom (free-text) certifications beyond the standard curriculum -->
+        @for (c of editCerts(); track c) {
+          @if (!certOptions.includes(c)) {
+            <span class="genre-tag mt-2 inline-flex items-center gap-1">
+              {{ c }}
+              <button type="button" (click)="toggleCert(c)" aria-label="remove">×</button>
+            </span>
+          }
+        }
+        <div class="mt-2 flex gap-2">
+          <input [ngModel]="editCustom()" (ngModelChange)="editCustom.set($event)" name="editCustom"
+            type="text" class="form-input" placeholder="{{ 'djs.custom_cert' | translate }}"
+            (keyup.enter)="addCustomCert()" data-testid="dj-edit-custom" />
+          <app-button type="button" size="sm" icon="plus"
+            [label]="'actions.add' | translate" (click)="addCustomCert()" />
+        </div>
+      </div>
+
+      <div class="mt-6 flex gap-2">
+        <app-button variant="primary" [label]="'actions.save' | translate"
+          testId="dj-edit-save" (click)="saveEdit()" />
+        <app-button [label]="'actions.cancel' | translate"
+          testId="dj-edit-cancel" (click)="cancelEdit()" />
+      </div>
+    </aside>
+  }
+</app-admin-shell>

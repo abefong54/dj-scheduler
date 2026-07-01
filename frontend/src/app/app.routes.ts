@@ -37,6 +37,12 @@ export const routes: Routes = [
       .then(m => m.DjsComponent),
   },
   {
+    path: 'admin/performance',
+    canActivate: [authGuard],
+    loadComponent: () => import('./admin/performance/performance.component')
+      .then(m => m.PerformanceComponent),
+  },
+  {
     path: 'events/:id',
     loadComponent: () => import('./schedule/schedule.component')
       .then(m => m.ScheduleComponent),
@@ -46,6 +52,12 @@ export const routes: Routes = [
     path: 'dj/portal',
     loadComponent: () => import('./dj-portal/dj-portal.component')
       .then(m => m.DJPortalComponent),
+  },
+  {
+    // Public per-DJ share card (no auth guard) — the link a DJ shares (EL-049).
+    path: 'card/:slotId',
+    loadComponent: () => import('./card/card.component')
+      .then(m => m.CardComponent),
   },
   { path: '', redirectTo: 'admin/events', pathMatch: 'full' },
 ];

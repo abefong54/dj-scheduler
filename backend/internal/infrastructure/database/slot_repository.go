@@ -110,6 +110,23 @@ func (r *slotRepo) Get(ctx context.Context, id, eventID, organizerID string) (mo
 	return s, err
 }
 
+// GetPublicByID looks up a single slot by its id without organizer/event
+// scoping, for the unauthenticated per-DJ share card (EL-049). It returns
+// apperrors.ErrNotFound when no slot matches.
+func (r *slotRepo) GetPublicByID(ctx context.Context, id string) (model.Slot, error) {
+	var s model.Slot
+	err := r.pool.QueryRow(ctx, querySlotPublicGet, id).Scan(
+		&s.ID, &s.EventID, &s.StageID, &s.StageName,
+		&s.DjID, &s.DjName, &s.Genre,
+		&s.SlotDate, &s.StartTime, &s.EndTime, &s.Notes,
+		&s.DJConfirmation,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return model.Slot{}, apperrors.ErrNotFound
+	}
+	return s, err
+}
+
 func (r *slotRepo) Create(ctx context.Context, s model.Slot, eventID, organizerID string) (model.Slot, error) {
 	err := r.pool.QueryRow(ctx, querySlotInsert,
 		eventID, s.StageID, s.DjID, s.Genre, s.SlotDate, s.StartTime, s.EndTime, s.Notes, organizerID).

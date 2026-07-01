@@ -12,11 +12,13 @@ import (
 // fakeRepo is a full SlotRepository whose List returns a fixed set and whose
 // writes record whether they were called.
 type fakeRepo struct {
-	stored    []model.Slot
-	created   bool
-	updated   bool
-	createErr error
-	getErr    error
+	stored        []model.Slot
+	created       bool
+	updated       bool
+	createErr     error
+	getErr        error
+	publicSlot    model.Slot
+	publicByIDErr error
 }
 
 func (f *fakeRepo) List(_ context.Context, _, _ string) ([]model.Slot, error) {
@@ -27,6 +29,9 @@ func (f *fakeRepo) ListPublic(_ context.Context, _ string) ([]model.Slot, error)
 }
 func (f *fakeRepo) Get(_ context.Context, _, _, _ string) (model.Slot, error) {
 	return model.Slot{}, f.getErr
+}
+func (f *fakeRepo) GetPublicByID(_ context.Context, _ string) (model.Slot, error) {
+	return f.publicSlot, f.publicByIDErr
 }
 func (f *fakeRepo) Create(_ context.Context, s model.Slot, _, _ string) (model.Slot, error) {
 	f.created = true
@@ -43,6 +48,30 @@ func bookedSlot() model.Slot {
 	return model.Slot{
 		ID: "slot-a", EventID: "evt-1", StageID: "stage-a", DjID: "dj-sasha",
 		SlotDate: "2026-08-15", StartTime: "22:00", EndTime: "23:00",
+	}
+}
+
+func TestGetPublicByID_ReturnsSlot(t *testing.T) {
+	want := bookedSlot()
+	repo := &fakeRepo{publicSlot: want}
+	uc := New(repo)
+
+	got, err := uc.GetPublicByID(context.Background(), want.ID)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if got.ID != want.ID || got.EventID != want.EventID {
+		t.Fatalf("expected slot %+v, got %+v", want, got)
+	}
+}
+
+func TestGetPublicByID_NotFound(t *testing.T) {
+	repo := &fakeRepo{publicByIDErr: apperrors.ErrNotFound}
+	uc := New(repo)
+
+	_, err := uc.GetPublicByID(context.Background(), "missing")
+	if !errors.Is(err, apperrors.ErrNotFound) {
+		t.Fatalf("expected ErrNotFound, got %v", err)
 	}
 }
 

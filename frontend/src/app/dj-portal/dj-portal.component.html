@@ -40,6 +40,11 @@
                   }
 
                   <div class="flex items-center gap-2 mt-3">
+                    <a [routerLink]="['/card', slot.id]"
+                      [attr.data-testid]="'share-card-' + slot.id"
+                      class="text-sm font-medium text-violet-700 hover:underline underline-offset-2">
+                      {{ 'dj.portal.shareCard' | translate }}
+                    </a>
                     @switch (slot.dj_confirmation) {
                       @case ('confirmed') {
                         <span [attr.data-testid]="'slot-status-' + slot.id"
@@ -51,18 +56,16 @@
                       }
                     }
                     <div class="ml-auto flex gap-2">
-                      <button (click)="confirm(slot.id, 'confirmed')"
-                        [attr.data-testid]="'confirm-slot-' + slot.id"
+                      <app-button variant="success" size="sm" icon="check"
+                        [label]="'dj.portal.confirm' | translate"
+                        [testId]="'confirm-slot-' + slot.id"
                         [disabled]="slot.dj_confirmation === 'confirmed'"
-                        class="text-sm font-medium px-3 py-1 rounded-md bg-green-600 text-white disabled:opacity-40">
-                        {{ 'dj.portal.confirm' | translate }}
-                      </button>
-                      <button (click)="confirm(slot.id, 'flagged')"
-                        [attr.data-testid]="'flag-slot-' + slot.id"
+                        (click)="confirm(slot.id, 'confirmed')" />
+                      <app-button variant="secondary" size="sm"
+                        [label]="'dj.portal.flag' | translate"
+                        [testId]="'flag-slot-' + slot.id"
                         [disabled]="slot.dj_confirmation === 'flagged'"
-                        class="text-sm font-medium px-3 py-1 rounded-md bg-amber-100 text-amber-800 disabled:opacity-40">
-                        {{ 'dj.portal.flag' | translate }}
-                      </button>
+                        (click)="confirm(slot.id, 'flagged')" />
                     </div>
                   </div>
                 </div>

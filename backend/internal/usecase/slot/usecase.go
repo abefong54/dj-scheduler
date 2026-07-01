@@ -28,6 +28,12 @@ func (uc *UseCase) Get(ctx context.Context, id, eventID, organizerID string) (mo
 	return uc.repo.Get(ctx, id, eventID, organizerID)
 }
 
+// GetPublicByID reads a slot by id alone, without organizer scoping, for the
+// public per-DJ share card (EL-049).
+func (uc *UseCase) GetPublicByID(ctx context.Context, id string) (model.Slot, error) {
+	return uc.repo.GetPublicByID(ctx, id)
+}
+
 func (uc *UseCase) Create(ctx context.Context, s model.Slot, eventID, organizerID string) (model.Slot, error) {
 	s.EventID = eventID
 	if err := CheckConflicts(ctx, uc.repo, s, "", organizerID); err != nil {

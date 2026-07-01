@@ -6,6 +6,10 @@ export interface DJ {
   id: string;
   name: string;
   genre_tags: string[];
+  // EL-019: genres the DJ is certified to perform, and student vs graduate.
+  // Optional so existing DJ literals/tests stay valid; the API always returns them.
+  certifications?: string[];
+  is_student?: boolean;
 }
 
 export interface Event {
@@ -47,6 +51,13 @@ export interface PublicSchedule {
   slots: Slot[];
 }
 
+// Shape of GET /api/slots/:id/public — a single booking plus its event, for the
+// public per-DJ share card (EL-049). No auth; exposes only already-public slot data.
+export interface PublicSlot {
+  slot: Slot;
+  event: Event;
+}
+
 // A DJ's portal response is "confirmed", "flagged", or null (no response yet).
 export type DJConfirmation = 'confirmed' | 'flagged' | null;
 
@@ -68,9 +79,53 @@ export interface DJPortalResponse {
   slots: DJPortalSlot[];
 }
 
+// Performance aggregation (EL-043/044): "reps" = slots played. total_minutes is
+// real stage time (sets crossing midnight count their full length). last_played
+// is 'YYYY-MM-DD' or '' when the DJ has never played.
+export interface GenreStat {
+  genre: string;
+  reps: number;
+  total_minutes: number;
+}
+
+export interface DJPerformance {
+  dj_id: string;
+  dj_name: string;
+  reps: number;
+  total_minutes: number;
+  last_played: string;
+  by_genre: GenreStat[];
+}
+
+export interface RosterPerformance {
+  dj_id: string;
+  dj_name: string;
+  is_student: boolean;
+  reps: number;
+  total_minutes: number;
+  last_played: string;
+}
+
+// Optional window/event filters shared by the roster + under-served endpoints.
+export interface PerformanceFilter {
+  eventId?: string;
+  from?: string; // 'YYYY-MM-DD'
+  to?: string;
+}
+
 // portalAuth builds the Authorization header carrying a DJ portal token (EL-038).
 function portalAuth(token: string) {
   return { Authorization: `Bearer ${token}` };
+}
+
+// performanceParams maps the optional window/event filter to query params, omitting
+// empties so the backend's "unset" branches apply.
+function performanceParams(filter: PerformanceFilter): Record<string, string> {
+  const params: Record<string, string> = {};
+  if (filter.eventId) params['event_id'] = filter.eventId;
+  if (filter.from) params['from'] = filter.from;
+  if (filter.to) params['to'] = filter.to;
+  return params;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -81,11 +136,36 @@ export class ApiService {
 
   // DJs
   getDJs() { return this.http.get<DJ[]>(`${this.base}/api/djs`); }
+  // EL-019: optional ?certified_for= / ?ready=true filters on the roster.
+  getDJsFiltered(opts: { certifiedFor?: string; ready?: boolean }) {
+    const params: Record<string, string> = {};
+    if (opts.certifiedFor) params['certified_for'] = opts.certifiedFor;
+    if (opts.ready) params['ready'] = 'true';
+    return this.http.get<DJ[]>(`${this.base}/api/djs`, { params });
+  }
   createDJ(d: Pick<DJ, 'name' | 'genre_tags'>) { return this.http.post<DJ>(`${this.base}/api/djs`, d); }
+  // EL-020: update a DJ's name, genres, certifications, and student status (PATCH).
+  updateDJ(id: string, d: Pick<DJ, 'name' | 'genre_tags' | 'certifications' | 'is_student'>) {
+    return this.http.patch<DJ>(`${this.base}/api/djs/${id}`, d);
+  }
   deleteDJ(id: string) { return this.http.delete(`${this.base}/api/djs/${id}`); }
   // Mint (or regenerate) a DJ's personal portal link.
   generateDJPortalToken(djId: string) {
     return this.http.post<{ portal_url: string; expires_at: string }>(`${this.base}/api/djs/${djId}/token`, {});
+  }
+
+  // Performance (EL-043/044). Routes registered by the backend performance handler:
+  // GET /api/djs/:id/performance, GET /api/performance, GET /api/performance/underserved.
+  getDJPerformance(id: string) {
+    return this.http.get<DJPerformance>(`${this.base}/api/djs/${id}/performance`);
+  }
+  getPerformance(filter: PerformanceFilter = {}) {
+    return this.http.get<RosterPerformance[]>(`${this.base}/api/performance`, { params: performanceParams(filter) });
+  }
+  getUnderserved(threshold?: number, filter: PerformanceFilter = {}) {
+    const params = performanceParams(filter);
+    if (threshold != null) params['threshold'] = String(threshold);
+    return this.http.get<RosterPerformance[]>(`${this.base}/api/performance/underserved`, { params });
   }
 
   // Events
@@ -93,6 +173,8 @@ export class ApiService {
   getEvent(id: string) { return this.http.get<Event>(`${this.base}/api/events/${id}`); }
   // Unauthenticated schedule for the public/shareable view (no Bearer token needed).
   getPublicSchedule(id: string) { return this.http.get<PublicSchedule>(`${this.base}/api/events/${id}/public`); }
+  // Unauthenticated single slot + its event, for the per-DJ share card (EL-049).
+  getPublicSlot(slotId: string) { return this.http.get<PublicSlot>(`${this.base}/api/slots/${slotId}/public`); }
   createEvent(e: Omit<Event, 'id'>) { return this.http.post<Event>(`${this.base}/api/events`, e); }
   deleteEvent(id: string) { return this.http.delete(`${this.base}/api/events/${id}`); }
   cloneEvent(id: string) { return this.http.post<Event>(`${this.base}/api/events/${id}/clone`, {}); }

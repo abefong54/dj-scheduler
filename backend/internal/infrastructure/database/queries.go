@@ -1,21 +1,29 @@
 package database
 
 const (
-	// DJ queries
-	queryDJList = `SELECT id, name, COALESCE(genre_tags, '{}'), created_at::text FROM djs WHERE organizer_id = $1 ORDER BY name`
+	// DJ queries. EL-019 adds certifications + is_student; the list supports two
+	// optional filters via params: $2 certified_for (case-insensitive genre, ''
+	// = no filter) and $3 ready_only (true = only DJs with ≥1 certification).
+	queryDJList = `
+		SELECT id, name, COALESCE(genre_tags, '{}'), COALESCE(certifications, '{}'), is_student, created_at::text
+		FROM djs
+		WHERE organizer_id = $1
+		  AND ($2 = '' OR EXISTS (SELECT 1 FROM unnest(certifications) c WHERE LOWER(c) = LOWER($2)))
+		  AND (NOT $3 OR cardinality(certifications) > 0)
+		ORDER BY name`
 
 	queryDJInsert = `
 		INSERT INTO djs (name, genre_tags, organizer_id) VALUES ($1, $2, $3)
-		RETURNING id, name, COALESCE(genre_tags, '{}'), created_at::text`
+		RETURNING id, name, COALESCE(genre_tags, '{}'), COALESCE(certifications, '{}'), is_student, created_at::text`
 
 	queryDJGet = `
-		SELECT id, name, COALESCE(genre_tags, '{}'), created_at::text
+		SELECT id, name, COALESCE(genre_tags, '{}'), COALESCE(certifications, '{}'), is_student, created_at::text
 		FROM djs WHERE id = $1 AND organizer_id = $2`
 
 	queryDJUpdate = `
-		UPDATE djs SET name = $1, genre_tags = $2
-		WHERE id = $3 AND organizer_id = $4
-		RETURNING id, name, COALESCE(genre_tags, '{}'), created_at::text`
+		UPDATE djs SET name = $1, genre_tags = $2, certifications = $3, is_student = $4
+		WHERE id = $5 AND organizer_id = $6
+		RETURNING id, name, COALESCE(genre_tags, '{}'), COALESCE(certifications, '{}'), is_student, created_at::text`
 
 	queryDJDelete = `DELETE FROM djs WHERE id = $1 AND organizer_id = $2`
 
@@ -212,6 +220,20 @@ const (
 		WHERE sl.event_id = $1
 		ORDER BY sl.slot_date, sl.start_time`
 
+	// querySlotPublicGet looks up a single slot purely by its id, without any
+	// organizer/event scoping. It backs the public per-DJ share card (EL-049):
+	// the slot id is the only credential. Callers must gate access some other way.
+	querySlotPublicGet = `
+		SELECT sl.id, sl.event_id, sl.stage_id, st.name,
+		       COALESCE(sl.dj_id::text,''), COALESCE(d.name,''),
+		       COALESCE(sl.genre,''),
+		       sl.slot_date::text, to_char(sl.start_time,'HH24:MI'), to_char(sl.end_time,'HH24:MI'), COALESCE(sl.notes,''),
+		       sl.dj_confirmation
+		FROM slots sl
+		JOIN stages st ON st.id = sl.stage_id
+		LEFT JOIN djs d ON d.id = sl.dj_id
+		WHERE sl.id = $1`
+
 	// Set a DJ's confirmation on a slot the token's DJ actually owns (US-011).
 	querySlotSetDJConfirmation = `
 		UPDATE slots SET dj_confirmation = $1
@@ -232,4 +254,67 @@ const (
 		INSERT INTO organizers (email, name, google_id)
 		VALUES ($1, $2, $3)
 		RETURNING id, email, name, google_id, created_at::text`
+
+	// Performance aggregation (EL-043). Duration is not stored, so it's computed
+	// from start/end TIME: a set whose end is <= start crosses midnight, so add a
+	// full day to count its real length (matches usecase/slot conflict math).
+	// Every query scopes through events.organizer_id (EL-036).
+
+	// queryDJPerformance: one DJ's reps across the organizer's events. The LEFT
+	// JOINs keep the row even with zero slots (owned-but-never-played → reps 0),
+	// while a DJ that isn't the organizer's yields no row → ErrNotFound.
+	queryDJPerformance = `
+		SELECT d.id, d.name,
+		       COUNT(*) FILTER (WHERE sl.id IS NOT NULL AND e.id IS NOT NULL) AS reps,
+		       COALESCE(SUM(
+		         EXTRACT(EPOCH FROM (CASE WHEN sl.end_time <= sl.start_time
+		                                  THEN (sl.end_time - sl.start_time) + INTERVAL '24 hours'
+		                                  ELSE (sl.end_time - sl.start_time) END)) / 60
+		       ) FILTER (WHERE e.id IS NOT NULL), 0)::int AS total_minutes,
+		       COALESCE((MAX(sl.slot_date) FILTER (WHERE e.id IS NOT NULL))::text, '') AS last_played
+		FROM djs d
+		LEFT JOIN slots sl ON sl.dj_id = d.id
+		LEFT JOIN events e ON e.id = sl.event_id AND e.organizer_id = $2
+		WHERE d.id = $1 AND d.organizer_id = $2
+		GROUP BY d.id, d.name`
+
+	// queryDJPerformanceByGenre: that DJ's reps split by slot genre (empty genre
+	// buckets together as "").
+	queryDJPerformanceByGenre = `
+		SELECT COALESCE(sl.genre, '') AS genre,
+		       COUNT(*) AS reps,
+		       COALESCE(SUM(
+		         EXTRACT(EPOCH FROM (CASE WHEN sl.end_time <= sl.start_time
+		                                  THEN (sl.end_time - sl.start_time) + INTERVAL '24 hours'
+		                                  ELSE (sl.end_time - sl.start_time) END)) / 60
+		       ), 0)::int AS total_minutes
+		FROM slots sl
+		JOIN events e ON e.id = sl.event_id
+		WHERE sl.dj_id = $1 AND e.organizer_id = $2
+		GROUP BY COALESCE(sl.genre, '')
+		ORDER BY reps DESC, genre`
+
+	// queryRosterSummary: every active student (is_student = true) with reps in
+	// the window, including zero-rep students. The event/date filters live in the
+	// LEFT JOIN ON clauses so non-matching students still appear with reps 0.
+	// $1 organizer, $2 event_id (''=all), $3 from (''=none), $4 to (''=none).
+	queryRosterSummary = `
+		SELECT d.id, d.name, d.is_student,
+		       COUNT(*) FILTER (WHERE sl.id IS NOT NULL AND e.id IS NOT NULL) AS reps,
+		       COALESCE(SUM(
+		         EXTRACT(EPOCH FROM (CASE WHEN sl.end_time <= sl.start_time
+		                                  THEN (sl.end_time - sl.start_time) + INTERVAL '24 hours'
+		                                  ELSE (sl.end_time - sl.start_time) END)) / 60
+		       ) FILTER (WHERE e.id IS NOT NULL), 0)::int AS total_minutes,
+		       COALESCE((MAX(sl.slot_date) FILTER (WHERE e.id IS NOT NULL))::text, '') AS last_played
+		FROM djs d
+		LEFT JOIN slots sl ON sl.dj_id = d.id
+		       AND ($3 = '' OR sl.slot_date >= NULLIF($3, '')::date)
+		       AND ($4 = '' OR sl.slot_date <= NULLIF($4, '')::date)
+		LEFT JOIN events e ON e.id = sl.event_id
+		       AND e.organizer_id = $1
+		       AND ($2 = '' OR e.id = NULLIF($2, '')::uuid)
+		WHERE d.organizer_id = $1 AND d.is_student = true
+		GROUP BY d.id, d.name, d.is_student
+		ORDER BY reps ASC, d.name`
 )
