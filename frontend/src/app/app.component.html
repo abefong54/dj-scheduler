@@ -1,5 +1,15 @@
 <nav class="navbar">
-  <span class="navbar-brand">EventLineup</span>
+  <!-- EL-078: Soundcheck wordmark — lowercase display face with a single amber
+       VU-meter detail. Inline SVG so it doesn't depend on the finalized logo
+       asset (EL-071 drops in later). -->
+  <span class="navbar-brand shell-wordmark" data-testid="brand-wordmark">
+    <svg class="shell-vu" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+      <rect class="shell-vu-bar" x="1" y="7" width="3" height="8" rx="1" />
+      <rect class="shell-vu-bar" x="6.5" y="2" width="3" height="13" rx="1" />
+      <rect class="shell-vu-bar" x="12" y="9" width="3" height="6" rx="1" />
+    </svg>
+    <span>soundcheck</span>
+  </span>
   <!-- Primary nav (Events/DJs) lives in the console sidebar (AdminShellComponent);
        the brand stays here so it appears in exactly one place. -->
   <div class="lang-switcher">

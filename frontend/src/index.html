@@ -1,5 +1,9 @@
 <!doctype html>
-<html lang="en">
+<!-- EL-078: Soundcheck design system is the app's active default. `data-brand`
+     activates the Soundcheck token scope (see src/styles.css); the absence of
+     `data-mode` = the dark "booth" mode default. ThemeService can flip the
+     document to `data-mode="light"` (admin mode) at runtime. -->
+<html lang="en" data-brand="soundcheck">
 <head>
   <meta charset="utf-8">
   <title>Frontend</title>
