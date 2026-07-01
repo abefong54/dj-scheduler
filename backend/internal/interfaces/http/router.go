@@ -17,6 +17,12 @@ func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, share *Shar
 	// code/state and DJ portal tokens into access logs (EL-037). RequestLogger
 	// logs the route template instead.
 	r := gin.New()
+	// Don't trust X-Forwarded-For from any proxy: c.ClientIP() is only used for
+	// the request log line, never for auth or rate-limiting, so trusting forwarded
+	// headers would just let a client spoof the logged IP. nil = trust none (the
+	// direct peer, i.e. Railway's edge). Also silences Gin's "trusted all proxies"
+	// warning. If a real client IP is ever needed, trust the platform's proxy hop.
+	_ = r.SetTrustedProxies(nil)
 	r.Use(gin.Recovery())
 	r.Use(middleware.RequestID())
 	r.Use(middleware.RequestLogger())
