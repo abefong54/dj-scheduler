@@ -8,7 +8,7 @@
     declined  → Blocked  (clip bar)
     live      → Info/Live (signal dot)
 -->
-<span class="status-badge" [class]="tintClass()">
+<span class="status-badge" [class]="tintClass()" [attr.data-testid]="testId()">
   <svg
     class="status-badge-glyph"
     viewBox="0 0 16 16"
@@ -44,5 +44,5 @@
       }
     }
   </svg>
-  <span class="status-badge-label">{{ labelKey() | translate }}</span>
+  <span class="status-badge-label">{{ label() ?? (labelKey() | translate) }}</span>
 </span>

@@ -6,10 +6,12 @@ import { StatusBadgeComponent, BadgeStatus } from './status-badge.component';
 @Component({
   standalone: true,
   imports: [StatusBadgeComponent],
-  template: `<app-status-badge [status]="status" />`,
+  template: `<app-status-badge [status]="status" [label]="label" [testId]="testId" />`,
 })
 class HostComponent {
   status: BadgeStatus = 'confirmed';
+  label: string | null = null;
+  testId: string | null = null;
 }
 
 describe('StatusBadgeComponent', () => {
@@ -70,5 +72,24 @@ describe('StatusBadgeComponent', () => {
     expect(signature('pending')).toEqual({ path: 0, rect: 2, circle: 0 });
     expect(signature('declined')).toEqual({ path: 1, rect: 1, circle: 0 });
     expect(signature('live')).toEqual({ path: 0, rect: 0, circle: 1 });
+  });
+
+  // EL-081: an optional label override lets the pill carry a custom label (e.g. a
+  // certification name) while keeping the icon + label discipline (never colour
+  // alone). Reused by the DJ roster to render "Cleared" certification chips.
+  it('renders the label override instead of the translated status copy, keeping the glyph', () => {
+    fixture.componentInstance.status = 'confirmed';
+    fixture.componentInstance.label = 'House';
+    fixture.detectChanges();
+    const el = badge();
+    expect(el.querySelector('.status-badge-label')!.textContent).toContain('House');
+    expect(el.textContent).not.toContain('badge.confirmed');
+    expect(el.querySelector('svg.status-badge-glyph')).toBeTruthy();
+  });
+
+  it('applies the optional testId to the pill root', () => {
+    fixture.componentInstance.testId = 'dj-cert-42';
+    fixture.detectChanges();
+    expect(badge().getAttribute('data-testid')).toBe('dj-cert-42');
   });
 });
