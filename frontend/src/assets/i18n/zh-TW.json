@@ -141,7 +141,7 @@
   "card.saving": "儲存中…",
 
   "slot.confirmation.confirmed": "✓ 已確認",
-  "slot.confirmation.flagged": "⚠ 已標記",
+  "slot.confirmation.flagged": "已標記",
   "slot.confirmation.awaiting": "— 待回覆",
   "dj.copy_portal_link": "複製專屬連結",
   "dj.copy_portal_link.copied": "已複製！",
