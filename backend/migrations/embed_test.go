@@ -9,7 +9,7 @@ import (
 )
 
 // TestEmbeddedMigrationsParse verifies that every embedded .sql file is a
-// well-formed goose migration and that all nine are present. It does not touch
+// well-formed goose migration and that all ten are present. It does not touch
 // a database — sql.Open is lazy and goose reads the filesystem when the provider
 // is constructed, so a bad -- +goose annotation or a missing file fails here
 // without needing Postgres.
@@ -24,7 +24,7 @@ func TestEmbeddedMigrationsParse(t *testing.T) {
 	if err != nil {
 		t.Fatalf("goose could not parse embedded migrations: %v", err)
 	}
-	if got := len(p.ListSources()); got != 9 {
-		t.Fatalf("embedded migrations = %d, want 9", got)
+	if got := len(p.ListSources()); got != 10 {
+		t.Fatalf("embedded migrations = %d, want 10", got)
 	}
 }
