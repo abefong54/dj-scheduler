@@ -20,6 +20,7 @@ func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, share *Shar
 	r.Use(gin.Recovery())
 	r.Use(middleware.RequestID())
 	r.Use(middleware.RequestLogger())
+	r.Use(middleware.SecurityHeaders())
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{frontendURL},
 		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
