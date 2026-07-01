@@ -1,53 +1,44 @@
-<!-- Public marketing landing page. Utility-only Tailwind + inline var() tokens
-     (no component CSS → no per-component style budget). EL-079: reskinned onto
-     the Soundcheck dark-"booth" system — Booth Black canvas (`--surface`),
-     Console Slate cards (`--card`), Cue Amber CTAs (`--violet`), Deck Cyan focus.
-     Skin only; copy + structure unchanged (renames are EL-076). -->
-<div class="font-sans" style="background: var(--surface); color: var(--ink);">
+<!-- Public marketing landing page. Utility-only Tailwind (no component CSS → no budget risk). -->
+<div class="font-sans text-slate-700">
 
-  <!-- Hero — dark booth field lit by a Cue Amber glow -->
-  <section class="relative overflow-hidden"
-           style="background:
-             radial-gradient(60% 70% at 50% 0%, rgba(255, 158, 44, 0.14), transparent 70%),
-             var(--surface);">
+  <!-- Hero -->
+  <section class="bg-gradient-to-br from-violet-600 via-violet-700 to-violet-900 text-white">
     <div class="max-w-5xl mx-auto px-6 py-20 sm:py-28 text-center">
-      <span class="inline-block text-xs font-semibold uppercase tracking-widest rounded-full px-4 py-1.5 mb-6"
-            style="background: rgba(255, 158, 44, 0.14); color: var(--violet);">
+      <span class="inline-block text-xs font-semibold uppercase tracking-widest bg-white/15 rounded-full px-4 py-1.5 mb-6">
         {{ 'landing.hero.badge' | translate }}
       </span>
-      <h1 class="font-display text-4xl sm:text-5xl font-bold leading-tight mb-5" style="color: var(--ink);">
+      <h1 class="font-display text-4xl sm:text-5xl font-bold leading-tight mb-5">
         {{ 'landing.hero.title' | translate }}
       </h1>
-      <p class="text-lg sm:text-xl max-w-2xl mx-auto mb-8" style="color: var(--muted);">
+      <p class="text-lg sm:text-xl text-violet-100 max-w-2xl mx-auto mb-8">
         {{ 'landing.hero.subtitle' | translate }}
       </p>
-      <a routerLink="/login" class="btn btn-primary text-base px-8 py-4">
+      <a routerLink="/login"
+         class="inline-block bg-white text-violet-700 font-semibold text-base px-8 py-4 rounded-xl shadow-lg shadow-violet-900/30 hover:bg-violet-50 transition focus:outline-none focus-visible:ring-4 focus-visible:ring-white/40">
         {{ 'landing.hero.cta' | translate }} →
       </a>
-      <p class="text-sm mt-4" style="color: var(--muted);">{{ 'landing.hero.micro' | translate }}</p>
+      <p class="text-sm text-violet-200 mt-4">{{ 'landing.hero.micro' | translate }}</p>
     </div>
   </section>
 
   <!-- What you get today -->
-  <section id="today" style="background: var(--surface);">
+  <section id="today" class="bg-white">
     <div class="max-w-6xl mx-auto px-6 py-16 sm:py-20">
       <div class="text-center max-w-2xl mx-auto mb-12">
-        <h2 class="font-display text-3xl font-bold mb-3" style="color: var(--ink);">{{ 'landing.today.title' | translate }}</h2>
-        <p class="text-lg" style="color: var(--muted);">{{ 'landing.today.subtitle' | translate }}</p>
+        <h2 class="font-display text-3xl font-bold text-slate-900 mb-3">{{ 'landing.today.title' | translate }}</h2>
+        <p class="text-slate-500 text-lg">{{ 'landing.today.subtitle' | translate }}</p>
       </div>
       <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
 
         @for (f of features; track f.key) {
-          <div class="rounded-2xl border p-6 transition hover:shadow-lg"
-               style="background: var(--card); border-color: var(--border);">
-            <div class="w-11 h-11 rounded-xl flex items-center justify-center mb-4" aria-hidden="true"
-                 style="background: rgba(255, 158, 44, 0.12); color: var(--violet);">
+          <div class="rounded-2xl border border-slate-200 p-6 hover:shadow-md hover:border-violet-200 transition">
+            <div class="w-11 h-11 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mb-4" aria-hidden="true">
               <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7">
                 <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="f.icon" />
               </svg>
             </div>
-            <h3 class="font-semibold mb-1.5" style="color: var(--ink);">{{ ('landing.feat.' + f.key + '.t') | translate }}</h3>
-            <p class="text-sm leading-relaxed" style="color: var(--muted);">{{ ('landing.feat.' + f.key + '.d') | translate }}</p>
+            <h3 class="font-semibold text-slate-900 mb-1.5">{{ ('landing.feat.' + f.key + '.t') | translate }}</h3>
+            <p class="text-sm text-slate-500 leading-relaxed">{{ ('landing.feat.' + f.key + '.d') | translate }}</p>
           </div>
         }
 
@@ -55,25 +46,25 @@
     </div>
   </section>
 
-  <!-- Roadmap — raised Console Slate band -->
-  <section style="background: var(--card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <!-- Roadmap -->
+  <section class="bg-slate-50 border-y border-slate-200">
     <div class="max-w-6xl mx-auto px-6 py-16 sm:py-20">
       <div class="text-center max-w-2xl mx-auto mb-12">
-        <h2 class="font-display text-3xl font-bold mb-3" style="color: var(--ink);">{{ 'landing.roadmap.title' | translate }}</h2>
-        <p class="text-lg" style="color: var(--muted);">{{ 'landing.roadmap.subtitle' | translate }}</p>
+        <h2 class="font-display text-3xl font-bold text-slate-900 mb-3">{{ 'landing.roadmap.title' | translate }}</h2>
+        <p class="text-slate-500 text-lg">{{ 'landing.roadmap.subtitle' | translate }}</p>
       </div>
       <div class="grid gap-5 md:grid-cols-3">
         @for (col of roadmap; track col.key) {
-          <div class="rounded-2xl border p-6" style="background: var(--surface); border-color: var(--border);">
+          <div class="rounded-2xl border border-slate-200 bg-white p-6">
             <div class="flex items-center gap-2 mb-1">
               <span class="w-2.5 h-2.5 rounded-full" [ngClass]="col.dot" aria-hidden="true"></span>
-              <h3 class="font-semibold" style="color: var(--ink);">{{ ('landing.roadmap.' + col.key) | translate }}</h3>
+              <h3 class="font-semibold text-slate-900">{{ ('landing.roadmap.' + col.key) | translate }}</h3>
             </div>
-            <p class="text-xs uppercase tracking-wide mb-4" style="color: var(--muted);">{{ ('landing.roadmap.' + col.key + '.when') | translate }}</p>
+            <p class="text-xs uppercase tracking-wide text-slate-400 mb-4">{{ ('landing.roadmap.' + col.key + '.when') | translate }}</p>
             <ul class="space-y-3">
               @for (i of col.items; track i) {
-                <li class="text-sm flex gap-2" style="color: var(--muted);">
-                  <span class="mt-0.5" aria-hidden="true" style="color: var(--violet);">•</span>
+                <li class="text-sm text-slate-600 flex gap-2">
+                  <span class="text-violet-400 mt-0.5" aria-hidden="true">•</span>
                   <span>{{ ('landing.roadmap.' + col.key + '.' + i) | translate }}</span>
                 </li>
               }
@@ -85,22 +76,22 @@
   </section>
 
   <!-- Comparison -->
-  <section style="background: var(--surface);">
+  <section class="bg-white">
     <div class="max-w-3xl mx-auto px-6 py-16 sm:py-20">
-      <h2 class="font-display text-3xl font-bold text-center mb-10" style="color: var(--ink);">{{ 'landing.compare.title' | translate }}</h2>
-      <div class="rounded-2xl border overflow-hidden" style="border-color: var(--border);">
-        <div class="grid grid-cols-2 font-semibold" style="background: rgba(255, 158, 44, 0.12); color: var(--ink);">
+      <h2 class="font-display text-3xl font-bold text-slate-900 text-center mb-10">{{ 'landing.compare.title' | translate }}</h2>
+      <div class="rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="grid grid-cols-2 bg-violet-50 text-slate-900 font-semibold">
           <div class="px-5 py-3">{{ 'landing.compare.head.old' | translate }}</div>
-          <div class="px-5 py-3" style="border-left: 2px solid var(--violet);">{{ 'landing.compare.head.us' | translate }}</div>
+          <div class="px-5 py-3 border-l-2 border-violet-300">{{ 'landing.compare.head.us' | translate }}</div>
         </div>
         @for (r of [1,2,3,4,5]; track r) {
-          <div class="grid grid-cols-2 text-sm" style="border-top: 1px solid var(--border);">
-            <div class="px-5 py-4 flex gap-2" style="color: var(--muted);">
-              <svg class="w-4 h-4 flex-none mt-0.5" style="color: var(--danger);" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+          <div class="grid grid-cols-2 border-t border-slate-200 text-sm">
+            <div class="px-5 py-4 flex gap-2 text-slate-500">
+              <svg class="w-4 h-4 text-rose-400 flex-none mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
               <span>{{ ('landing.compare.r' + r + '.old') | translate }}</span>
             </div>
-            <div class="px-5 py-4 flex gap-2" style="color: var(--ink); border-left: 2px solid var(--border);">
-              <svg class="w-4 h-4 flex-none mt-0.5" style="color: var(--success);" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+            <div class="px-5 py-4 flex gap-2 text-slate-700 border-l-2 border-violet-100">
+              <svg class="w-4 h-4 text-emerald-500 flex-none mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
               <span>{{ ('landing.compare.r' + r + '.us') | translate }}</span>
             </div>
           </div>
@@ -109,60 +100,53 @@
     </div>
   </section>
 
-  <!-- The proof — booth field with a faint amber wash -->
-  <section class="relative overflow-hidden"
-           style="background:
-             radial-gradient(70% 80% at 50% 30%, rgba(255, 158, 44, 0.10), transparent 70%),
-             var(--surface);">
+  <!-- The proof -->
+  <section class="bg-gradient-to-br from-violet-50 to-violet-100">
     <div class="max-w-5xl mx-auto px-6 py-16 sm:py-20">
       <div class="text-center max-w-2xl mx-auto mb-12">
-        <span class="inline-block text-xs font-semibold uppercase tracking-widest rounded-full px-4 py-1.5 mb-5"
-              style="background: rgba(255, 158, 44, 0.14); color: var(--violet);">
+        <span class="inline-block text-xs font-semibold uppercase tracking-widest text-violet-700 bg-white rounded-full px-4 py-1.5 mb-5">
           {{ 'landing.proof.badge' | translate }}
         </span>
-        <h2 class="font-display text-3xl font-bold mb-3" style="color: var(--ink);">{{ 'landing.proof.title' | translate }}</h2>
-        <p class="text-lg" style="color: var(--muted);">{{ 'landing.proof.subtitle' | translate }}</p>
+        <h2 class="font-display text-3xl font-bold text-slate-900 mb-3">{{ 'landing.proof.title' | translate }}</h2>
+        <p class="text-slate-500 text-lg">{{ 'landing.proof.subtitle' | translate }}</p>
       </div>
       <div class="grid gap-5 md:grid-cols-3">
         @for (s of [1,2,3]; track s) {
-          <div class="rounded-2xl border p-6" style="background: var(--card); border-color: var(--border);">
-            <div class="w-9 h-9 rounded-full font-semibold flex items-center justify-center mb-4" aria-hidden="true"
-                 style="background: var(--violet); color: var(--sc-on-amber);">{{ s }}</div>
-            <h3 class="font-semibold mb-1.5" style="color: var(--ink);">{{ ('landing.proof.s' + s + '.t') | translate }}</h3>
-            <p class="text-sm leading-relaxed" style="color: var(--muted);">{{ ('landing.proof.s' + s + '.d') | translate }}</p>
+          <div class="rounded-2xl bg-white border border-violet-100 p-6">
+            <div class="w-9 h-9 rounded-full bg-violet-600 text-white font-semibold flex items-center justify-center mb-4" aria-hidden="true">{{ s }}</div>
+            <h3 class="font-semibold text-slate-900 mb-1.5">{{ ('landing.proof.s' + s + '.t') | translate }}</h3>
+            <p class="text-sm text-slate-500 leading-relaxed">{{ ('landing.proof.s' + s + '.d') | translate }}</p>
           </div>
         }
       </div>
-      <p class="text-center mt-8" style="color: var(--muted);">{{ 'landing.proof.foot' | translate }}</p>
+      <p class="text-center text-slate-500 mt-8">{{ 'landing.proof.foot' | translate }}</p>
     </div>
   </section>
 
   <!-- CTA -->
-  <section id="cta" style="background: var(--surface);">
+  <section id="cta" class="bg-white">
     <div class="max-w-4xl mx-auto px-6 py-20 text-center">
-      <span class="inline-block text-xs font-semibold uppercase tracking-widest rounded-full px-4 py-1.5 mb-5"
-            style="background: rgba(255, 158, 44, 0.14); color: var(--violet);">
+      <span class="inline-block text-xs font-semibold uppercase tracking-widest text-violet-700 bg-violet-50 rounded-full px-4 py-1.5 mb-5">
         {{ 'landing.cta.badge' | translate }}
       </span>
-      <h2 class="font-display text-3xl sm:text-4xl font-bold mb-4" style="color: var(--ink);">{{ 'landing.cta.title' | translate }}</h2>
-      <p class="text-lg max-w-2xl mx-auto mb-8" style="color: var(--muted);">{{ 'landing.cta.body' | translate }}</p>
+      <h2 class="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-4">{{ 'landing.cta.title' | translate }}</h2>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto mb-8">{{ 'landing.cta.body' | translate }}</p>
       <div class="flex flex-wrap justify-center gap-3 mb-8">
         @for (r of [1,2,3,4]; track r) {
-          <span class="inline-flex items-center gap-1.5 border rounded-full px-4 py-2 text-sm font-medium"
-                style="background: var(--card); border-color: var(--border); color: var(--ink);">
-            <svg class="w-4 h-4" style="color: var(--success);" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+          <span class="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-full px-4 py-2 text-sm font-medium text-slate-700">
+            <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
             {{ ('landing.cta.r' + r) | translate }}
           </span>
         }
       </div>
-      <a routerLink="/login" class="btn btn-primary text-base px-8 py-4">
+      <a routerLink="/login"
+         class="inline-block bg-violet-600 text-white font-semibold text-base px-8 py-4 rounded-xl shadow-lg shadow-violet-600/30 hover:bg-violet-700 transition focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300">
         {{ 'landing.cta.button' | translate }} →
       </a>
     </div>
   </section>
 
-  <footer class="text-sm text-center py-8 px-6"
-          style="background: var(--surface); color: var(--muted); border-top: 1px solid var(--border);">
+  <footer class="bg-slate-900 text-slate-400 text-sm text-center py-8 px-6">
     {{ 'landing.footer' | translate }}
   </footer>
 
