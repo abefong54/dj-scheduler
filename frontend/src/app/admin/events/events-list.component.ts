@@ -5,6 +5,7 @@ import { ApiService, Event } from '../../services/api.service';
 import { AdminShellComponent } from '../../shared/admin-shell.component';
 import { StatusBadgeComponent } from '../../shared/status-badge.component';
 import { ButtonComponent } from '../../shared/button.component';
+import { LoadingMeterComponent } from '../../shared/loading-meter.component';
 import { DialogService } from '../../shared/dialog.service';
 
 /** Lifecycle state derived purely from an event's start/end dates. */
@@ -13,7 +14,7 @@ type EventLifecycle = 'live' | 'upcoming' | 'past';
 @Component({
   selector: 'app-events-list',
   standalone: true,
-  imports: [RouterLink, TranslatePipe, AdminShellComponent, StatusBadgeComponent, ButtonComponent],
+  imports: [RouterLink, TranslatePipe, AdminShellComponent, StatusBadgeComponent, ButtonComponent, LoadingMeterComponent],
   templateUrl: './events-list.component.html',
   styleUrl: './events-list.component.css',
 })
@@ -27,6 +28,8 @@ export class EventsListComponent {
   today = new Date().toISOString().slice(0, 10);
 
   events = signal<Event[]>([]);
+  loading = signal(true);
+  loadError = signal(false);
 
   upcoming = computed(() => this.events().filter(e => e.end_date >= this.today));
   past = computed(() => this.events().filter(e => e.end_date < this.today));
@@ -36,7 +39,22 @@ export class EventsListComponent {
   }
 
   private loadEvents() {
-    this.api.getEvents().subscribe(events => this.events.set(events));
+    this.loading.set(true);
+    this.loadError.set(false);
+    this.api.getEvents().subscribe({
+      next: events => {
+        this.events.set(events);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loadError.set(true);
+        this.loading.set(false);
+      },
+    });
+  }
+
+  retry() {
+    this.loadEvents();
   }
 
   formatDates(e: Event): string {

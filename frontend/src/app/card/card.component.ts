@@ -1,6 +1,7 @@
 import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { LoadingMeterComponent } from '../shared/loading-meter.component';
 import { toPng } from 'html-to-image';
 import { ApiService, PublicSlot } from '../services/api.service';
 import { environment } from '../../environments/environment';
@@ -27,7 +28,7 @@ const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', '
 @Component({
   selector: 'app-card',
   standalone: true,
-  imports: [TranslatePipe, RouterLink, ButtonComponent],
+  imports: [TranslatePipe, RouterLink, ButtonComponent, LoadingMeterComponent],
   templateUrl: './card.component.html',
   styleUrl: './card.component.css',
 })

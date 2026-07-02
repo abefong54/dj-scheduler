@@ -19,6 +19,14 @@
       testId="dj-add-btn" (click)="addDJ()" />
   </div>
 
+  @if (loading()) {
+    <div class="flex justify-center py-16"><app-loading-meter [label]="'common.loading' | translate" /></div>
+  } @else if (loadError()) {
+    <div class="flex flex-col items-center gap-3 py-16">
+      <p class="empty-state">{{ 'common.loadError' | translate }}</p>
+      <button class="btn btn-primary" (click)="retry()">{{ 'common.retry' | translate }}</button>
+    </div>
+  } @else {
   <app-data-table [columns]="djColumns()" [data]="djsAsRows()">
     <ng-template appColumnDef="genre_tags" let-row="row">
       @for (g of genreTags(row); track g) {
@@ -64,6 +72,7 @@
       </div>
     </ng-template>
   </app-data-table>
+  }
 
   <!-- EL-020: certifications edit slide-over -->
   @if (editing(); as dj) {

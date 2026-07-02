@@ -5,6 +5,14 @@
   [newLabel]="'events.new' | translate"
   (newClicked)="goToNew()"
 >
+  @if (loading()) {
+    <div class="flex justify-center py-16"><app-loading-meter [label]="'common.loading' | translate" /></div>
+  } @else if (loadError()) {
+    <div class="flex flex-col items-center gap-3 py-16">
+      <p class="empty-state">{{ 'common.loadError' | translate }}</p>
+      <button class="btn btn-primary" (click)="retry()">{{ 'common.retry' | translate }}</button>
+    </div>
+  } @else {
   <!-- Stat tiles: real metrics derived from the loaded events. -->
   <section class="events-stats">
     <div class="stat-tile">
@@ -92,5 +100,6 @@
         </tbody>
       </table>
     </div>
+  }
   }
 </app-admin-shell>
