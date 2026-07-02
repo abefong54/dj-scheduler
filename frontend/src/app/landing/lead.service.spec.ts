@@ -19,7 +19,7 @@ describe('LeadService', () => {
     svc.submit({ name: 'A', organization: 'S', email: 'a@x.com', message: '' }).subscribe();
     const req = http.expectOne('/api/leads');
     expect(req.request.method).toBe('POST');
-    expect(req.request.body.email).toBe('a@x.com');
+    expect(req.request.body).toEqual({ name: 'A', organization: 'S', email: 'a@x.com', message: '' });
     req.flush({ id: '1' });
   });
 });

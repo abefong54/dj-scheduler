@@ -36,7 +36,11 @@ export class LandingComponent {
   openLeadForm(): void {
     this.showForm.set(true);
     // Let the @if render, then bring the form into view.
-    setTimeout(() => document.getElementById('lead-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 0);
+    setTimeout(() => {
+      const section = document.getElementById('lead-form');
+      section?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      section?.querySelector<HTMLInputElement>('input')?.focus();
+    }, 0);
   }
 
   /** How-it-works steps — i18n under landing.how.<key>.{t,d}. */

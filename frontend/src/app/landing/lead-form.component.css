@@ -15,7 +15,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--sc-text-muted);
 }
 
@@ -43,7 +43,7 @@
 
 .lead-form-msg {
   margin: 0;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .lead-form-error {

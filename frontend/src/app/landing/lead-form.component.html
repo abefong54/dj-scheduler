@@ -1,5 +1,5 @@
 @if (state() === 'success') {
-  <p class="lead-form-msg lead-form-success">{{ 'landing.leadform.success' | translate }}</p>
+  <p class="lead-form-msg lead-form-success" role="status" aria-live="polite">{{ 'landing.leadform.success' | translate }}</p>
 } @else {
   <form class="lead-form" (submit)="$event.preventDefault(); submit()">
     <h3 class="lead-form-title">{{ 'landing.leadform.title' | translate }}</h3>
@@ -29,7 +29,7 @@
     </label>
 
     @if (state() === 'error') {
-      <p class="lead-form-msg lead-form-error">{{ 'landing.leadform.error' | translate }}</p>
+      <p class="lead-form-msg lead-form-error" role="alert">{{ 'landing.leadform.error' | translate }}</p>
     }
 
     <button type="submit" class="btn btn-primary"

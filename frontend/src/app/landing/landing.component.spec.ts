@@ -60,7 +60,7 @@ describe('LandingComponent (EL-075 Soundcheck landing)', () => {
     const el = (await build()).nativeElement as HTMLElement;
     const primaries = el.querySelectorAll<HTMLAnchorElement>('a.lp-btn-amber');
     // Hero CTA points at /login; the CTA-band amber is now a <button> (opens lead form).
-    expect(primaries.length).toBeGreaterThanOrEqual(1);
+    expect(primaries.length).toBe(1);
     primaries.forEach((a) => expect(a.getAttribute('href')).toBe('/login'));
   });
 
