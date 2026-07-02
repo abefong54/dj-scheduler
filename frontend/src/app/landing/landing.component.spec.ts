@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { provideTranslateService } from '@ngx-translate/core';
+import { of } from 'rxjs';
 
 import { LandingComponent } from './landing.component';
 
@@ -56,12 +57,27 @@ describe('LandingComponent (EL-075 Soundcheck landing)', () => {
     expect(rows.length).toBe(4);
   });
 
-  it('wires the primary CTAs to the sign-in / onboarding route', async () => {
-    const el = (await build()).nativeElement as HTMLElement;
-    const primaries = el.querySelectorAll<HTMLAnchorElement>('a.lp-btn-amber');
-    // Hero CTA points at /login; the CTA-band amber is now a <button> (opens lead form).
-    expect(primaries.length).toBe(1);
-    primaries.forEach((a) => expect(a.getAttribute('href')).toBe('/login'));
+  it('hero primary CTA opens the lead form (no /login link on the landing)', async () => {
+    const fixture = await build();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('a[href="/login"]')).toBeNull();
+    expect(el.querySelector('app-lead-form')).toBeNull();
+    (el.querySelector('.lp-hero .lp-btn-amber') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(el.querySelector('app-lead-form')).not.toBeNull();
+  });
+
+  it('reveals the form when navigated with the #lead-form fragment', async () => {
+    await TestBed.configureTestingModule({
+      imports: [LandingComponent],
+      providers: [
+        provideRouter([]), provideTranslateService(), provideHttpClient(), provideHttpClientTesting(),
+        { provide: ActivatedRoute, useValue: { fragment: of('lead-form') } },
+      ],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(LandingComponent);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('app-lead-form')).not.toBeNull();
   });
 
   it('uses translate keys (not raw copy) for section headings', async () => {
