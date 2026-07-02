@@ -1,0 +1,40 @@
+@if (state() === 'success') {
+  <p class="lead-form-msg lead-form-success">{{ 'landing.leadform.success' | translate }}</p>
+} @else {
+  <form class="lead-form" (submit)="$event.preventDefault(); submit()">
+    <h3 class="lead-form-title">{{ 'landing.leadform.title' | translate }}</h3>
+
+    <label class="lead-field">
+      <span>{{ 'landing.leadform.name' | translate }}</span>
+      <input type="text" name="name" autocomplete="name"
+             [value]="name()" (input)="name.set(val($event))" required />
+    </label>
+
+    <label class="lead-field">
+      <span>{{ 'landing.leadform.organization' | translate }}</span>
+      <input type="text" name="organization" autocomplete="organization"
+             [value]="organization()" (input)="organization.set(val($event))" />
+    </label>
+
+    <label class="lead-field">
+      <span>{{ 'landing.leadform.email' | translate }}</span>
+      <input type="email" name="email" autocomplete="email"
+             [value]="email()" (input)="email.set(val($event))" required />
+    </label>
+
+    <label class="lead-field">
+      <span>{{ 'landing.leadform.message' | translate }}</span>
+      <textarea name="message" rows="3"
+                [value]="message()" (input)="message.set(val($event))"></textarea>
+    </label>
+
+    @if (state() === 'error') {
+      <p class="lead-form-msg lead-form-error">{{ 'landing.leadform.error' | translate }}</p>
+    }
+
+    <button type="submit" class="btn btn-primary"
+            [disabled]="!valid() || state() === 'submitting'">
+      {{ 'landing.leadform.submit' | translate }}
+    </button>
+  </form>
+}
