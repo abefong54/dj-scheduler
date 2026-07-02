@@ -271,5 +271,14 @@
   "landing.footer.company.2": "Partners",
   "landing.footer.company.3": "Contact",
   "landing.footer.copyright": "© 2026 Soundcheck. Made in Taipei.",
-  "landing.footer.legal": "Privacy · Terms"
+  "landing.footer.legal": "Privacy · Terms",
+
+  "landing.leadform.title": "Book a demo",
+  "landing.leadform.name": "Your name",
+  "landing.leadform.organization": "School / studio",
+  "landing.leadform.email": "Email",
+  "landing.leadform.message": "Anything you want us to know?",
+  "landing.leadform.submit": "Request a demo",
+  "landing.leadform.success": "Thanks — we'll be in touch shortly.",
+  "landing.leadform.error": "Something went wrong. Please try again or email us."
 }
