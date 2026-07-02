@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { provideTranslateService } from '@ngx-translate/core';
 
@@ -8,7 +10,7 @@ describe('LandingComponent (EL-075 Soundcheck landing)', () => {
   async function build(): Promise<ComponentFixture<LandingComponent>> {
     await TestBed.configureTestingModule({
       imports: [LandingComponent],
-      providers: [provideRouter([]), provideTranslateService()],
+      providers: [provideRouter([]), provideTranslateService(), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
     const fixture = TestBed.createComponent(LandingComponent);
     fixture.detectChanges();
@@ -57,8 +59,8 @@ describe('LandingComponent (EL-075 Soundcheck landing)', () => {
   it('wires the primary CTAs to the sign-in / onboarding route', async () => {
     const el = (await build()).nativeElement as HTMLElement;
     const primaries = el.querySelectorAll<HTMLAnchorElement>('a.lp-btn-amber');
-    // Hero + CTA band both point at /login.
-    expect(primaries.length).toBeGreaterThanOrEqual(2);
+    // Hero CTA points at /login; the CTA-band amber is now a <button> (opens lead form).
+    expect(primaries.length).toBeGreaterThanOrEqual(1);
     primaries.forEach((a) => expect(a.getAttribute('href')).toBe('/login'));
   });
 
@@ -66,5 +68,15 @@ describe('LandingComponent (EL-075 Soundcheck landing)', () => {
     const el = (await build()).nativeElement as HTMLElement;
     // With no translations loaded, the pipe echoes the key — proves i18n wiring.
     expect(el.querySelector('.lp-h1')?.textContent).toContain('landing.hero.title');
+  });
+
+  it('reveals the lead form when a demo CTA is clicked', async () => {
+    const fixture = await build();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('app-lead-form')).toBeNull();
+    const demoBtn = el.querySelector('.lp-cta-card .lp-btn-amber') as HTMLButtonElement;
+    demoBtn.click();
+    fixture.detectChanges();
+    expect(el.querySelector('app-lead-form')).not.toBeNull();
   });
 });

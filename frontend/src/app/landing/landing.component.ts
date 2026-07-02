@@ -1,7 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
 import { TranslatePipe } from '@ngx-translate/core';
+import { LeadFormComponent } from './lead-form.component';
 
 /**
  * Soundcheck marketing landing page (EL-075) — the branded front door prospects
@@ -21,13 +22,22 @@ import { TranslatePipe } from '@ngx-translate/core';
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [RouterLink, TranslatePipe],
+  imports: [RouterLink, TranslatePipe, LeadFormComponent],
   templateUrl: './landing.component.html',
   styleUrl: './landing.component.css',
 })
 export class LandingComponent {
   /** Every primary CTA points at the sign-in / onboarding route. */
   readonly signInRoute = '/login';
+
+  /** Demo/contact form reveal (the CTA-band buttons open it). */
+  readonly showForm = signal(false);
+
+  openLeadForm(): void {
+    this.showForm.set(true);
+    // Let the @if render, then bring the form into view.
+    setTimeout(() => document.getElementById('lead-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 0);
+  }
 
   /** How-it-works steps — i18n under landing.how.<key>.{t,d}. */
   readonly steps = ['s1', 's2', 's3'] as const;
