@@ -52,4 +52,17 @@ describe('LanguageService', () => {
     TestBed.tick();
     expect(localStorage.getItem('lang')).toBe('en');
   });
+
+  // EL-074: the TC type-floor CSS is scoped to `html[lang|="zh"]`, so the
+  // service must mirror the active language onto <html lang> for it to engage
+  // (and for assistive tech to announce the right language).
+  it('mirrors the active language onto <html lang>', () => {
+    const svc = make();
+    TestBed.tick();
+    expect(document.documentElement.lang).toBe('en');
+
+    svc.setLanguage('zh-TW');
+    TestBed.tick();
+    expect(document.documentElement.lang).toBe('zh-TW');
+  });
 });

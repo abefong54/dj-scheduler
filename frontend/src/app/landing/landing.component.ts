@@ -1,7 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
 import { TranslatePipe } from '@ngx-translate/core';
+import { LeadFormComponent } from './lead-form.component';
 
 /**
  * Soundcheck marketing landing page (EL-075) — the branded front door prospects
@@ -21,13 +22,26 @@ import { TranslatePipe } from '@ngx-translate/core';
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [RouterLink, TranslatePipe],
+  imports: [RouterLink, TranslatePipe, LeadFormComponent],
   templateUrl: './landing.component.html',
   styleUrl: './landing.component.css',
 })
 export class LandingComponent {
   /** Every primary CTA points at the sign-in / onboarding route. */
   readonly signInRoute = '/login';
+
+  /** Demo/contact form reveal (the CTA-band buttons open it). */
+  readonly showForm = signal(false);
+
+  openLeadForm(): void {
+    this.showForm.set(true);
+    // Let the @if render, then bring the form into view.
+    setTimeout(() => {
+      const section = document.getElementById('lead-form');
+      section?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      section?.querySelector<HTMLInputElement>('input')?.focus();
+    }, 0);
+  }
 
   /** How-it-works steps — i18n under landing.how.<key>.{t,d}. */
   readonly steps = ['s1', 's2', 's3'] as const;
@@ -53,12 +67,16 @@ export class LandingComponent {
     { name: 'Aria Chen', cjk: '陳雅', level: 'Level 1', credits: '3', certs: '1 / 3', tone: 'blocked' },
   ] as const;
 
-  /** Stats band — value is sample data; caption is i18n under landing.stats.<key>. */
+  /**
+   * Stats band — qualitative capability copy, NOT metrics. We deliberately do
+   * not ship invented numbers on a public page (EL-075 G4); real pilot figures
+   * can replace these once they exist. Caption is i18n under landing.stats.<key>.
+   */
   readonly stats = [
-    { key: 's1', value: '1,200+', accent: 'amber' },
-    { key: 's2', value: '340', accent: 'cyan' },
-    { key: 's3', value: '86%', accent: 'green' },
-    { key: 's4', value: '3', accent: 'amber' },
+    { key: 's1', value: 'Every set', accent: 'amber' },
+    { key: 's2', value: 'Certified', accent: 'cyan' },
+    { key: 's3', value: 'Gated', accent: 'green' },
+    { key: 's4', value: 'Real gigs', accent: 'amber' },
   ] as const;
 
   /** Footer link columns — labels/links i18n under landing.footer.<col>.{title,<n>}. */

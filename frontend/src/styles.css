@@ -54,10 +54,18 @@
   --space-5: 24px;
   --space-6: 32px;
 
-  /* Type families */
-  --font-display: 'Space Grotesk', system-ui, sans-serif;
-  --font-body: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+  /* Type families.
+     EL-074: 'Noto Sans TC' is appended AFTER the Latin faces in every Console
+     stack so Traditional Chinese has real coverage. The live components read
+     these Console tokens (body/buttons via --font-body, status pills + mono
+     labels via --font-mono, headings via --font-display) — before this, TC
+     codepoints fell through to a system CJK face and the Noto webfont never
+     loaded. Latin faces stay first, so Latin (Inter/Space Grotesk/JetBrains)
+     rendering is unchanged; only CJK codepoints resolve to Noto Sans TC. */
+  --font-display: 'Space Grotesk', 'Noto Sans TC', system-ui, sans-serif;
+  --font-body: 'Inter', 'Noto Sans TC', system-ui, sans-serif;
+  --font-mono:
+    'JetBrains Mono', ui-monospace, 'SFMono-Regular', 'Noto Sans TC', monospace;
 }
 
 @layer base {
@@ -76,12 +84,13 @@
   .page { @apply max-w-4xl mx-auto px-6 py-8; }
   .page-sm { @apply max-w-2xl mx-auto px-6 py-8; }
   .page-header { @apply flex items-center justify-between mb-6; }
-  .page-title { @apply text-2xl font-semibold text-gray-900; }
-  .section-title { @apply text-lg font-semibold text-gray-900; }
-  .back-link { @apply text-violet-600 hover:text-violet-700 text-sm font-medium; }
+  .page-title { @apply text-2xl font-semibold; color: var(--ink); }
+  .section-title { @apply text-lg font-semibold; color: var(--ink); }
+  .back-link { @apply text-sm font-medium; color: var(--violet); }
+  .back-link:hover { color: var(--violet-deep); }
 
   /* Card */
-  .card { @apply bg-white border border-gray-200 rounded-lg; }
+  .card { @apply border rounded-lg; background: var(--card); border-color: var(--border); }
   .card-body { @apply p-6; }
   .card-header { @apply flex items-center justify-between mb-4; }
 
@@ -112,19 +121,20 @@
 
   /* Modals */
   .modal-overlay { @apply fixed inset-0 z-50 flex items-center justify-center bg-black/40; }
-  .modal-box-md { @apply bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4; }
-  .modal-box-sm { @apply bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4; }
-  .modal-title { @apply text-lg font-semibold text-gray-900 mb-4; }
+  .modal-box-md { @apply rounded-xl shadow-xl p-6 w-full max-w-md mx-4; background: var(--card); }
+  .modal-box-sm { @apply rounded-xl shadow-xl p-6 w-full max-w-sm mx-4; background: var(--card); }
+  .modal-title { @apply text-lg font-semibold mb-4; color: var(--ink); }
   .modal-actions { @apply flex gap-3 mt-5; }
 
   /* Tabs */
-  .tabs { @apply flex gap-1 border-b border-gray-200; }
+  .tabs { @apply flex gap-1 border-b; border-color: var(--border); }
   .tab-btn { @apply pb-2 px-1 text-sm font-medium border-b-2 transition-colors; }
-  .tab-active { @apply border-violet-600 text-violet-600; }
-  .tab-inactive { @apply border-transparent text-gray-500 hover:text-gray-700; }
+  .tab-active { border-color: var(--violet); color: var(--violet); }
+  .tab-inactive { @apply border-transparent; color: var(--muted); }
+  .tab-inactive:hover { color: var(--ink); }
 
   /* Empty state */
-  .empty-state { @apply text-gray-500 text-sm py-8 text-center; }
+  .empty-state { @apply text-sm py-8 text-center; color: var(--muted); }
 }
 
 /* ── Event detail / slots table ───────────────────────────────────────────
@@ -274,7 +284,7 @@
   /* Stage modal color swatches */
   .color-swatches { @apply flex gap-2 flex-wrap; }
   .color-swatch { @apply w-7 h-7 rounded-full border-2 transition-all; }
-  .swatch-active { @apply border-gray-900; }
+  .swatch-active { border-color: var(--ink); }
   .swatch-inactive { @apply border-transparent; }
 
   /* Slot notes column */
@@ -355,12 +365,12 @@
   .slot-form { @apply bg-white border border-gray-200 rounded-lg p-6 space-y-4; }
 
   /* DJ roster — djs.component */
-  .genre-tag { @apply inline-block bg-violet-50 text-violet-700 px-2 py-0.5 rounded-full text-xs mr-1 mb-1; }
+  .genre-tag { @apply inline-block px-2 py-0.5 rounded-full text-xs mr-1 mb-1; background: rgba(124, 58, 237, 0.08); color: var(--violet); }
 
   /* Confirm dialog — dialog.component */
-  .dialog-box { @apply bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4; }
-  .dialog-title { @apply text-base font-semibold text-gray-900 mb-2; }
-  .dialog-message { @apply text-sm text-gray-600 mb-5 leading-relaxed; }
+  .dialog-box { @apply rounded-xl shadow-xl p-6 w-full max-w-sm mx-4; background: var(--card); }
+  .dialog-title { @apply text-base font-semibold mb-2; color: var(--ink); }
+  .dialog-message { @apply text-sm mb-5 leading-relaxed; color: var(--muted); }
   .dialog-actions { @apply flex justify-end gap-3; }
 
   /* Shared data table — data-table.component */
@@ -731,6 +741,62 @@
   --sc-text-muted: #5b6472;        /* muted text tuned for white bg */
   /* --sc-primary stays Cue Amber but is used as a fill; text on white must be
      `--sc-on-primary` (dark) sitting on the amber, never amber text on white. */
+}
+
+/* ── EL-074 Traditional-Chinese type floor ────────────────────────────────
+   Han (Traditional Chinese, Taiwan) glyphs are denser and near-square than
+   Latin — more stroke detail per em — so they need a higher size floor, more
+   leading, and more room in status pills that were sized for short Latin
+   words. These rules encode the EL-070 type-floor recommendation:
+     • TC body min ~15px (Latin body ~14px), line-height ~1.7
+     • Any TC UI text ≥ 13px absolute floor (11px captions are illegible in TC)
+     • Status pills ~30–32px tall, ≥6px/12px padding, ≥64px min-width for TC
+     • Never apply letter-spacing/tracking or uppercase transforms to Han
+
+   SCOPE: everything here is gated on `html[lang|="zh"]`. LanguageService
+   mirrors the active ngx-translate language onto <html lang> (e.g. "zh-TW"),
+   so these rules engage ONLY for Traditional Chinese and leave the compact
+   Latin layout untouched. The `[lang|="zh"]` prefix (+ a class/`:is()`) keeps
+   specificity one notch above the base rules so the floor wins cleanly.
+
+   NOTE: this ticket validates TYPE + LAYOUT only. The production TC *wording*
+   is still under native review (EL-070) — no shipping TC copy lives here. */
+[lang|='zh'] body {
+  font-size: 15px;   /* TC body floor (Latin body ~14px) */
+  line-height: 1.7;  /* dense square glyphs need more vertical air */
+}
+
+/* Status pill (StatusBadgeComponent) — TC variant. Latin keeps its compact
+   11px uppercase lozenge; TC gets the 13px floor, zero tracking, no uppercase,
+   and a box big enough that 3–4 full-width glyphs (e.g. 已認證 / 尚未認證) sit
+   centred without clipping. */
+[lang|='zh'] .status-badge {
+  font-size: 13px;        /* TC floor (Latin 11px) */
+  line-height: 1.5;
+  letter-spacing: 0;      /* never track Han glyphs */
+  text-transform: none;   /* no uppercase transform on TC (protects EN+TC) */
+  min-height: 30px;       /* ≈ 13 × 1.5 + 2 × 6 → ~30–32px pill height */
+  min-width: 64px;        /* short labels keep a proper pill, not a lozenge */
+  padding: 6px 12px;      /* 6px vertical / 12px horizontal */
+}
+
+/* Sub-floor mono caption / label primitives: Latin renders these at 11px with
+   letter-spacing; for TC lift them to the 13px caption floor and drop the
+   tracking + uppercase (both hostile to Han legibility). `:is()` keeps
+   specificity at a single class, so `[lang|="zh"]` + `:is()` still beats the
+   base rule. */
+[lang|='zh']
+  :is(
+    .mono-label,
+    .table-header,
+    .stat-tile-caption,
+    .slot-th,
+    .shell-breadcrumb,
+    .genre-pill
+  ) {
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 /* ── EL-078 THE FLIP — Soundcheck is now the app's active default ──────────────
