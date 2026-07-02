@@ -3,6 +3,7 @@
   "nav.djs": "DJs",
   "nav.signOut": "Sign out",
   "nav.signIn": "Sign in",
+  "nav.bookDemo": "Book a demo",
 
   "shell.workspace": "The Booth",
   "shell.nav.events": "Events",

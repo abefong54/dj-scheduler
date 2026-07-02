@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { provideTranslateService } from '@ngx-translate/core';
 import { signal } from '@angular/core';
 
@@ -58,5 +58,58 @@ describe('AppComponent top bar', () => {
     // finalized logo asset (EL-071).
     expect(brand?.querySelector('svg.shell-vu')).toBeTruthy();
     expect(brand?.querySelectorAll('.shell-vu-bar').length).toBe(3);
+  });
+
+  describe('nav "Book a demo" button (landing-only)', () => {
+    async function buildWithRouter(authed: boolean): Promise<{ fixture: ComponentFixture<AppComponent>; router: Router }> {
+      isAuthenticated = signal(authed);
+      await TestBed.configureTestingModule({
+        imports: [AppComponent],
+        providers: [
+          provideRouter([
+            { path: '', children: [] },
+            { path: 'login', children: [] },
+          ]),
+          provideTranslateService(),
+          {
+            provide: AuthService,
+            useValue: {
+              isAuthenticated,
+              signOut: vi.fn(),
+              signInWithGoogle: vi.fn(),
+              token: signal<string | null>(null),
+            },
+          },
+        ],
+      }).compileComponents();
+      const fixture = TestBed.createComponent(AppComponent);
+      const router = TestBed.inject(Router);
+      fixture.detectChanges();
+      return { fixture, router };
+    }
+
+    it('shows the Book a demo button on the landing route (/)', async () => {
+      const { fixture, router } = await buildWithRouter(false);
+      await router.navigate(['/']);
+      fixture.detectChanges();
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('[data-testid="nav-book-demo"]')).toBeTruthy();
+    });
+
+    it('does not show the Book a demo button on a non-landing route (/login)', async () => {
+      const { fixture, router } = await buildWithRouter(false);
+      await router.navigate(['/login']);
+      fixture.detectChanges();
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('[data-testid="nav-book-demo"]')).toBeNull();
+    });
+
+    it('Sign in link still renders when unauthenticated on any route', async () => {
+      const { fixture, router } = await buildWithRouter(false);
+      await router.navigate(['/login']);
+      fixture.detectChanges();
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('[data-testid="signin"]')).toBeTruthy();
+    });
   });
 });
