@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { provideTranslateService } from '@ngx-translate/core';
 import { vi } from 'vitest';
 
@@ -190,5 +190,54 @@ describe('EventsListComponent — Console restyle (EL-064)', () => {
     expect(root().querySelector('[data-testid="event-edit-evt-past"]')).toBeTruthy();
     expect(root().querySelector('[data-testid="event-clone-evt-past"]')).toBeTruthy();
     expect(root().querySelector('[data-testid="event-delete-evt-past"]')).toBeFalsy();
+  });
+});
+
+// EL-087: representative per-surface loading-state coverage. The gate pattern
+// (loading signal + @if meter / @else if retry / @else content) is identical
+// across every wired surface.
+describe('EventsListComponent — loading state (EL-087)', () => {
+  const setup = (getEvents: () => import('rxjs').Observable<Event[]>) => {
+    TestBed.configureTestingModule({
+      imports: [EventsListComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: { getEvents } },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+      ],
+    });
+    const fixture = TestBed.createComponent(EventsListComponent);
+    fixture.detectChanges();
+    return fixture;
+  };
+
+  it('shows the VU-meter while loading, then the content', () => {
+    const subject = new Subject<Event[]>();
+    const fixture = setup(() => subject.asObservable());
+    const el = fixture.nativeElement as HTMLElement;
+
+    expect(el.querySelector('app-loading-meter')).toBeTruthy();
+    expect(el.querySelector('.events-table')).toBeFalsy();
+
+    // FUTURE_EVENT is upcoming vs. the real clock, so it lands on the default tab.
+    subject.next([FUTURE_EVENT]);
+    subject.complete();
+    fixture.detectChanges();
+
+    expect(el.querySelector('app-loading-meter')).toBeFalsy();
+    expect(el.querySelector('.events-table')).toBeTruthy();
+  });
+
+  it('shows a retry fallback when the load fails', () => {
+    const subject = new Subject<Event[]>();
+    const fixture = setup(() => subject.asObservable());
+    const el = fixture.nativeElement as HTMLElement;
+
+    subject.error(new Error('boom'));
+    fixture.detectChanges();
+
+    expect(el.querySelector('app-loading-meter')).toBeFalsy();
+    expect(el.querySelector('button.btn-primary')?.textContent).toContain('common.retry');
   });
 });

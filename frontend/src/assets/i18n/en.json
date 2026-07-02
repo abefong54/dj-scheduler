@@ -1,4 +1,7 @@
 {
+  "common.loading": "Loading…",
+  "common.loadError": "Couldn't load. Please try again.",
+  "common.retry": "Retry",
   "nav.events": "Events",
   "nav.djs": "DJs",
   "nav.signOut": "Sign out",

@@ -6,7 +6,7 @@
 <div class="min-h-screen flex flex-col items-center px-4 py-8" style="background: var(--surface)">
 
   @if (loading()) {
-    <p class="py-24" style="color: var(--muted)">…</p>
+    <div class="flex justify-center py-24"><app-loading-meter [label]="'common.loading' | translate" /></div>
   } @else if (notFound()) {
     <div class="text-center py-24">
       <p class="text-lg font-medium" style="color: var(--ink)">{{ 'card.notFound' | translate }}</p>

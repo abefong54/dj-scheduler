@@ -10,6 +10,7 @@ import { ColumnDefDirective } from '../../shared/column-def.directive';
 import { ButtonComponent } from '../../shared/button.component';
 import { AdminShellComponent } from '../../shared/admin-shell.component';
 import { StatusBadgeComponent } from '../../shared/status-badge.component';
+import { LoadingMeterComponent } from '../../shared/loading-meter.component';
 
 // CERT_OPTIONS are the school's standard curriculum genres (EL-020). DJs can
 // also have custom (free-text) certifications beyond this list.
@@ -18,7 +19,7 @@ export const CERT_OPTIONS = ['House', 'Hip Hop', 'Pop', 'Techno', 'Trance', 'Dru
 @Component({
   selector: 'app-djs',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, DataTableComponent, ColumnDefDirective, ButtonComponent, AdminShellComponent, StatusBadgeComponent],
+  imports: [FormsModule, TranslatePipe, DataTableComponent, ColumnDefDirective, ButtonComponent, AdminShellComponent, StatusBadgeComponent, LoadingMeterComponent],
   templateUrl: './djs.component.html',
   styleUrl: './djs.component.css',
 })
@@ -29,6 +30,8 @@ export class DjsComponent implements OnDestroy {
   private langService = inject(LanguageService);
 
   djs = signal<DJ[]>([]);
+  loading = signal(true);
+  loadError = signal(false);
   newDJ = signal({ name: '' });
   newDJGenres = signal('');
   // ID of the DJ whose portal link was just copied (drives the "Copied!" flash).
@@ -50,9 +53,24 @@ export class DjsComponent implements OnDestroy {
   }
 
   private loadDJs() {
+    this.loading.set(true);
+    this.loadError.set(false);
     this.subscriptions.push(
-      this.api.getDJs().subscribe(djs => this.djs.set(djs))
+      this.api.getDJs().subscribe({
+        next: djs => {
+          this.djs.set(djs);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.loadError.set(true);
+          this.loading.set(false);
+        },
+      })
     );
+  }
+
+  retry() {
+    this.loadDJs();
   }
 
   // Convert DJ[] to Record<string, unknown>[] for DataTableComponent

@@ -1,4 +1,7 @@
 {
+  "common.loading": "載入中…",
+  "common.loadError": "載入失敗，請再試一次。",
+  "common.retry": "重試",
   "nav.events": "活動",
   "nav.djs": "DJ",
   "nav.signOut": "登出",

@@ -5,11 +5,12 @@ import { LanguageService } from './services/language.service';
 import { AuthService } from './services/auth.service';
 import { ThemeService } from './services/theme.service';
 import { DialogComponent } from './shared/dialog.component';
+import { GlobalLoadingComponent } from './shared/global-loading.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, TranslatePipe, DialogComponent],
+  imports: [RouterOutlet, RouterLink, TranslatePipe, DialogComponent, GlobalLoadingComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })

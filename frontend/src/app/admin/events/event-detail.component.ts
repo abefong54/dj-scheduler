@@ -9,6 +9,7 @@ import { ScheduleExportService } from '../../services/schedule-export.service';
 import { slotDurationMins } from '../../shared/slot-time.util';
 import { parseLocalDate } from '../../shared/date.util';
 import { AdminShellComponent } from '../../shared/admin-shell.component';
+import { LoadingMeterComponent } from '../../shared/loading-meter.component';
 import { StatusBadgeComponent } from '../../shared/status-badge.component';
 import { ButtonComponent } from '../../shared/button.component';
 import { TableSort } from '../../shared/table-sort';
@@ -16,7 +17,7 @@ import { TableSort } from '../../shared/table-sort';
 @Component({
   selector: 'app-event-detail',
   standalone: true,
-  imports: [FormsModule, RouterLink, TranslatePipe, AdminShellComponent, StatusBadgeComponent, ButtonComponent],
+  imports: [FormsModule, RouterLink, TranslatePipe, AdminShellComponent, StatusBadgeComponent, ButtonComponent, LoadingMeterComponent],
   templateUrl: './event-detail.component.html',
   styleUrl: './event-detail.component.css',
 })
@@ -28,6 +29,8 @@ export class EventDetailComponent implements OnDestroy {
   private exporter = inject(ScheduleExportService);
 
   event = signal<Event | null>(null);
+  loading = signal(true);
+  loadError = signal(false);
   stages = signal<Stage[]>([]);
   slots = signal<Slot[]>([]);
   djs = signal<DJ[]>([]);
@@ -198,16 +201,30 @@ export class EventDetailComponent implements OnDestroy {
 
   private loadData() {
     const eventId = this.route.snapshot.paramMap.get('id')!;
+    this.loading.set(true);
+    this.loadError.set(false);
 
     this.subscriptions.push(
-      this.api.getEvent(eventId).subscribe(e => {
-        this.event.set(e);
-        if (this.selectedDate() === '') this.selectedDate.set(e.start_date);
+      // getEvent is the primary payload — it drives the loading/error gate.
+      this.api.getEvent(eventId).subscribe({
+        next: e => {
+          this.event.set(e);
+          if (this.selectedDate() === '') this.selectedDate.set(e.start_date);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.loadError.set(true);
+          this.loading.set(false);
+        },
       }),
       this.api.getStages(eventId).subscribe(s => this.stages.set(s)),
       this.api.getSlots(eventId).subscribe(s => this.slots.set(s)),
       this.api.getDJs().subscribe(d => this.djs.set(d)),
     );
+  }
+
+  retry() {
+    this.loadData();
   }
 
   private stageMap = computed(() =>
