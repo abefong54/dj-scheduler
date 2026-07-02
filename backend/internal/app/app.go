@@ -11,6 +11,7 @@ import (
 	authuc "eventlineup/internal/usecase/auth"
 	djuc "eventlineup/internal/usecase/dj"
 	eventuc "eventlineup/internal/usecase/event"
+	leaduc "eventlineup/internal/usecase/lead"
 	linenotifyuc "eventlineup/internal/usecase/linenotify"
 	perfuc "eventlineup/internal/usecase/performance"
 	slotuc "eventlineup/internal/usecase/slot"
@@ -56,6 +57,8 @@ func Run() {
 	slotHandler := httphandler.NewSlotHandler(slotUC)
 	lineHandler := httphandler.NewLineHandler(linenotifyuc.New(eventRepo, cfg.LineNotifyEncryptionKey))
 	perfHandler := httphandler.NewPerformanceHandler(perfuc.New(perfRepo))
+	leadRepo := database.NewLeadRepository(pool)
+	leadHandler := httphandler.NewLeadHandler(leaduc.New(leadRepo))
 	publicHandler := httphandler.NewPublicHandler(eventuc.New(eventRepo), stageuc.New(stageRepo), slotuc.New(slotRepo))
 	shareHandler := httphandler.NewShareHandler(slotuc.New(slotRepo), eventuc.New(eventRepo), cfg.FrontendURL)
 
@@ -63,7 +66,7 @@ func Run() {
 	googleAuth := googleauth.New(cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL)
 	authHandler := httphandler.NewAuthHandler(authuc.New(googleAuth, organizerRepo, cfg.JWTSecret, tokenTTL), cfg.FrontendURL, cfg.SecureCookies)
 
-	r := httphandler.NewRouter(cfg.FrontendURL, cfg.JWTSecret, publicHandler, shareHandler, djPortalHandler, djHandler, eventHandler, stageHandler, slotHandler, lineHandler, perfHandler)
+	r := httphandler.NewRouter(cfg.FrontendURL, cfg.JWTSecret, publicHandler, shareHandler, djPortalHandler, djHandler, eventHandler, stageHandler, slotHandler, lineHandler, perfHandler, leadHandler)
 	authHandler.Register(r) // unauthenticated auth routes
 
 	log.Printf("listening on :%s", cfg.Port)

@@ -1,0 +1,29 @@
+/* EL-081 records reskin — plain, token-driven CSS (NOT @apply; enforced by
+   stylelint). View-encapsulated to the performance dashboard, so these only
+   re-point the shared `.card` / `.section-title` primitives to the Soundcheck
+   dark-booth tokens on THIS surface (styles.css is left to the parallel reskin
+   agents). Stat tiles, mono labels and the DataTable already read tokens. */
+
+/* Callout / drill-in cards → Console Slate surface + hairline border. */
+.card {
+  background: var(--card);
+  border-color: var(--border);
+}
+
+/* Section headings default to text-gray-900 (invisible on the dark card). */
+.section-title {
+  color: var(--ink);
+}
+
+/* Under-served (fairness) signal — kept clearly legible on the dark palette:
+   a warning-amber-tinted row + bright amber dot. The DJ name and reps count
+   carry the meaning too, so the signal never rides on colour alone. The tint
+   rgba matches the Pending amber (--warning ≈ #f5b544 in booth mode); the dot
+   fill reads straight from the token. */
+.underserved-row {
+  background: rgba(245, 181, 68, 0.14);
+  border: 1px solid rgba(245, 181, 68, 0.28);
+}
+.underserved-dot {
+  background: var(--warning);
+}

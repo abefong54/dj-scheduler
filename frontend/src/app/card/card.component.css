@@ -9,17 +9,22 @@
 }
 
 .card {
-  /* Default (violet/lime) theme. EL-052 overrides these vars per genre. */
-  --ground: #eceaf9;
-  --ink: #1a1726;
-  --muted: #8e88a8;
-  --name: #6d28d9;
-  --accent: #bff026;
-  --accent-ink: #1a1726;
-  --panel-from: #6d28d9;
-  --panel-to: #3b2197;
-  --genre: #bff026;
-  --panel-ink: #ffffff;
+  /* Default (Soundcheck) theme — EL-082 reconciles the card with the Soundcheck
+     palette: a warm screenprint paper ground, Booth Black headline, Cue Amber
+     echo/pill/accent, and a dark "booth" gradient panel (Console Slate → Booth
+     Black) with an amber genre headline. The ground stays LIGHT on purpose so
+     the analog-grain multiply overlay and the html-to-image PNG export (EL-053)
+     render exactly as before. EL-052 overrides only the accent hue per genre. */
+  --ground: #f4f1ea;       /* warm screenprint paper */
+  --ink: #14121c;          /* headline/body ink on paper */
+  --muted: #6b6673;        /* captions, venue, footer */
+  --name: #0b0d10;         /* Booth Black headline */
+  --accent: #ff9e2c;       /* Cue Amber — echo, pill, lockup chip */
+  --accent-ink: #0b0d10;   /* dark ink sitting ON the amber */
+  --panel-from: #171b21;   /* Console Slate */
+  --panel-to: #0b0d10;     /* Booth Black */
+  --genre: #ff9e2c;        /* Cue Amber genre headline on the booth panel */
+  --panel-ink: #e6eaf0;    /* light label text on the dark panel */
 
   position: relative;
   width: 100%;
@@ -242,45 +247,38 @@
   color: var(--muted);
 }
 
-/* Genre-themed palettes (EL-052). Each overrides only the brand colour vars;
-   layout is unchanged. Keyed by genreTheme() in genre-theme.ts. The default
-   (violet/lime) is the base .card rule above. */
+/* Genre-themed palettes (EL-052), reconciled with Soundcheck in EL-082. Each
+   genre now rides the SAME booth composition as the default (Booth Black
+   headline + dark "booth" gradient panel, inherited from the base .card rule)
+   and differentiates only by its accent hue — the echo, stage pill, lockup chip
+   and the big panel genre headline. This keeps genre identity while sitting all
+   the cards on one coherent Soundcheck backdrop instead of clashing with the
+   amber/cyan brand. Keyed by genreTheme() in genre-theme.ts; the mapping logic
+   (and its tests) is unchanged. Grounds stay light so the PNG export is safe. */
 .card.theme-house {
-  --ground: #e7f5ea;
-  --name: #15803d;
-  --accent: #c4f24d;
-  --accent-ink: #13311e;
-  --panel-from: #16a34a;
-  --panel-to: #0a4d2e;
-  --genre: #e3ff8a;
+  --ground: #eaf3ee;       /* green-tinted paper */
+  --accent: #34d399;       /* Cleared green */
+  --accent-ink: #06251a;
+  --genre: #34d399;
 }
 
 .card.theme-techno {
-  --ground: #e6eef2;
-  --name: #0e7490;
-  --accent: #34e0e0;
-  --accent-ink: #06282e;
-  --panel-from: #0e7490;
-  --panel-to: #0a2540;
-  --genre: #7df0f5;
+  --ground: #e9f2f4;       /* cyan-tinted paper */
+  --accent: #22d3ee;       /* Deck Cyan — a native Soundcheck accent */
+  --accent-ink: #052a30;
+  --genre: #22d3ee;
 }
 
 .card.theme-hiphop {
-  --ground: #f4ece4;
-  --name: #6d28d9;
-  --accent: #fb8c2e;
+  --ground: #f5efe8;       /* warm paper */
+  --accent: #fb7a2e;       /* hot orange, in the Cue Amber warm family */
   --accent-ink: #2a1206;
-  --panel-from: #7c3aed;
-  --panel-to: #9a3412;
-  --genre: #ffb86b;
+  --genre: #fb7a2e;
 }
 
 .card.theme-soul {
-  --ground: #e8edfa;
-  --name: #1d4ed8;
-  --accent: #c4f24d;
-  --accent-ink: #0b1b40;
-  --panel-from: #2563eb;
-  --panel-to: #1a2a7a;
-  --genre: #e3ff8a;
+  --ground: #eaeef8;       /* blue-tinted paper */
+  --accent: #6a9bff;       /* electric blue */
+  --accent-ink: #0a1a3d;
+  --genre: #6a9bff;
 }

@@ -2,7 +2,7 @@
 -- Scope events and djs to an organizer. Non-destructive: existing rows are
 -- backfilled to a synthetic "legacy" organizer before NOT NULL is enforced, so
 -- pre-auth data is preserved rather than dropped.
-
+-- +goose Up
 -- 1. Add the column nullable so existing rows survive.
 ALTER TABLE events ADD COLUMN IF NOT EXISTS organizer_id UUID REFERENCES organizers(id);
 ALTER TABLE djs   ADD COLUMN IF NOT EXISTS organizer_id UUID REFERENCES organizers(id);
@@ -27,3 +27,14 @@ ALTER TABLE djs   ALTER COLUMN organizer_id SET NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_events_organizer ON events(organizer_id);
 CREATE INDEX IF NOT EXISTS idx_djs_organizer    ON djs(organizer_id);
+
+-- +goose Down
+-- Dropping the columns removes their FK constraints and organizer indexes. The
+-- backfill (which rows were originally unscoped) is not recoverable, but that
+-- information is discarded with the column anyway. Remove the synthetic legacy
+-- organizer created above so the down is a clean reversal.
+DROP INDEX IF EXISTS idx_djs_organizer;
+DROP INDEX IF EXISTS idx_events_organizer;
+ALTER TABLE djs   DROP COLUMN IF EXISTS organizer_id;
+ALTER TABLE events DROP COLUMN IF EXISTS organizer_id;
+DELETE FROM organizers WHERE google_id = 'legacy-pre-auth';

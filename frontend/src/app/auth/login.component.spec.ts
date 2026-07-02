@@ -4,7 +4,7 @@ import { provideTranslateService } from '@ngx-translate/core';
 import { LoginComponent } from './login.component';
 import { AuthService } from '../services/auth.service';
 
-describe('LoginComponent (EL-062 restyle)', () => {
+describe('LoginComponent (EL-079 Soundcheck reskin)', () => {
   let signInWithGoogle: ReturnType<typeof vi.fn>;
 
   async function build(): Promise<ComponentFixture<LoginComponent>> {
@@ -21,17 +21,33 @@ describe('LoginComponent (EL-062 restyle)', () => {
     return fixture;
   }
 
-  it('renders the Console dark console card with the EventLineup wordmark', async () => {
+  it('renders the dark-booth card with the Soundcheck wordmark on token surfaces', async () => {
     const fixture = await build();
     const el = fixture.nativeElement as HTMLElement;
 
     const wordmark = el.querySelector('h1');
-    expect(wordmark?.textContent).toContain('EventLineup');
+    expect(wordmark?.textContent).toContain('Soundcheck');
     expect(wordmark?.className).toContain('font-display');
+    // Wordmark uses the semantic ink token (no hard-coded white).
+    expect(wordmark?.getAttribute('style')).toContain('var(--ink)');
 
-    // Dark, full-height field with the violet void gradient.
+    // Full-height field sits on the Soundcheck Booth Black canvas token.
     const section = el.querySelector('section');
-    expect(section?.getAttribute('style')).toContain('var(--void)');
+    expect(section?.getAttribute('style')).toContain('var(--surface)');
+
+    // Card is the raised Console Slate surface, bordered with the token hairline.
+    const card = section?.querySelector('div');
+    expect(card?.getAttribute('style')).toContain('var(--card)');
+    expect(card?.getAttribute('style')).toContain('var(--border)');
+  });
+
+  it('styles the Google action with the shared Cue-Amber .btn-primary', async () => {
+    const fixture = await build();
+    const el = fixture.nativeElement as HTMLElement;
+
+    const googleBtn = el.querySelector<HTMLButtonElement>('[data-testid="google-signin"]');
+    expect(googleBtn?.className).toContain('btn');
+    expect(googleBtn?.className).toContain('btn-primary');
   });
 
   it('keeps Google OAuth as the working primary action', async () => {

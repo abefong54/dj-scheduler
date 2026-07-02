@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="Cleared">
+  <title>Waveform-check (filled / Cleared)</title>
+  <!-- EL-073 domain icon. Filled = active/status. Cleared green #34D399 is
+       status-semantic (colour carries meaning), so it is baked in here.
+       Bars trace the checkmark, consistent with the EL-071 mark. Pair with a
+       text label per the design system (status is never colour-alone). -->
+  <g fill="#34D399">
+    <rect x="3"  y="13" width="4" height="6"  rx="2"/>
+    <rect x="8"  y="15" width="4" height="4"  rx="2"/>
+    <rect x="13" y="9"  width="4" height="10" rx="2"/>
+    <rect x="18" y="4"  width="4" height="15" rx="2"/>
+  </g>
+</svg>

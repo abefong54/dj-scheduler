@@ -245,6 +245,12 @@ const (
 		WHERE sl.id = $1 AND sl.event_id = $2
 		  AND e.id = sl.event_id AND e.organizer_id = $3`
 
+	// Lead queries (EL-084). Public route — no organizer scoping.
+	queryLeadInsert = `
+		INSERT INTO leads (name, organization, email, message, source)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id, name, organization, email, message, source, created_at::text`
+
 	// Organizer queries
 	queryOrganizerFindByGoogleID = `
 		SELECT id, email, name, google_id, created_at::text

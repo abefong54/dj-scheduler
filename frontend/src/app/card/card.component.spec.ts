@@ -125,7 +125,9 @@ describe('CardComponent (EL-049)', () => {
 
   it('copies the share link to the clipboard and flags copied', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.assign(navigator, { clipboard: { writeText } });
+    // navigator.clipboard is a read-only property in some environments (e.g. CI),
+    // so Object.assign throws — defineProperty overrides it regardless.
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
     const { component } = await build();
     await component.copyLink();
     expect(writeText).toHaveBeenCalledTimes(1);

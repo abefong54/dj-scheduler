@@ -1,4 +1,4 @@
-# EventLineup Frontend
+# Soundcheck Frontend
 
 A modern Angular application for managing event schedules, DJs, and stages using Angular Signals for reactive state management.
 
@@ -389,4 +389,4 @@ effect(() => {
 
 ## 📝 License
 
-Part of the EventLineup project.
+Part of the Soundcheck project.

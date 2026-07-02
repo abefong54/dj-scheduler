@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="Waveform check">
+  <title>Waveform-check (line)</title>
+  <!-- EL-073 domain icon. Equalizer bars whose tops trace a checkmark
+       (short dip, long climb) — the EL-071 mark concept as a line glyph.
+       currentColor so it inherits the token colour in use. -->
+  <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+    <line x1="4.5"  y1="19" x2="4.5"  y2="14"/>
+    <line x1="9.5"  y1="19" x2="9.5"  y2="16"/>
+    <line x1="14.5" y1="19" x2="14.5" y2="10"/>
+    <line x1="19.5" y1="19" x2="19.5" y2="5"/>
+  </g>
+</svg>

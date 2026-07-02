@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="Certificate">
+  <title>Certificate badge (line)</title>
+  <!-- EL-073 domain icon. A seal with ribbon tails and an inner check — the
+       "certified" credential, tying to the waveform-check theme.
+       currentColor for reuse. -->
+  <g fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.2 13.8 L7.4 21 L9.9 19.3"/>
+    <path d="M14.8 13.8 L16.6 21 L14.1 19.3"/>
+    <circle cx="12" cy="9" r="6"/>
+    <path d="M9.2 9.1 L10.9 11 L15.2 6.6"/>
+  </g>
+</svg>

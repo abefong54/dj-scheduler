@@ -3,12 +3,14 @@ package handler
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
+	"eventlineup/internal/interfaces/http/middleware"
 	authuc "eventlineup/internal/usecase/auth"
 )
 
@@ -70,6 +72,16 @@ func (h *AuthHandler) callback(c *gin.Context) {
 	cookieState, _ := c.Cookie(oauthStateCookie)
 
 	if code == "" || state == "" || cookieState == "" || state != cookieState {
+		// Client gets a generic message; the server log records WHICH precondition
+		// failed (booleans only — no code, state value, or token is ever logged) so
+		// a state-cookie problem can be told apart from a token-exchange one.
+		slog.Warn("oauth callback rejected: state precheck failed",
+			"request_id", middleware.GetRequestID(c),
+			"has_code", code != "",
+			"has_state", state != "",
+			"has_state_cookie", cookieState != "",
+			"state_matches_cookie", state == cookieState,
+		)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "oauth exchange failed"})
 		return
 	}
@@ -79,6 +91,13 @@ func (h *AuthHandler) callback(c *gin.Context) {
 
 	jwt, err := h.uc.HandleCallback(c.Request.Context(), code)
 	if err != nil {
+		// The wrapped error carries Google's real reason (e.g. invalid_client,
+		// invalid_grant). It contains no secret — the client secret and the auth
+		// code are not part of the returned error — so it is safe to log.
+		slog.Error("oauth callback failed: code exchange / userinfo",
+			"request_id", middleware.GetRequestID(c),
+			"err", err,
+		)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "oauth exchange failed"})
 		return
 	}

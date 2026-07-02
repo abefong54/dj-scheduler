@@ -29,7 +29,11 @@ test.describe('console side nav (EL-067)', () => {
 
   test('brand appears once — in the top bar, not the sidebar', async ({ page }) => {
     await page.goto('/admin/events');
-    await expect(page.locator('.navbar-brand')).toHaveText('EventLineup');
+    // EL-078 reskin: brand is now the Soundcheck wordmark ("soundcheck", lowercase)
+    // with an inline amber VU-meter detail, so match the text loosely and assert
+    // the VU glyph is present rather than an exact "EventLineup" string.
+    await expect(page.locator('.navbar-brand')).toContainText('soundcheck');
+    await expect(page.locator('.navbar-brand .shell-vu')).toBeVisible();
     await expect(page.locator('.shell-sidebar .shell-wordmark')).toHaveCount(0);
   });
 });

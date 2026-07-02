@@ -1,4 +1,4 @@
-# EventLineup DJ Scheduler
+# Soundcheck DJ Scheduler
 
 A full-stack application for managing event schedules, DJs, and stages. Features an Angular frontend with signals-based state management and a Go backend with PostgreSQL.
 
@@ -305,7 +305,7 @@ export class MyFeatureComponent {
 
 ## 📄 License
 
-Part of EventLineup project.
+Part of Soundcheck project.
 
 ## 🔗 Useful Links
 

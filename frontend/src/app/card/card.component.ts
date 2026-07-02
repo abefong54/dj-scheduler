@@ -144,7 +144,7 @@ export class CardComponent {
   // Download filename, slugged from the DJ + event so saved cards are findable.
   fileName(): string {
     const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-    return `${slug(this.djName()) || 'set'}-${slug(this.eventName()) || 'eventlineup'}.png`;
+    return `${slug(this.djName()) || 'set'}-${slug(this.eventName()) || 'soundcheck'}.png`;
   }
 
   // Export the card to a PNG for Instagram/feed, where you need an image, not a

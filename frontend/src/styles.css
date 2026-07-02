@@ -54,10 +54,18 @@
   --space-5: 24px;
   --space-6: 32px;
 
-  /* Type families */
-  --font-display: 'Space Grotesk', system-ui, sans-serif;
-  --font-body: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+  /* Type families.
+     EL-074: 'Noto Sans TC' is appended AFTER the Latin faces in every Console
+     stack so Traditional Chinese has real coverage. The live components read
+     these Console tokens (body/buttons via --font-body, status pills + mono
+     labels via --font-mono, headings via --font-display) — before this, TC
+     codepoints fell through to a system CJK face and the Noto webfont never
+     loaded. Latin faces stay first, so Latin (Inter/Space Grotesk/JetBrains)
+     rendering is unchanged; only CJK codepoints resolve to Noto Sans TC. */
+  --font-display: 'Space Grotesk', 'Noto Sans TC', system-ui, sans-serif;
+  --font-body: 'Inter', 'Noto Sans TC', system-ui, sans-serif;
+  --font-mono:
+    'JetBrains Mono', ui-monospace, 'SFMono-Regular', 'Noto Sans TC', monospace;
 }
 
 @layer base {
@@ -76,12 +84,13 @@
   .page { @apply max-w-4xl mx-auto px-6 py-8; }
   .page-sm { @apply max-w-2xl mx-auto px-6 py-8; }
   .page-header { @apply flex items-center justify-between mb-6; }
-  .page-title { @apply text-2xl font-semibold text-gray-900; }
-  .section-title { @apply text-lg font-semibold text-gray-900; }
-  .back-link { @apply text-violet-600 hover:text-violet-700 text-sm font-medium; }
+  .page-title { @apply text-2xl font-semibold; color: var(--ink); }
+  .section-title { @apply text-lg font-semibold; color: var(--ink); }
+  .back-link { @apply text-sm font-medium; color: var(--violet); }
+  .back-link:hover { color: var(--violet-deep); }
 
   /* Card */
-  .card { @apply bg-white border border-gray-200 rounded-lg; }
+  .card { @apply border rounded-lg; background: var(--card); border-color: var(--border); }
   .card-body { @apply p-6; }
   .card-header { @apply flex items-center justify-between mb-4; }
 
@@ -112,19 +121,20 @@
 
   /* Modals */
   .modal-overlay { @apply fixed inset-0 z-50 flex items-center justify-center bg-black/40; }
-  .modal-box-md { @apply bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4; }
-  .modal-box-sm { @apply bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4; }
-  .modal-title { @apply text-lg font-semibold text-gray-900 mb-4; }
+  .modal-box-md { @apply rounded-xl shadow-xl p-6 w-full max-w-md mx-4; background: var(--card); }
+  .modal-box-sm { @apply rounded-xl shadow-xl p-6 w-full max-w-sm mx-4; background: var(--card); }
+  .modal-title { @apply text-lg font-semibold mb-4; color: var(--ink); }
   .modal-actions { @apply flex gap-3 mt-5; }
 
   /* Tabs */
-  .tabs { @apply flex gap-1 border-b border-gray-200; }
+  .tabs { @apply flex gap-1 border-b; border-color: var(--border); }
   .tab-btn { @apply pb-2 px-1 text-sm font-medium border-b-2 transition-colors; }
-  .tab-active { @apply border-violet-600 text-violet-600; }
-  .tab-inactive { @apply border-transparent text-gray-500 hover:text-gray-700; }
+  .tab-active { border-color: var(--violet); color: var(--violet); }
+  .tab-inactive { @apply border-transparent; color: var(--muted); }
+  .tab-inactive:hover { color: var(--ink); }
 
   /* Empty state */
-  .empty-state { @apply text-gray-500 text-sm py-8 text-center; }
+  .empty-state { @apply text-sm py-8 text-center; color: var(--muted); }
 }
 
 /* ── Event detail / slots table ───────────────────────────────────────────
@@ -274,7 +284,7 @@
   /* Stage modal color swatches */
   .color-swatches { @apply flex gap-2 flex-wrap; }
   .color-swatch { @apply w-7 h-7 rounded-full border-2 transition-all; }
-  .swatch-active { @apply border-gray-900; }
+  .swatch-active { border-color: var(--ink); }
   .swatch-inactive { @apply border-transparent; }
 
   /* Slot notes column */
@@ -355,12 +365,12 @@
   .slot-form { @apply bg-white border border-gray-200 rounded-lg p-6 space-y-4; }
 
   /* DJ roster — djs.component */
-  .genre-tag { @apply inline-block bg-violet-50 text-violet-700 px-2 py-0.5 rounded-full text-xs mr-1 mb-1; }
+  .genre-tag { @apply inline-block px-2 py-0.5 rounded-full text-xs mr-1 mb-1; background: rgba(124, 58, 237, 0.08); color: var(--violet); }
 
   /* Confirm dialog — dialog.component */
-  .dialog-box { @apply bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4; }
-  .dialog-title { @apply text-base font-semibold text-gray-900 mb-2; }
-  .dialog-message { @apply text-sm text-gray-600 mb-5 leading-relaxed; }
+  .dialog-box { @apply rounded-xl shadow-xl p-6 w-full max-w-sm mx-4; background: var(--card); }
+  .dialog-title { @apply text-base font-semibold mb-2; color: var(--ink); }
+  .dialog-message { @apply text-sm mb-5 leading-relaxed; color: var(--muted); }
   .dialog-actions { @apply flex justify-end gap-3; }
 
   /* Shared data table — data-table.component */
@@ -731,4 +741,361 @@
   --sc-text-muted: #5b6472;        /* muted text tuned for white bg */
   /* --sc-primary stays Cue Amber but is used as a fill; text on white must be
      `--sc-on-primary` (dark) sitting on the amber, never amber text on white. */
+}
+
+/* ── EL-074 Traditional-Chinese type floor ────────────────────────────────
+   Han (Traditional Chinese, Taiwan) glyphs are denser and near-square than
+   Latin — more stroke detail per em — so they need a higher size floor, more
+   leading, and more room in status pills that were sized for short Latin
+   words. These rules encode the EL-070 type-floor recommendation:
+     • TC body min ~15px (Latin body ~14px), line-height ~1.7
+     • Any TC UI text ≥ 13px absolute floor (11px captions are illegible in TC)
+     • Status pills ~30–32px tall, ≥6px/12px padding, ≥64px min-width for TC
+     • Never apply letter-spacing/tracking or uppercase transforms to Han
+
+   SCOPE: everything here is gated on `html[lang|="zh"]`. LanguageService
+   mirrors the active ngx-translate language onto <html lang> (e.g. "zh-TW"),
+   so these rules engage ONLY for Traditional Chinese and leave the compact
+   Latin layout untouched. The `[lang|="zh"]` prefix (+ a class/`:is()`) keeps
+   specificity one notch above the base rules so the floor wins cleanly.
+
+   NOTE: this ticket validates TYPE + LAYOUT only. The production TC *wording*
+   is still under native review (EL-070) — no shipping TC copy lives here. */
+[lang|='zh'] body {
+  font-size: 15px;   /* TC body floor (Latin body ~14px) */
+  line-height: 1.7;  /* dense square glyphs need more vertical air */
+}
+
+/* Status pill (StatusBadgeComponent) — TC variant. Latin keeps its compact
+   11px uppercase lozenge; TC gets the 13px floor, zero tracking, no uppercase,
+   and a box big enough that 3–4 full-width glyphs (e.g. 已認證 / 尚未認證) sit
+   centred without clipping. */
+[lang|='zh'] .status-badge {
+  font-size: 13px;        /* TC floor (Latin 11px) */
+  line-height: 1.5;
+  letter-spacing: 0;      /* never track Han glyphs */
+  text-transform: none;   /* no uppercase transform on TC (protects EN+TC) */
+  min-height: 30px;       /* ≈ 13 × 1.5 + 2 × 6 → ~30–32px pill height */
+  min-width: 64px;        /* short labels keep a proper pill, not a lozenge */
+  padding: 6px 12px;      /* 6px vertical / 12px horizontal */
+}
+
+/* Sub-floor mono caption / label primitives: Latin renders these at 11px with
+   letter-spacing; for TC lift them to the 13px caption floor and drop the
+   tracking + uppercase (both hostile to Han legibility). `:is()` keeps
+   specificity at a single class, so `[lang|="zh"]` + `:is()` still beats the
+   base rule. */
+[lang|='zh']
+  :is(
+    .mono-label,
+    .table-header,
+    .stat-tile-caption,
+    .slot-th,
+    .shell-breadcrumb,
+    .genre-pill
+  ) {
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* ── EL-078 THE FLIP — Soundcheck is now the app's active default ──────────────
+   Strategy (per ticket): the Console tokens above are SEMANTIC (`--ink` text,
+   `--surface` bg, `--violet` brand/primary, `--success/--warning/--danger`,
+   `--border`, `--card`, …) and every component already reads them via `var()`.
+   So instead of touching hundreds of components, we RE-POINT those semantic
+   token *values* to the Soundcheck palette inside the active `[data-brand=
+   "soundcheck"]` scope (set on <html> in index.html). Existing `var(--…)`
+   references then adopt the dark-booth look for free. The original Console
+   `:root` values are KEPT as the fallback when the brand attr is absent.
+
+   Most Soundcheck semantics (`--sc-bg`, `--sc-surface`, `--sc-text`, …) already
+   flip between dark "booth" and light "admin" mode above, so mapping onto them
+   makes the Console tokens mode-aware automatically.
+
+   NOTE: a later cleanup can rename these variables (e.g. `--violet` → `--amber`);
+   this ticket only flips the *look*, not the identifiers.
+
+   Everything below is intentionally UNLAYERED (outside @layer) and prefixed with
+   the `[data-brand='soundcheck']` scope so it reliably wins over the layered
+   Console `@apply` utilities without per-component edits. */
+[data-brand='soundcheck'] {
+  --sc-cue-amber-hover: #e98a1c; /* pressed/hover shade of Cue Amber */
+
+  /* Neutrals / canvas → Soundcheck (mode-aware via the --sc-* semantics) */
+  --surface: var(--sc-bg); /* Booth Black (dark) / Stage White (light) */
+  --card: var(--sc-surface); /* Console Slate (dark) / white (light) */
+  --ink: var(--sc-text); /* neutral-100 (dark) / near-black (light) */
+  --muted: var(--sc-text-muted); /* neutral-400 (dark) */
+  --border: var(--sc-border); /* neutral-700 (dark) */
+
+  /* Brand + signal accents */
+  --violet: var(--sc-primary); /* Cue Amber — primary/brand/active */
+  --violet-deep: var(--sc-cue-amber-hover); /* hover/pressed amber */
+  --cyan: var(--sc-deck-cyan); /* Deck Cyan — focus/live */
+  --live: var(--sc-status-info); /* Deck Cyan */
+  --void: var(--sc-neutral-950); /* sidebar gradient top — Booth Black */
+  --void-2: #05070a; /* sidebar gradient bottom — deeper */
+
+  /* Status */
+  --success: var(--sc-status-cleared); /* Cleared */
+  --warning: var(--sc-status-pending); /* Pending */
+  --danger: var(--sc-status-blocked); /* Clip Red / Blocked */
+
+  /* Shadows read deeper on a dark canvas */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 34px rgba(0, 0, 0, 0.55);
+}
+
+/* Global dark canvas so even not-yet-reskinned surfaces sit on booth black. */
+[data-brand='soundcheck'] body {
+  background: var(--sc-bg);
+  color: var(--ink);
+}
+[data-brand='soundcheck'] .app-main {
+  background: var(--surface);
+}
+
+/* ── Global top bar / wordmark ── */
+[data-brand='soundcheck'] .navbar {
+  background-color: var(--sc-booth-black);
+  border-bottom: 1px solid var(--sc-border);
+}
+/* Soundcheck wordmark: lowercase display face + single amber VU-meter detail. */
+.shell-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.shell-vu {
+  flex-shrink: 0;
+}
+.shell-vu-bar {
+  fill: var(--sc-cue-amber, var(--violet));
+}
+
+/* ── App shell chrome: amber gel replaces the violet bloom ── */
+[data-brand='soundcheck'] .shell-brand::before {
+  background: radial-gradient(circle, rgba(255, 158, 44, 0.32), transparent 70%);
+}
+[data-brand='soundcheck'] .shell-nav-active {
+  background: rgba(255, 158, 44, 0.16);
+  box-shadow: 0 0 18px rgba(255, 158, 44, 0.16);
+}
+
+/* ── Buttons: primary = Cue Amber with dark ink; cyan focus ring ── */
+[data-brand='soundcheck'] .btn,
+[data-brand='soundcheck'] .form-input,
+[data-brand='soundcheck'] .form-select,
+[data-brand='soundcheck'] .form-textarea,
+[data-brand='soundcheck'] .dt-search,
+[data-brand='soundcheck'] .edit-notes-input {
+  --tw-ring-color: var(--sc-deck-cyan); /* Deck Cyan focus ring */
+}
+[data-brand='soundcheck'] .btn-primary {
+  background: var(--sc-cue-amber);
+  color: var(--sc-on-amber);
+}
+[data-brand='soundcheck'] .btn-primary:hover {
+  background: var(--sc-cue-amber-hover);
+}
+[data-brand='soundcheck'] .btn-secondary {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--ink);
+}
+[data-brand='soundcheck'] .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+[data-brand='soundcheck'] .btn-success {
+  background: var(--sc-status-cleared);
+  color: var(--sc-on-amber); /* dark ink on the light green fill */
+}
+[data-brand='soundcheck'] .btn-success:hover {
+  filter: brightness(0.94);
+}
+[data-brand='soundcheck'] .btn-danger {
+  background: transparent;
+  border-color: rgba(244, 80, 91, 0.5);
+  color: var(--sc-status-blocked);
+}
+[data-brand='soundcheck'] .btn-danger:hover {
+  background: rgba(244, 80, 91, 0.14);
+}
+[data-brand='soundcheck'] .btn-ghost {
+  color: var(--muted);
+}
+[data-brand='soundcheck'] .btn-ghost:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+}
+/* Amber-fill buttons that shipped with white text → dark ink (contrast trap). */
+[data-brand='soundcheck'] .shell-new-btn,
+[data-brand='soundcheck'] .console-btn-primary,
+[data-brand='soundcheck'] .detail-topbtn-primary,
+[data-brand='soundcheck'] .btn-save {
+  color: var(--sc-on-amber);
+}
+
+/* ── DataTable (EL-028) + tables: dark records surfaces, tabular figures ── */
+[data-brand='soundcheck'] .dt-table {
+  background: var(--card);
+}
+[data-brand='soundcheck'] .dt-search {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+[data-brand='soundcheck'] .dt-search::placeholder {
+  color: var(--muted);
+}
+[data-brand='soundcheck'] .dt-table-scroll {
+  border-color: var(--border);
+}
+[data-brand='soundcheck'] .dt-head-row {
+  background: var(--surface);
+  border-color: var(--border);
+}
+[data-brand='soundcheck'] .dt-th {
+  color: var(--muted);
+}
+[data-brand='soundcheck'] .dt-th-sortable:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+[data-brand='soundcheck'] .dt-sort-icon {
+  color: var(--violet);
+}
+[data-brand='soundcheck'] .dt-row {
+  border-color: var(--border);
+}
+[data-brand='soundcheck'] .dt-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+[data-brand='soundcheck'] .dt-td {
+  color: var(--ink);
+}
+[data-brand='soundcheck'] .dt-empty {
+  color: var(--muted);
+}
+/* Tabular numerals for aligned records (durations, counts, times). */
+[data-brand='soundcheck'] .dt-td,
+[data-brand='soundcheck'] .slot-time-cell,
+[data-brand='soundcheck'] .events-dates,
+[data-brand='soundcheck'] .stat-tile-number {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Forms: dark inputs, Deck Cyan 2px focus ring ── */
+[data-brand='soundcheck'] .form-label {
+  color: var(--muted);
+}
+[data-brand='soundcheck'] .form-input,
+[data-brand='soundcheck'] .form-select,
+[data-brand='soundcheck'] .form-textarea,
+[data-brand='soundcheck'] .edit-notes-input {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+[data-brand='soundcheck'] .form-input::placeholder,
+[data-brand='soundcheck'] .form-textarea::placeholder {
+  color: var(--muted);
+}
+[data-brand='soundcheck'] .form-select:disabled {
+  background: var(--surface);
+  color: var(--muted);
+}
+[data-brand='soundcheck'] .slot-notes-text {
+  color: var(--muted);
+}
+/* Token-based inputs whose focus glow was amber → make it a clean cyan ring. */
+[data-brand='soundcheck'] .console-input:focus {
+  border-color: var(--sc-deck-cyan);
+  box-shadow: 0 0 0 2px var(--sc-deck-cyan);
+}
+[data-brand='soundcheck'] .shell-search {
+  color: var(--ink);
+}
+[data-brand='soundcheck'] .shell-search::placeholder {
+  color: var(--muted);
+}
+[data-brand='soundcheck'] .shell-search:focus,
+[data-brand='soundcheck'] .edit-select:focus,
+[data-brand='soundcheck'] .edit-time-input:focus,
+[data-brand='soundcheck'] .edit-dur-input:focus {
+  box-shadow: 0 0 0 2px var(--sc-deck-cyan);
+}
+
+/* ── Status pills (StatusBadgeComponent): dark-friendly tint + hue-carrying
+   glyph. The glyph + text label (in the component) mean status never rides on
+   colour alone — deuteranopia/protanopia safe. ── */
+.status-badge-glyph {
+  flex-shrink: 0;
+}
+[data-brand='soundcheck'] .status-confirmed {
+  color: var(--sc-status-cleared);
+  background: rgba(52, 211, 153, 0.14);
+}
+[data-brand='soundcheck'] .status-pending {
+  color: var(--sc-status-pending);
+  background: rgba(245, 181, 68, 0.16);
+}
+[data-brand='soundcheck'] .status-declined {
+  color: var(--sc-status-blocked);
+  background: rgba(244, 80, 91, 0.16);
+}
+[data-brand='soundcheck'] .status-live {
+  color: var(--sc-status-info);
+  background: rgba(34, 211, 238, 0.16);
+}
+
+/* ── Loading / progress convention: "levels, not fades" (LoadingMeterComponent).
+   VU-meter bars that rise/fall instead of a spinner; reduced motion holds a
+   static filled level. ── */
+.vu-loader {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 18px;
+}
+.vu-loader-bar {
+  width: 3px;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--sc-cue-amber, var(--violet));
+  transform-origin: bottom;
+  animation: vu-level 900ms ease-in-out infinite;
+}
+.vu-loader-bar:nth-child(2) {
+  animation-delay: 150ms;
+}
+.vu-loader-bar:nth-child(3) {
+  animation-delay: 300ms;
+}
+.vu-loader-bar:nth-child(4) {
+  animation-delay: 450ms;
+}
+.vu-loader-label {
+  align-self: center;
+  margin-left: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+@keyframes vu-level {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vu-loader-bar {
+    animation: none;
+    transform: scaleY(0.7);
+  }
 }

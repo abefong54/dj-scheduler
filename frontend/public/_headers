@@ -1,0 +1,16 @@
+# Netlify host-layer security headers for the EventLineup SPA (EL-040).
+#
+# This is the AUTHORITATIVE Content-Security-Policy for the app. It lives here
+# (host layer) rather than as an index.html <meta> tag so the strict policy only
+# applies to the deployed build — a <meta> CSP would also apply to `ng serve` and
+# break local dev (HMR uses inline scripts / eval).
+#
+# connect-src must list the Railway API origin. The placeholder below is
+# rewritten to $RAILWAY_API_URL at build time by netlify.toml's sed step, the
+# same substitution applied to src/environments/environment.prod.ts.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://YOUR_RAILWAY_URL.up.railway.app; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  Referrer-Policy: no-referrer
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=()

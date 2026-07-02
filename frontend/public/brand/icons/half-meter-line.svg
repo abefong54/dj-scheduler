@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="Half meter">
+  <title>Half-meter (line)</title>
+  <!-- EL-073 domain icon. A level meter filled to ~half — pending / in
+       progress, the climb hasn't completed. currentColor for reuse. -->
+  <g fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round">
+    <rect x="8.5" y="3" width="7" height="18" rx="3.5"/>
+  </g>
+  <rect x="10.25" y="11" width="3.5" height="8" rx="1.75" fill="currentColor"/>
+</svg>

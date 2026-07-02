@@ -4,3 +4,48 @@
    stylesheet past Angular's per-component anyComponentStyle budget, failing
    `ng build`. Put utilities in the template markup, or add a shared class to
    styles.css. Enforced by stylelint + a pre-commit hook. */
+
+/* ── EL-082 Soundcheck reskin (public schedule) ───────────────────────────
+   The public grid's wrapper classes above ship hard-coded light Tailwind
+   colours (bg-white, bg-gray-*, text-gray-*, border-gray-200). Rather than
+   edit styles.css (parallel reskin agents are in that file), we re-point only
+   the *colours* onto the design tokens here, in-component. These are plain-CSS
+   overrides (no @apply), so they stay tiny and Angular's emulated-encapsulation
+   attribute makes them win over the layered global @apply rules. Layout/spacing
+   is untouched — this is a skin only. Tokens resolve to the dark "booth" palette
+   under [data-brand="soundcheck"] and to the original light Console values when
+   the brand attribute is absent. */
+
+/* Page + sticky header */
+.schedule-page { background: var(--surface); }
+.schedule-header { background: var(--card); border-color: var(--border); }
+.schedule-event-name { color: var(--ink); }
+.schedule-venue { color: var(--muted); }
+
+/* Date tabs */
+.date-tab-active { background: var(--violet); color: var(--sc-on-amber, #fff); }
+.date-tab-inactive { background: var(--card); color: var(--ink); }
+.date-tab-inactive:hover { background: var(--surface); }
+
+/* Empty state */
+.empty-schedule { color: var(--muted); }
+
+/* Mobile stage cards */
+.stage-card { background: var(--card); border-color: var(--border); }
+.stage-card-header { background: var(--surface); border-color: var(--border); }
+.stage-card-name { color: var(--ink); }
+/* divide-y colour on the between-slot hairlines */
+.stage-card-slot { border-color: var(--border); }
+.slot-time-label { color: var(--muted); }
+.slot-dj-label { color: var(--ink); }
+.slot-genre-badge { color: var(--violet); }
+.slot-notes-label { color: var(--muted); }
+
+/* Desktop grid table */
+.grid-stage-th,
+.grid-time-th,
+.grid-stage-td { background: var(--surface); border-color: var(--border); }
+.grid-stage-th { color: var(--muted); }
+.grid-time-th { color: var(--muted); }
+.grid-stage-name { color: var(--ink); }
+.grid-cell { border-color: var(--border); }

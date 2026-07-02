@@ -2,7 +2,10 @@
 # to your Railway backend URL, e.g. https://myapp.up.railway.app
 [build]
   base    = "frontend"
-  command = "sed -i \"s|https://YOUR_RAILWAY_URL.up.railway.app|${RAILWAY_API_URL}|\" src/environments/environment.prod.ts && npm run build"
+  # Substitute the Railway API origin into BOTH the Angular prod env (apiUrl) and
+  # the CSP connect-src in public/_headers (EL-040) before building, so the
+  # built site points at the real backend and its CSP allows calls to it.
+  command = "sed -i \"s|https://YOUR_RAILWAY_URL.up.railway.app|${RAILWAY_API_URL}|\" src/environments/environment.prod.ts public/_headers && npm run build"
   publish = "dist/frontend/browser"
 
 [[redirects]]
