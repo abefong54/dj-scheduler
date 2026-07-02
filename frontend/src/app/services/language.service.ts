@@ -28,6 +28,10 @@ export class LanguageService {
       const lang = this.currentLang();
       this.translate.use(lang);
       localStorage.setItem('lang', lang);
+      // Mirror the active language onto <html lang> so (a) assistive tech gets
+      // the right language and (b) the TC type-floor CSS (EL-074), scoped to
+      // `[lang|="zh"]`, actually engages for Traditional Chinese.
+      document.documentElement.lang = lang;
     });
   }
 
