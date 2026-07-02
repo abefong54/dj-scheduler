@@ -6,6 +6,7 @@
   "nav.djs": "DJ",
   "nav.signOut": "登出",
   "nav.signIn": "登入",
+  "nav.bookDemo": "預約導覽",
 
   "shell.workspace": "工作區",
   "shell.nav.events": "活動",
@@ -173,7 +174,7 @@
   "landing.hero.title.lit": "舞台。",
   "landing.hero.sub": "Soundcheck 追蹤每位學員的實戰累積，在他們被排上真正的演出前，先認證他們已準備好登台。它是一套學員登台養成系統，剛好也能排活動。",
   "landing.hero.tagline": "每一場，都算數。",
-  "landing.hero.ctaPrimary": "準備登台",
+  "landing.hero.ctaPrimary": "預約導覽",
   "landing.hero.ctaSecondary": "看看運作方式",
   "landing.hero.micro": "與 IMDJ DJSchool 共同打造 · 台北 · 免綁卡即可開始",
   "landing.hero.card.role": "Open-format · Level 3",

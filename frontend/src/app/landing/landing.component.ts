@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Meta, Title } from '@angular/platform-browser';
 import { TranslatePipe } from '@ngx-translate/core';
 import { LeadFormComponent } from './lead-form.component';
@@ -22,13 +23,11 @@ import { LeadFormComponent } from './lead-form.component';
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [RouterLink, TranslatePipe, LeadFormComponent],
+  imports: [TranslatePipe, LeadFormComponent],
   templateUrl: './landing.component.html',
   styleUrl: './landing.component.css',
 })
 export class LandingComponent {
-  /** Every primary CTA points at the sign-in / onboarding route. */
-  readonly signInRoute = '/login';
 
   /** Demo/contact form reveal (the CTA-band buttons open it). */
   readonly showForm = signal(false);
@@ -108,5 +107,10 @@ export class LandingComponent {
     meta.updateTag({ name: 'twitter:title', content: pageTitle });
     meta.updateTag({ name: 'twitter:description', content: description });
     meta.updateTag({ name: 'twitter:image', content: ogImage });
+
+    const route = inject(ActivatedRoute);
+    route.fragment.pipe(takeUntilDestroyed()).subscribe((f) => {
+      if (f === 'lead-form') this.openLeadForm();
+    });
   }
 }

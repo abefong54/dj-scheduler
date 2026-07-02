@@ -4,3 +4,9 @@
    stylesheet past Angular's per-component anyComponentStyle budget, failing
    `ng build`. Put utilities in the template markup, or add a shared class to
    styles.css. Enforced by stylelint + a pre-commit hook. */
+
+.nav-cta {
+  padding: 6px 14px;
+  font-size: 0.8125rem;
+  line-height: 1;
+}
