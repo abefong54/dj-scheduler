@@ -16,8 +16,11 @@ type LeadHandler struct{ uc *leaduc.UseCase }
 
 func NewLeadHandler(uc *leaduc.UseCase) *LeadHandler { return &LeadHandler{uc: uc} }
 
-func (h *LeadHandler) Register(rg *gin.RouterGroup) {
-	rg.POST("/leads", h.create)
+// Register mounts POST /leads, applying any middleware (e.g. rate limiting,
+// EL-086) ahead of the handler.
+func (h *LeadHandler) Register(rg *gin.RouterGroup, mw ...gin.HandlerFunc) {
+	handlers := append(append([]gin.HandlerFunc{}, mw...), h.create)
+	rg.POST("/leads", handlers...)
 }
 
 type leadWriteRequest struct {

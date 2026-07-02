@@ -37,7 +37,9 @@ func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, share *Shar
 	publicAPI := r.Group("/api")
 	public.Register(publicAPI)
 	djPortal.RegisterPublic(publicAPI)
-	leadHandler.Register(publicAPI)
+	// Lead capture is an unauthenticated write — rate-limit it to blunt spam /
+	// flooding of the leads table (EL-086). ~1 req/s sustained, burst 5, per client.
+	leadHandler.Register(publicAPI, middleware.RateLimit(1, 5))
 
 	// Protected routes — every request must carry a valid organizer JWT.
 	api := r.Group("/api")
