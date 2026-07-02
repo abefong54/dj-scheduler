@@ -111,7 +111,11 @@ func TestShareCardRendersOGTags(t *testing.T) {
 	wantSubstrings := []string{
 		`<meta property="og:title" content="DJ Sasha is playing Summer Fest">`,
 		`<meta property="og:description" content="Main Stage · 22:00 · Sun 12 Jul">`,
-		`<meta property="og:image" content="https://app.example.com/assets/og/card-default.png">`,
+		`<meta property="og:image" content="https://app.example.com/assets/og/share-card-default.png">`,
+		// Landscape dimension hints so LINE/Facebook render the large hero unfurl
+		// rather than the small square thumbnail (EL — CODY/portrait bug fix).
+		`<meta property="og:image:width" content="1200">`,
+		`<meta property="og:image:height" content="630">`,
 		`<meta property="og:url" content="https://app.example.com/card/slot-42">`,
 		`<meta property="og:type" content="website">`,
 		`<meta name="twitter:card" content="summary_large_image">`,
