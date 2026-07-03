@@ -1,7 +1,7 @@
 // Button standard (app-button): the admin action buttons became icon-only, so
 // these specs guard that the icon conversion kept each action operable and
 // accessibly labelled, and exercise the icon-driven flows the refactor added
-// (copy-portal-link toggle, view-public, export). The add/edit/delete flows
+// (copy-portal-link dialog, view-public, export). The add/edit/delete flows
 // themselves stay covered by admin-djs.spec.ts / admin-slots.spec.ts via the
 // preserved data-testids.
 import { test, expect } from '../fixtures';
@@ -38,17 +38,25 @@ test.describe('button standard · DJ roster', () => {
     await expect(page.getByTestId(`dj-delete-${SEED.djBeta.id}`)).toHaveCount(0);
   });
 
-  test('copy-portal-link button swaps to the "copied" check icon', async ({ page }) => {
+  test('copy-portal-link button opens the share dialog with the portal link', async ({ page }) => {
     await page.goto('/admin/djs');
     const copyBtn = page.getByTestId(`dj-copy-${SEED.djTesta.id}`);
 
-    // Before: the link glyph.
+    // The link glyph.
     await expect(copyBtn.locator('svg')).toHaveAttribute('data-icon', 'link');
 
     await copyBtn.click();
 
-    // After copying, the icon toggles to the check glyph (and reverts later).
-    await expect(copyBtn.locator('svg')).toHaveAttribute('data-icon', 'check');
+    // Instead of a silent clipboard copy, a dialog opens showing the DJ's portal
+    // link (read-only + copyable) so the organizer can see what it is (EL-089).
+    const linkInput = page.getByTestId('dialog-link-input');
+    await expect(linkInput).toBeVisible();
+    await expect(linkInput).toHaveValue(/\/dj\/portal\?token=/);
+
+    // Copy it, then dismiss.
+    await page.getByTestId('dialog-link-copy').click();
+    await page.getByTestId('dialog-close-btn').click();
+    await expect(linkInput).toHaveCount(0);
   });
 });
 

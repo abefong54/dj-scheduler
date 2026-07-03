@@ -119,6 +119,25 @@
   .btn-xs { @apply px-2.5 py-1 text-xs; }
   .btn-icon { @apply p-1.5 rounded-md; }
 
+  /* Hover/focus tooltip for icon-only controls (EL-090). Rendered on <body> by
+     TooltipDirective with fixed left/top; this styles it and lifts it above the
+     control. Plain CSS (no @apply) so it needs no component-scoped budget. */
+  .app-tooltip {
+    position: fixed;
+    transform: translate(-50%, calc(-100% - 8px));
+    background: var(--ink);
+    color: #fff;
+    font-size: 12px;
+    line-height: 1.3;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.18);
+  }
+
   /* Modals */
   .modal-overlay { @apply fixed inset-0 z-50 flex items-center justify-center bg-black/40; }
   .modal-box-md { @apply rounded-xl shadow-xl p-6 w-full max-w-md mx-4; background: var(--card); }

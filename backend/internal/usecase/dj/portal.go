@@ -11,11 +11,13 @@ import (
 )
 
 // portalTokenTTL is how long a freshly generated DJ portal token stays valid.
-const portalTokenTTL = 90 * 24 * time.Hour
+// Two weeks: long enough for a DJ to act on a booking, short enough that a stale
+// link doesn't stay live for a whole quarter (EL-088).
+const portalTokenTTL = 14 * 24 * time.Hour
 
 // GeneratePortalToken issues a new portal token for a DJ the organizer owns. A
 // 32-byte random token is generated; only its SHA-256 hash is stored (with a
-// 90-day expiry). The raw token is returned exactly once — it is never persisted
+// 2-week expiry). The raw token is returned exactly once — it is never persisted
 // or logged. Generating a new token overwrites the old hash, which revokes any
 // previously issued token. Returns apperrors.ErrNotFound if the DJ is not the
 // organizer's.

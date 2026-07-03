@@ -4,6 +4,14 @@
   [breadcrumb]="'shell.workspace' | translate"
 >
   <!-- KPI tiles -->
+  @if (loading()) {
+    <div class="flex justify-center py-16"><app-loading-meter [label]="'common.loading' | translate" /></div>
+  } @else if (loadError()) {
+    <div class="flex flex-col items-center gap-3 py-16">
+      <p class="empty-state">{{ 'common.loadError' | translate }}</p>
+      <button class="btn btn-primary" (click)="retry()">{{ 'common.retry' | translate }}</button>
+    </div>
+  } @else {
   <section class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
     <div class="stat-tile">
       <div class="stat-tile-number">{{ roster().length }}</div>
@@ -98,4 +106,5 @@
         [testId]="'perf-view-' + row['id']" (click)="viewDj(rowId(row))" />
     </ng-template>
   </app-data-table>
+  }
 </app-admin-shell>

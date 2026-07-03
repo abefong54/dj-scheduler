@@ -10,6 +10,8 @@ import { ColumnDefDirective } from '../../shared/column-def.directive';
 import { ButtonComponent } from '../../shared/button.component';
 import { AdminShellComponent } from '../../shared/admin-shell.component';
 import { StatusBadgeComponent } from '../../shared/status-badge.component';
+import { LoadingMeterComponent } from '../../shared/loading-meter.component';
+import { SubmitGuard } from '../../shared/submit-guard';
 
 // CERT_OPTIONS are the school's standard curriculum genres (EL-020). DJs can
 // also have custom (free-text) certifications beyond this list.
@@ -18,7 +20,7 @@ export const CERT_OPTIONS = ['House', 'Hip Hop', 'Pop', 'Techno', 'Trance', 'Dru
 @Component({
   selector: 'app-djs',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, DataTableComponent, ColumnDefDirective, ButtonComponent, AdminShellComponent, StatusBadgeComponent],
+  imports: [FormsModule, TranslatePipe, DataTableComponent, ColumnDefDirective, ButtonComponent, AdminShellComponent, StatusBadgeComponent, LoadingMeterComponent],
   templateUrl: './djs.component.html',
   styleUrl: './djs.component.css',
 })
@@ -29,10 +31,12 @@ export class DjsComponent implements OnDestroy {
   private langService = inject(LanguageService);
 
   djs = signal<DJ[]>([]);
+  loading = signal(true);
+  loadError = signal(false);
+  readonly addGuard = new SubmitGuard();
+  readonly saveGuard = new SubmitGuard();
   newDJ = signal({ name: '' });
   newDJGenres = signal('');
-  // ID of the DJ whose portal link was just copied (drives the "Copied!" flash).
-  copiedDJId = signal<string | null>(null);
 
   // EL-020: certifications edit panel. `editing` holds the DJ being edited (the
   // panel is open when non-null); the rest are its working-copy form fields.
@@ -50,9 +54,24 @@ export class DjsComponent implements OnDestroy {
   }
 
   private loadDJs() {
+    this.loading.set(true);
+    this.loadError.set(false);
     this.subscriptions.push(
-      this.api.getDJs().subscribe(djs => this.djs.set(djs))
+      this.api.getDJs().subscribe({
+        next: djs => {
+          this.djs.set(djs);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.loadError.set(true);
+          this.loading.set(false);
+        },
+      })
     );
+  }
+
+  retry() {
+    this.loadDJs();
   }
 
   // Convert DJ[] to Record<string, unknown>[] for DataTableComponent
@@ -108,21 +127,36 @@ export class DjsComponent implements OnDestroy {
       return;
     }
 
-    this.api.createDJ({ name, genre_tags: genres }).subscribe(() => {
-      this.newDJ.set({ name: '' });
-      this.newDJGenres.set('');
-      this.loadDJs();
+    this.addGuard.run(this.api.createDJ({ name, genre_tags: genres }), {
+      next: () => {
+        this.newDJ.set({ name: '' });
+        this.newDJGenres.set('');
+        this.loadDJs();
+      },
     });
   }
 
   copyPortalLink(id: string) {
-    this.api.generateDJPortalToken(id).subscribe(async ({ portal_url }) => {
-      await navigator.clipboard.writeText(portal_url);
-      this.copiedDJId.set(id);
-      setTimeout(() => {
-        if (this.copiedDJId() === id) this.copiedDJId.set(null);
-      }, 2000);
+    this.api.generateDJPortalToken(id).subscribe(({ portal_url, expires_at }) => {
+      this.dialog.shareLink({
+        title: this.translate.instant('dj.portal_link.title'),
+        message: this.translate.instant('dj.portal_link.warning'),
+        url: portal_url,
+        expiresLabel: expires_at
+          ? this.translate.instant('dj.portal_link.expires', { date: this.formatExpiry(expires_at) })
+          : undefined,
+        copyLabel: this.translate.instant('dj.portal_link.copy'),
+        copiedLabel: this.translate.instant('dj.portal_link.copied'),
+      });
     });
+  }
+
+  /** Formats an ISO timestamp to a short local date like "17 Jul 2026". */
+  private formatExpiry(iso: string): string {
+    const d = new Date(iso);
+    return isNaN(d.getTime())
+      ? iso
+      : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
   async deleteDJ(id: string) {
@@ -169,14 +203,16 @@ export class DjsComponent implements OnDestroy {
   saveEdit() {
     const dj = this.editing();
     if (!dj || !this.editName().trim()) return;
-    this.api.updateDJ(dj.id, {
+    this.saveGuard.run(this.api.updateDJ(dj.id, {
       name: this.editName().trim(),
       genre_tags: dj.genre_tags,
       certifications: this.editCerts(),
       is_student: this.editIsStudent(),
-    }).subscribe(() => {
-      this.cancelEdit();
-      this.loadDJs();
+    }), {
+      next: () => {
+        this.cancelEdit();
+        this.loadDJs();
+      },
     });
   }
 

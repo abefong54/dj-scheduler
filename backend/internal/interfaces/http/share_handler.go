@@ -58,6 +58,10 @@ var shareTmpl = template.Must(template.New("share").Parse(`<!DOCTYPE html>
 <meta property="og:title" content="{{.Title}}">
 <meta property="og:description" content="{{.Description}}">
 <meta property="og:image" content="{{.Image}}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:alt" content="{{.Title}}">
 <meta property="og:url" content="{{.CardURL}}">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
@@ -114,7 +118,7 @@ func (h *ShareHandler) card(c *gin.Context) {
 	data := shareData{
 		Title:       slot.DjName + " is playing " + event.Name,
 		Description: slot.StageName + " · " + slot.StartTime + " · " + humanDate(slot.SlotDate),
-		Image:       h.frontendURL + "/assets/og/card-default.png",
+		Image:       h.frontendURL + "/assets/og/share-card-default.png",
 		CardURL:     cardURL,
 	}
 

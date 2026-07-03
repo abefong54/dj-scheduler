@@ -23,6 +23,11 @@
       [class]="langService.currentLang() === 'zh-TW' ? 'lang-btn-active' : 'lang-btn-inactive'">
       中文
     </button>
+    @if (isLanding()) {
+      <a routerLink="/" fragment="lead-form" data-testid="nav-book-demo" class="btn btn-primary nav-cta">
+        {{ 'nav.bookDemo' | translate }}
+      </a>
+    }
     @if (auth.isAuthenticated()) {
       <button (click)="auth.signOut()" data-testid="signout" class="lang-btn lang-btn-inactive">
         {{ 'nav.signOut' | translate }}
@@ -39,3 +44,4 @@
 </main>
 
 <app-dialog />
+<app-global-loading />

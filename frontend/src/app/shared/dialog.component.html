@@ -1,9 +1,24 @@
 @if (dialog.state()) {
-  <div class="modal-overlay" (click)="dialog.state()!.type === 'alert' && dialog.respond(true)">
+  <div class="modal-overlay"
+    (click)="(dialog.state()!.type === 'alert' || dialog.state()!.type === 'share') && dialog.respond(true)">
     <div class="dialog-box" (click)="$event.stopPropagation()">
 
       <h2 class="dialog-title">{{ dialog.state()!.title }}</h2>
       <p class="dialog-message">{{ dialog.state()!.message }}</p>
+
+      @if (dialog.state()!.type === 'share') {
+        <div class="flex gap-2 items-stretch mt-3">
+          <input class="form-input flex-1 font-mono text-sm" type="text" readonly
+            [value]="dialog.state()!.url" (focus)="selectAll($event)"
+            data-testid="dialog-link-input" />
+          <app-button variant="primary" icon="link"
+            [label]="(copied() ? dialog.state()!.copiedLabel : dialog.state()!.copyLabel) ?? ''"
+            testId="dialog-link-copy" (click)="copyLink()" />
+        </div>
+        @if (dialog.state()!.expiresLabel) {
+          <p class="mt-2 text-sm opacity-70">{{ dialog.state()!.expiresLabel }}</p>
+        }
+      }
 
       <div class="dialog-actions">
         @if (dialog.state()!.type === 'confirm') {
@@ -12,6 +27,9 @@
           <app-button [variant]="dialog.state()!.variant === 'danger' ? 'danger' : 'primary'"
             [label]="dialog.state()!.confirmLabel ?? ('actions.confirm' | translate)"
             testId="dialog-confirm-btn" (click)="dialog.respond(true)" />
+        } @else if (dialog.state()!.type === 'share') {
+          <app-button [label]="dialog.state()!.closeLabel ?? ('actions.close' | translate)"
+            testId="dialog-close-btn" (click)="dialog.respond(true)" />
         } @else {
           <app-button variant="primary"
             [label]="dialog.state()!.confirmLabel ?? ('actions.ok' | translate)"

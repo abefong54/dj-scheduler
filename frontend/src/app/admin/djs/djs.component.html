@@ -16,9 +16,17 @@
         name="genres" type="text" class="form-input" placeholder="genre1, genre2, genre3" data-testid="dj-genres-input" />
     </div>
     <app-button variant="primary" icon="plus" [label]="'actions.add' | translate"
-      testId="dj-add-btn" (click)="addDJ()" />
+      testId="dj-add-btn" [disabled]="addGuard.pending()" (click)="addDJ()" />
   </div>
 
+  @if (loading()) {
+    <div class="flex justify-center py-16"><app-loading-meter [label]="'common.loading' | translate" /></div>
+  } @else if (loadError()) {
+    <div class="flex flex-col items-center gap-3 py-16">
+      <p class="empty-state">{{ 'common.loadError' | translate }}</p>
+      <button class="btn btn-primary" (click)="retry()">{{ 'common.retry' | translate }}</button>
+    </div>
+  } @else {
   <app-data-table [columns]="djColumns()" [data]="djsAsRows()">
     <ng-template appColumnDef="genre_tags" let-row="row">
       @for (g of genreTags(row); track g) {
@@ -54,9 +62,8 @@
         <app-button variant="secondary" size="icon" icon="edit" [iconOnly]="true"
           [label]="'actions.edit' | translate" [testId]="'dj-edit-' + rowId(row)"
           (click)="openEdit(row)" />
-        <app-button variant="secondary" size="icon"
-          [icon]="copiedDJId() === rowId(row) ? 'check' : 'link'" [iconOnly]="true"
-          [label]="(copiedDJId() === rowId(row) ? 'dj.copy_portal_link.copied' : 'dj.copy_portal_link') | translate"
+        <app-button variant="secondary" size="icon" icon="link" [iconOnly]="true"
+          [label]="'dj.copy_portal_link' | translate"
           [testId]="'dj-copy-' + rowId(row)" (click)="copyPortalLink(rowId(row))" />
         <app-button variant="danger" size="icon" icon="trash" [iconOnly]="true"
           [label]="'actions.delete' | translate" [testId]="'dj-delete-' + rowId(row)"
@@ -64,6 +71,7 @@
       </div>
     </ng-template>
   </app-data-table>
+  }
 
   <!-- EL-020: certifications edit slide-over -->
   @if (editing(); as dj) {
@@ -120,7 +128,7 @@
 
       <div class="mt-6 flex gap-2">
         <app-button variant="primary" [label]="'actions.save' | translate"
-          testId="dj-edit-save" (click)="saveEdit()" />
+          testId="dj-edit-save" [disabled]="saveGuard.pending()" (click)="saveEdit()" />
         <app-button [label]="'actions.cancel' | translate"
           testId="dj-edit-cancel" (click)="cancelEdit()" />
       </div>

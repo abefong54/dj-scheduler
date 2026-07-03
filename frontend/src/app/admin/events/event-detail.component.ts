@@ -9,6 +9,8 @@ import { ScheduleExportService } from '../../services/schedule-export.service';
 import { slotDurationMins } from '../../shared/slot-time.util';
 import { parseLocalDate } from '../../shared/date.util';
 import { AdminShellComponent } from '../../shared/admin-shell.component';
+import { LoadingMeterComponent } from '../../shared/loading-meter.component';
+import { SubmitGuard } from '../../shared/submit-guard';
 import { StatusBadgeComponent } from '../../shared/status-badge.component';
 import { ButtonComponent } from '../../shared/button.component';
 import { TableSort } from '../../shared/table-sort';
@@ -16,7 +18,7 @@ import { TableSort } from '../../shared/table-sort';
 @Component({
   selector: 'app-event-detail',
   standalone: true,
-  imports: [FormsModule, RouterLink, TranslatePipe, AdminShellComponent, StatusBadgeComponent, ButtonComponent],
+  imports: [FormsModule, RouterLink, TranslatePipe, AdminShellComponent, StatusBadgeComponent, ButtonComponent, LoadingMeterComponent],
   templateUrl: './event-detail.component.html',
   styleUrl: './event-detail.component.css',
 })
@@ -28,6 +30,11 @@ export class EventDetailComponent implements OnDestroy {
   private exporter = inject(ScheduleExportService);
 
   event = signal<Event | null>(null);
+  loading = signal(true);
+  loadError = signal(false);
+  readonly addSlotGuard = new SubmitGuard();
+  readonly stageGuard = new SubmitGuard();
+  readonly editSlotGuard = new SubmitGuard();
   stages = signal<Stage[]>([]);
   slots = signal<Slot[]>([]);
   djs = signal<DJ[]>([]);
@@ -149,7 +156,7 @@ export class EventDetailComponent implements OnDestroy {
   submitAddRow() {
     if (!this.addStageId || !this.addDate || !this.addStart) return;
     const eventId = this.event()!.id;
-    this.api.createSlot(eventId, {
+    this.addSlotGuard.run(this.api.createSlot(eventId, {
       stage_id: this.addStageId,
       dj_id: this.addDjId,
       genre: this.addGenre,
@@ -157,7 +164,7 @@ export class EventDetailComponent implements OnDestroy {
       start_time: this.addStart,
       end_time: this.addMinutes(this.addStart, this.addDuration),
       notes: this.addNotes,
-    }).subscribe({
+    }), {
       next: () => {
         this.api.getSlots(eventId).subscribe(s => {
           this.slots.set(s);
@@ -198,16 +205,30 @@ export class EventDetailComponent implements OnDestroy {
 
   private loadData() {
     const eventId = this.route.snapshot.paramMap.get('id')!;
+    this.loading.set(true);
+    this.loadError.set(false);
 
     this.subscriptions.push(
-      this.api.getEvent(eventId).subscribe(e => {
-        this.event.set(e);
-        if (this.selectedDate() === '') this.selectedDate.set(e.start_date);
+      // getEvent is the primary payload — it drives the loading/error gate.
+      this.api.getEvent(eventId).subscribe({
+        next: e => {
+          this.event.set(e);
+          if (this.selectedDate() === '') this.selectedDate.set(e.start_date);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.loadError.set(true);
+          this.loading.set(false);
+        },
       }),
       this.api.getStages(eventId).subscribe(s => this.stages.set(s)),
       this.api.getSlots(eventId).subscribe(s => this.slots.set(s)),
       this.api.getDJs().subscribe(d => this.djs.set(d)),
     );
+  }
+
+  retry() {
+    this.loadData();
   }
 
   private stageMap = computed(() =>
@@ -299,9 +320,11 @@ export class EventDetailComponent implements OnDestroy {
   submitNewStage() {
     if (!this.newStageName.trim()) return;
     const eventId = this.event()!.id;
-    this.api.createStage(eventId, { name: this.newStageName.trim(), color: this.newStageColor }).subscribe(() => {
-      this.api.getStages(eventId).subscribe(s => this.stages.set(s));
-      this.showStageModal.set(false);
+    this.stageGuard.run(this.api.createStage(eventId, { name: this.newStageName.trim(), color: this.newStageColor }), {
+      next: () => {
+        this.api.getStages(eventId).subscribe(s => this.stages.set(s));
+        this.showStageModal.set(false);
+      },
     });
   }
 
@@ -390,7 +413,7 @@ export class EventDetailComponent implements OnDestroy {
 
   saveEdit(slotId: string) {
     const eventId = this.event()!.id;
-    this.api.updateSlot(eventId, slotId, {
+    this.editSlotGuard.run(this.api.updateSlot(eventId, slotId, {
       stage_id: this.editSlotStageId,
       dj_id: this.editSlotDjId,
       genre: this.editSlotGenre,
@@ -398,7 +421,7 @@ export class EventDetailComponent implements OnDestroy {
       start_time: this.editSlotStart,
       end_time: this.addMinutes(this.editSlotStart, Number(this.editSlotDuration)),
       notes: this.editSlotNotes,
-    }).subscribe({
+    }), {
       next: () => {
         this.api.getSlots(eventId).subscribe(s => this.slots.set(s));
         this.editConflictError.set(null);

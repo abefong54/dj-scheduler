@@ -7,6 +7,7 @@ import { DataTableComponent, TableColumn } from '../../shared/data-table.compone
 import { ColumnDefDirective } from '../../shared/column-def.directive';
 import { ButtonComponent } from '../../shared/button.component';
 import { AdminShellComponent } from '../../shared/admin-shell.component';
+import { LoadingMeterComponent } from '../../shared/loading-meter.component';
 
 /**
  * Performance dashboard (EL-044, Wedge B). The teacher-facing view of who is
@@ -17,7 +18,7 @@ import { AdminShellComponent } from '../../shared/admin-shell.component';
 @Component({
   selector: 'app-performance',
   standalone: true,
-  imports: [TranslatePipe, DataTableComponent, ColumnDefDirective, ButtonComponent, AdminShellComponent],
+  imports: [TranslatePipe, DataTableComponent, ColumnDefDirective, ButtonComponent, AdminShellComponent, LoadingMeterComponent],
   templateUrl: './performance.component.html',
   styleUrl: './performance.component.css',
 })
@@ -31,6 +32,8 @@ export class PerformanceComponent implements OnDestroy {
   roster = signal<RosterPerformance[]>([]);
   underserved = signal<RosterPerformance[]>([]);
   selectedPerf = signal<DJPerformance | null>(null);
+  loading = signal(true);
+  loadError = signal(false);
 
   totalReps = computed(() => this.roster().reduce((sum, r) => sum + r.reps, 0));
 
@@ -41,10 +44,26 @@ export class PerformanceComponent implements OnDestroy {
   }
 
   private load() {
+    this.loading.set(true);
+    this.loadError.set(false);
     this.subscriptions.push(
-      this.api.getPerformance().subscribe(r => this.roster.set(r)),
+      // The roster is the primary payload — it drives the loading/error gate.
+      this.api.getPerformance().subscribe({
+        next: r => {
+          this.roster.set(r);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.loadError.set(true);
+          this.loading.set(false);
+        },
+      }),
       this.api.getUnderserved().subscribe(u => this.underserved.set(u)),
     );
+  }
+
+  retry() {
+    this.load();
   }
 
   // Rows for DataTableComponent: needs a unique `id` and plain record fields.

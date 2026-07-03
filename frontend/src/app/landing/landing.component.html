@@ -16,7 +16,7 @@
           <p class="lp-sub">{{ 'landing.hero.sub' | translate }}</p>
           <p class="lp-tagline">{{ 'landing.hero.tagline' | translate }}</p>
           <div class="lp-cta-row">
-            <a [routerLink]="signInRoute" class="lp-btn lp-btn-amber">{{ 'landing.hero.ctaPrimary' | translate }}</a>
+            <button type="button" class="lp-btn lp-btn-amber" (click)="openLeadForm()">{{ 'landing.hero.ctaPrimary' | translate }}</button>
             <a href="#how" class="lp-btn lp-btn-ghost">{{ 'landing.hero.ctaSecondary' | translate }} ↓</a>
           </div>
           <p class="lp-micro">{{ 'landing.hero.micro' | translate }}</p>
