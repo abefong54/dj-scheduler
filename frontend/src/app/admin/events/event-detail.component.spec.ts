@@ -2,6 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { EventDetailComponent } from './event-detail.component';
 import { ApiService, Slot } from '../../services/api.service';
@@ -397,5 +399,70 @@ describe('EventDetailComponent — slot search & sort (EL-028)', () => {
     component.slotTable.toggle('dj_name');
     component.slotTable.sortDir.set('desc');
     expect(component.slotTable.view().map(s => s.dj_name)).toEqual(['DJ Beta', 'DJ Alpha']);
+  });
+});
+
+// Hero editor tests (EL-092): Edit button on the detail hero flips name/venue/
+// dates/genres into inputs; Save PATCHes via updateEvent, Cancel discards.
+// Uses HttpClientTestingModule so we can assert the exact PATCH payload.
+describe('EventDetailComponent — hero editor', () => {
+  let fixture: ComponentFixture<EventDetailComponent>;
+  let httpMock: HttpTestingController;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [EventDetailComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'evt-1' } } } },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true), alert: () => {} } },
+        { provide: ScheduleExportService, useValue: { download: () => {} } },
+      ],
+    }).compileComponents();
+
+    TestBed.inject(TranslateService).use('en');
+    fixture = TestBed.createComponent(EventDetailComponent);
+    httpMock = TestBed.inject(HttpTestingController);
+
+    // Flush the 4 initialization requests so event() is populated.
+    httpMock.expectOne('/api/events/evt-1').flush(EVENT);
+    httpMock.expectOne('/api/events/evt-1/stages').flush(STAGES);
+    httpMock.expectOne('/api/events/evt-1/slots').flush([]);
+    httpMock.expectOne('/api/djs').flush(DJS);
+  });
+
+  afterEach(() => httpMock.verify());
+
+  it('opens the hero editor seeded from the event', () => {
+    const cmp = fixture.componentInstance;
+    cmp.startHeaderEdit();
+    expect(cmp.editingHeader()).toBe(true);
+    expect(cmp.hVenue()).toBe(cmp.event()!.venue_name);
+  });
+
+  it('saveHeader PATCHes the event and closes the editor', () => {
+    const cmp = fixture.componentInstance;
+    cmp.startHeaderEdit();
+    cmp.hVenue.set('Renamed Venue');
+    cmp.saveHeader();
+    const req = httpMock.expectOne(`/api/events/${cmp.event()!.id}`);
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body.venue_name).toBe('Renamed Venue');
+    req.flush({ ...req.request.body, id: cmp.event()!.id });
+    fixture.detectChanges();
+    expect(cmp.editingHeader()).toBe(false);
+    expect(cmp.event()!.venue_name).toBe('Renamed Venue');
+  });
+
+  it('cancelHeader closes without a request', () => {
+    const cmp = fixture.componentInstance;
+    cmp.startHeaderEdit();
+    cmp.hVenue.set('discard me');
+    cmp.cancelHeader();
+    httpMock.expectNone(`/api/events/${cmp.event()!.id}`);
+    expect(cmp.editingHeader()).toBe(false);
   });
 });

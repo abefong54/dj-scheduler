@@ -389,6 +389,53 @@ export class EventDetailComponent implements OnDestroy {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   }
 
+  // ── Hero editor (EL-092) ──────────────────────────────────────────────
+  editingHeader = signal(false);
+  hName = signal('');
+  hVenue = signal('');
+  hStart = signal('');
+  hEnd = signal('');
+  hGenres = signal('');
+
+  startHeaderEdit() {
+    const e = this.event();
+    if (!e) return;
+    this.hName.set(e.name);
+    this.hVenue.set(e.venue_name);
+    this.hStart.set(e.start_date);
+    this.hEnd.set(e.end_date);
+    this.hGenres.set(e.genres.join(', '));
+    this.editingHeader.set(true);
+  }
+
+  cancelHeader() {
+    this.editingHeader.set(false);
+  }
+
+  saveHeader() {
+    const e = this.event();
+    if (!e) return;
+    const name = this.hName().trim();
+    const venue = this.hVenue().trim();
+    const start = this.hStart();
+    if (!name || !venue || !start) return;
+    const end = this.hEnd() || start;
+    if (end < start) return;
+    const genres = this.hGenres().split(',').map(g => g.trim()).filter(g => g.length > 0);
+    this.api.updateEvent(e.id, {
+      name, venue_name: venue, start_date: start, end_date: end, genres,
+    }).subscribe({
+      next: updated => {
+        this.event.set(updated);
+        this.editingHeader.set(false);
+      },
+      error: () => this.dialog.alert({
+        title: this.translate.instant('common.loadError'),
+        message: this.translate.instant('common.loadError'),
+      }),
+    });
+  }
+
   editingSlotId = signal<string | null>(null);
   editSlotStageId = '';
   editSlotDjId = '';
