@@ -37,8 +37,6 @@ export class DjsComponent implements OnDestroy {
   readonly saveGuard = new SubmitGuard();
   newDJ = signal({ name: '' });
   newDJGenres = signal('');
-  // ID of the DJ whose portal link was just copied (drives the "Copied!" flash).
-  copiedDJId = signal<string | null>(null);
 
   // EL-020: certifications edit panel. `editing` holds the DJ being edited (the
   // panel is open when non-null); the rest are its working-copy form fields.
@@ -139,13 +137,26 @@ export class DjsComponent implements OnDestroy {
   }
 
   copyPortalLink(id: string) {
-    this.api.generateDJPortalToken(id).subscribe(async ({ portal_url }) => {
-      await navigator.clipboard.writeText(portal_url);
-      this.copiedDJId.set(id);
-      setTimeout(() => {
-        if (this.copiedDJId() === id) this.copiedDJId.set(null);
-      }, 2000);
+    this.api.generateDJPortalToken(id).subscribe(({ portal_url, expires_at }) => {
+      this.dialog.shareLink({
+        title: this.translate.instant('dj.portal_link.title'),
+        message: this.translate.instant('dj.portal_link.warning'),
+        url: portal_url,
+        expiresLabel: expires_at
+          ? this.translate.instant('dj.portal_link.expires', { date: this.formatExpiry(expires_at) })
+          : undefined,
+        copyLabel: this.translate.instant('dj.portal_link.copy'),
+        copiedLabel: this.translate.instant('dj.portal_link.copied'),
+      });
     });
+  }
+
+  /** Formats an ISO timestamp to a short local date like "17 Jul 2026". */
+  private formatExpiry(iso: string): string {
+    const d = new Date(iso);
+    return isNaN(d.getTime())
+      ? iso
+      : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
   async deleteDJ(id: string) {
