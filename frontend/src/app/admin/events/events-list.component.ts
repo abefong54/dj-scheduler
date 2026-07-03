@@ -7,6 +7,7 @@ import { StatusBadgeComponent } from '../../shared/status-badge.component';
 import { ButtonComponent } from '../../shared/button.component';
 import { LoadingMeterComponent } from '../../shared/loading-meter.component';
 import { DialogService } from '../../shared/dialog.service';
+import { SubmitGuard } from '../../shared/submit-guard';
 
 /** Lifecycle state derived purely from an event's start/end dates. */
 type EventLifecycle = 'live' | 'upcoming' | 'past';
@@ -26,6 +27,7 @@ export class EventsListComponent {
 
   activeTab = signal<'upcoming' | 'past'>('upcoming');
   today = new Date().toISOString().slice(0, 10);
+  readonly cloneGuard = new SubmitGuard();
 
   events = signal<Event[]>([]);
   loading = signal(true);
@@ -99,8 +101,8 @@ export class EventsListComponent {
       confirmLabel: this.translate.instant('events.clone'),
     });
     if (!ok) return;
-    this.api.cloneEvent(id).subscribe(newEvent =>
-      this.router.navigate(['/admin/events', newEvent.id]),
-    );
+    this.cloneGuard.run(this.api.cloneEvent(id), {
+      next: newEvent => this.router.navigate(['/admin/events', newEvent.id]),
+    });
   }
 }

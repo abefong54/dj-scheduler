@@ -11,6 +11,7 @@ import { ButtonComponent } from '../../shared/button.component';
 import { AdminShellComponent } from '../../shared/admin-shell.component';
 import { StatusBadgeComponent } from '../../shared/status-badge.component';
 import { LoadingMeterComponent } from '../../shared/loading-meter.component';
+import { SubmitGuard } from '../../shared/submit-guard';
 
 // CERT_OPTIONS are the school's standard curriculum genres (EL-020). DJs can
 // also have custom (free-text) certifications beyond this list.
@@ -32,6 +33,8 @@ export class DjsComponent implements OnDestroy {
   djs = signal<DJ[]>([]);
   loading = signal(true);
   loadError = signal(false);
+  readonly addGuard = new SubmitGuard();
+  readonly saveGuard = new SubmitGuard();
   newDJ = signal({ name: '' });
   newDJGenres = signal('');
   // ID of the DJ whose portal link was just copied (drives the "Copied!" flash).
@@ -126,10 +129,12 @@ export class DjsComponent implements OnDestroy {
       return;
     }
 
-    this.api.createDJ({ name, genre_tags: genres }).subscribe(() => {
-      this.newDJ.set({ name: '' });
-      this.newDJGenres.set('');
-      this.loadDJs();
+    this.addGuard.run(this.api.createDJ({ name, genre_tags: genres }), {
+      next: () => {
+        this.newDJ.set({ name: '' });
+        this.newDJGenres.set('');
+        this.loadDJs();
+      },
     });
   }
 
@@ -187,14 +192,16 @@ export class DjsComponent implements OnDestroy {
   saveEdit() {
     const dj = this.editing();
     if (!dj || !this.editName().trim()) return;
-    this.api.updateDJ(dj.id, {
+    this.saveGuard.run(this.api.updateDJ(dj.id, {
       name: this.editName().trim(),
       genre_tags: dj.genre_tags,
       certifications: this.editCerts(),
       is_student: this.editIsStudent(),
-    }).subscribe(() => {
-      this.cancelEdit();
-      this.loadDJs();
+    }), {
+      next: () => {
+        this.cancelEdit();
+        this.loadDJs();
+      },
     });
   }
 
