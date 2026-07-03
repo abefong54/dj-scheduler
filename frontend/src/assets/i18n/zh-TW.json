@@ -15,6 +15,8 @@
   "shell.nav.schedule": "時間表",
   "shell.search": "搜尋…",
   "shell.new": "新增",
+  "shell.toggleNav": "切換導覽",
+  "shell.moreActions": "更多操作",
 
   "badge.confirmed": "已確認",
   "badge.pending": "待回覆",

@@ -22,7 +22,17 @@ describe('AdminShellComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AdminShellComponent, HostComponent],
-      providers: [provideRouter([]), provideTranslateService()],
+      providers: [
+        // Stub routes for the nav links so clicking one (EL-093 close-on-nav)
+        // resolves instead of throwing NG04002.
+        provideRouter([
+          { path: 'admin/events', children: [] },
+          { path: 'admin/djs', children: [] },
+          { path: 'admin/performance', children: [] },
+          { path: 'admin/schedule', children: [] },
+        ]),
+        provideTranslateService(),
+      ],
     }).compileComponents();
   });
 
@@ -95,6 +105,85 @@ describe('AdminShellComponent', () => {
       fixture.componentRef.setInput('activeNav', null);
       fixture.detectChanges();
       expect(root().querySelectorAll('.shell-nav-active').length).toBe(0);
+    });
+  });
+
+  // EL-093: mobile drawer + overflow menu. Behaviour is asserted here; the
+  // responsive layout itself (no overflow, reachability) is covered by the
+  // Playwright spec e2e/specs/shell-mobile.spec.ts.
+  describe('mobile drawer + overflow menu (EL-093)', () => {
+    let fixture: ComponentFixture<AdminShellComponent>;
+    const root = () => fixture.nativeElement as HTMLElement;
+    const q = <T extends Element>(sel: string) => root().querySelector<T>(sel)!;
+
+    beforeEach(() => {
+      fixture = TestBed.createComponent(AdminShellComponent);
+      fixture.detectChanges();
+    });
+
+    afterEach(() => {
+      document.body.classList.remove('shell-drawer-lock');
+    });
+
+    it('drawer is closed by default', () => {
+      expect(q('.shell-sidebar').classList).not.toContain('shell-sidebar-open');
+      expect(q('.shell-hamburger').getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('the hamburger opens the drawer and locks body scroll', () => {
+      q<HTMLButtonElement>('.shell-hamburger').click();
+      fixture.detectChanges();
+      expect(q('.shell-sidebar').classList).toContain('shell-sidebar-open');
+      expect(q('.shell-hamburger').getAttribute('aria-expanded')).toBe('true');
+      expect(document.body.classList).toContain('shell-drawer-lock');
+    });
+
+    it('clicking a nav item closes the drawer', () => {
+      q<HTMLButtonElement>('.shell-hamburger').click();
+      fixture.detectChanges();
+      q<HTMLAnchorElement>('[data-nav="djs"]').click();
+      fixture.detectChanges();
+      expect(q('.shell-sidebar').classList).not.toContain('shell-sidebar-open');
+      expect(document.body.classList).not.toContain('shell-drawer-lock');
+    });
+
+    it('clicking the backdrop closes the drawer', () => {
+      q<HTMLButtonElement>('.shell-hamburger').click();
+      fixture.detectChanges();
+      q<HTMLElement>('.shell-backdrop').click();
+      fixture.detectChanges();
+      expect(q('.shell-sidebar').classList).not.toContain('shell-sidebar-open');
+    });
+
+    it('Escape closes the drawer', () => {
+      q<HTMLButtonElement>('.shell-hamburger').click();
+      fixture.detectChanges();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      fixture.detectChanges();
+      expect(q('.shell-sidebar').classList).not.toContain('shell-sidebar-open');
+    });
+
+    it('the ⋯ toggle opens the actions group and stays open on its own click', () => {
+      q<HTMLButtonElement>('.shell-actions-toggle').click();
+      fixture.detectChanges();
+      expect(q('.shell-actions-group').classList).toContain('open');
+      expect(q('.shell-actions-toggle').getAttribute('aria-expanded')).toBe('true');
+    });
+
+    it('a click outside the actions group closes it', () => {
+      q<HTMLButtonElement>('.shell-actions-toggle').click();
+      fixture.detectChanges();
+      document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      fixture.detectChanges();
+      expect(q('.shell-actions-group').classList).not.toContain('open');
+    });
+
+    it('Escape closes the actions group', () => {
+      q<HTMLButtonElement>('.shell-actions-toggle').click();
+      fixture.detectChanges();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      fixture.detectChanges();
+      expect(q('.shell-actions-group').classList).not.toContain('open');
     });
   });
 });
