@@ -118,6 +118,23 @@ describe('ApiService', () => {
     });
   });
 
+  describe('updateEvent', () => {
+    it('issues a PATCH to the event route with the full event body', () => {
+      const body = {
+        name: 'Summer Fest',
+        venue_name: 'The Warehouse',
+        start_date: '2026-07-04',
+        end_date: '2026-07-06',
+        genres: ['House', 'Techno'],
+      };
+      api.updateEvent('evt-1', body).subscribe();
+      const req = httpMock.expectOne('/api/events/evt-1');
+      expect(req.request.method).toBe('PATCH');
+      expect(req.request.body).toEqual(body);
+      req.flush({ id: 'evt-1', ...body });
+    });
+  });
+
   // EL-043/044: verify the exact method+path the backend registers for the three
   // performance endpoints (the EL-035 contract guard).
   describe('performance endpoints (EL-043/044)', () => {
