@@ -1,8 +1,8 @@
-import { Component, computed, inject, signal, OnDestroy } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Subscription } from 'rxjs';
 import { ApiService, DJ } from '../../services/api.service';
+import { DjsStore } from '../../services/djs-store';
 import { DialogService } from '../../shared/dialog.service';
 import { LanguageService } from '../../services/language.service';
 import { DataTableComponent, TableColumn } from '../../shared/data-table.component';
@@ -24,15 +24,18 @@ export const CERT_OPTIONS = ['House', 'Hip Hop', 'Pop', 'Techno', 'Trance', 'Dru
   templateUrl: './djs.component.html',
   styleUrl: './djs.component.css',
 })
-export class DjsComponent implements OnDestroy {
+export class DjsComponent {
   private api = inject(ApiService);
   private translate = inject(TranslateService);
   private dialog = inject(DialogService);
   private langService = inject(LanguageService);
+  private store = inject(DjsStore);
 
-  djs = signal<DJ[]>([]);
-  loading = signal(true);
-  loadError = signal(false);
+  // Backed by the root DjsStore (EL-092): a re-visit paints from cache with no
+  // spinner while the roster revalidates in the background.
+  djs = this.store.djs;
+  loading = this.store.loading;
+  loadError = this.store.error;
   readonly addGuard = new SubmitGuard();
   readonly saveGuard = new SubmitGuard();
   newDJ = signal({ name: '' });
@@ -47,31 +50,12 @@ export class DjsComponent implements OnDestroy {
   editCerts = signal<string[]>([]);
   editCustom = signal('');
 
-  private subscriptions: Subscription[] = [];
-
   constructor() {
-    this.loadDJs();
-  }
-
-  private loadDJs() {
-    this.loading.set(true);
-    this.loadError.set(false);
-    this.subscriptions.push(
-      this.api.getDJs().subscribe({
-        next: djs => {
-          this.djs.set(djs);
-          this.loading.set(false);
-        },
-        error: () => {
-          this.loadError.set(true);
-          this.loading.set(false);
-        },
-      })
-    );
+    this.store.ensure();
   }
 
   retry() {
-    this.loadDJs();
+    this.store.ensure();
   }
 
   // Convert DJ[] to Record<string, unknown>[] for DataTableComponent
@@ -131,7 +115,7 @@ export class DjsComponent implements OnDestroy {
       next: () => {
         this.newDJ.set({ name: '' });
         this.newDJGenres.set('');
-        this.loadDJs();
+        this.store.refresh();
       },
     });
   }
@@ -167,7 +151,7 @@ export class DjsComponent implements OnDestroy {
       variant: 'danger',
     });
     if (!ok) return;
-    this.api.deleteDJ(id).subscribe(() => this.loadDJs());
+    this.api.deleteDJ(id).subscribe(() => this.store.refresh());
   }
 
   // --- EL-020: certifications edit panel ---
@@ -211,16 +195,12 @@ export class DjsComponent implements OnDestroy {
     }), {
       next: () => {
         this.cancelEdit();
-        this.loadDJs();
+        this.store.refresh();
       },
     });
   }
 
   cancelEdit() {
     this.editing.set(null);
-  }
-
-  ngOnDestroy() {
-    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 }
