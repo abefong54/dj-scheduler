@@ -1,5 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 import { IconComponent, IconName } from './icon.component';
+import { TooltipDirective } from './tooltip.directive';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'success' | 'ghost';
 export type ButtonSize = 'md' | 'sm' | 'xs' | 'icon';
@@ -22,7 +23,7 @@ const SIZE_CLASS: Record<ButtonSize, string> = {
 @Component({
   selector: 'app-button',
   standalone: true,
-  imports: [IconComponent],
+  imports: [IconComponent, TooltipDirective],
   host: {
     '[class.block]': 'fullWidth()',
     '[class.w-full]': 'fullWidth()',
@@ -34,7 +35,7 @@ const SIZE_CLASS: Record<ButtonSize, string> = {
       [class]="classes()"
       [attr.data-testid]="testId() || null"
       [attr.aria-label]="accessibleLabel()"
-      [attr.title]="iconOnly() ? label() || null : null"
+      [appTooltip]="iconOnly() ? label() : ''"
     >
       @if (icon()) {
         <app-icon [name]="icon()!" class="w-4 h-4" />

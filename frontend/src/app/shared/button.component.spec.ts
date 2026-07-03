@@ -64,11 +64,13 @@ describe('ButtonComponent', () => {
     expect(button.getAttribute('aria-label')).toBeNull();
   });
 
-  it('hides the text and exposes the label as aria-label + title when iconOnly', () => {
+  it('hides the text and exposes the label as aria-label when iconOnly', () => {
     const { button } = render({ icon: 'trash', iconOnly: true, label: 'Delete' });
     expect(button.textContent?.trim()).toBe('');
     expect(button.getAttribute('aria-label')).toBe('Delete');
-    expect(button.getAttribute('title')).toBe('Delete');
+    // The visible tooltip is provided by TooltipDirective (EL-090), not a native
+    // title attribute; the accessible name stays on aria-label.
+    expect(button.getAttribute('title')).toBeNull();
   });
 
   it('lets ariaLabel override the label for the accessible name', () => {

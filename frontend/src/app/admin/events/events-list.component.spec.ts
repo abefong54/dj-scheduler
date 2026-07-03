@@ -145,10 +145,11 @@ describe('EventsListComponent — Console restyle (EL-064)', () => {
       expect(btn!.querySelector('span')).toBeFalsy(); // iconOnly hides the label span
     }
 
-    // Accessible name preserved on the icon-only buttons (title falls back to the label key).
-    expect(editBtn!.getAttribute('title')).toBe('actions.edit');
-    expect(cloneBtn!.getAttribute('title')).toBe('events.clone');
-    expect(deleteBtn!.getAttribute('title')).toBe('actions.delete');
+    // Accessible name preserved on the icon-only buttons: aria-label carries the
+    // label key; the visible tooltip is now TooltipDirective (EL-090), not title.
+    expect(editBtn!.getAttribute('aria-label')).toBe('actions.edit');
+    expect(cloneBtn!.getAttribute('aria-label')).toBe('events.clone');
+    expect(deleteBtn!.getAttribute('aria-label')).toBe('actions.delete');
   });
 
   it('centers the Actions column header and cell', () => {

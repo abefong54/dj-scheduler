@@ -54,9 +54,8 @@
         <app-button variant="secondary" size="icon" icon="edit" [iconOnly]="true"
           [label]="'actions.edit' | translate" [testId]="'dj-edit-' + rowId(row)"
           (click)="openEdit(row)" />
-        <app-button variant="secondary" size="icon"
-          [icon]="copiedDJId() === rowId(row) ? 'check' : 'link'" [iconOnly]="true"
-          [label]="(copiedDJId() === rowId(row) ? 'dj.copy_portal_link.copied' : 'dj.copy_portal_link') | translate"
+        <app-button variant="secondary" size="icon" icon="link" [iconOnly]="true"
+          [label]="'dj.copy_portal_link' | translate"
           [testId]="'dj-copy-' + rowId(row)" (click)="copyPortalLink(rowId(row))" />
         <app-button variant="danger" size="icon" icon="trash" [iconOnly]="true"
           [label]="'actions.delete' | translate" [testId]="'dj-delete-' + rowId(row)"
