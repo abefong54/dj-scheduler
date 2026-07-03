@@ -1,5 +1,5 @@
 import { ApplicationConfig } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withViewTransitions } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
@@ -9,7 +9,11 @@ import { loadingInterceptor } from './interceptors/loading.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter(routes),
+    // EL-096: withViewTransitions() enables the browser View Transitions API so
+    // route changes cross-fade instead of hard-cutting. Progressive enhancement —
+    // unsupported browsers navigate as before. Timing/curve are set in styles.css
+    // (::view-transition-*), honouring prefers-reduced-motion.
+    provideRouter(routes, withViewTransitions()),
     provideHttpClient(withInterceptors([authInterceptor, loadingInterceptor])),
     // fallbackLang ensures that if the active language fails to load or is
     // missing a key, the UI degrades to English instead of showing raw keys.
