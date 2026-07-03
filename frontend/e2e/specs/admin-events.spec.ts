@@ -25,12 +25,14 @@ test.describe('admin · events', () => {
 
   test('deletes an event after confirming the dialog', async ({ page }) => {
     await page.goto('/admin/events');
-    await expect(page.getByTestId(`event-card-${SEED.event.id}`)).toBeVisible();
+    // The events list renders on the shared DataTableComponent, which has no
+    // per-row test-id; the unique per-event handle is the name link (event-view-*).
+    await expect(page.getByTestId(`event-view-${SEED.event.id}`)).toBeVisible();
 
     await page.getByTestId(`event-delete-${SEED.event.id}`).click();
     await page.getByTestId('dialog-confirm-btn').click();
 
-    await expect(page.getByTestId(`event-card-${SEED.event.id}`)).toHaveCount(0);
+    await expect(page.getByTestId(`event-view-${SEED.event.id}`)).toHaveCount(0);
   });
 
   test('clones an event into a new one', async ({ page }) => {

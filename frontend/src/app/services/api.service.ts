@@ -176,6 +176,10 @@ export class ApiService {
   // Unauthenticated single slot + its event, for the per-DJ share card (EL-049).
   getPublicSlot(slotId: string) { return this.http.get<PublicSlot>(`${this.base}/api/slots/${slotId}/public`); }
   createEvent(e: Omit<Event, 'id'>) { return this.http.post<Event>(`${this.base}/api/events`, e); }
+  // Update an event's name, venue, dates, and genres (PATCH). Mirrors updateDJ.
+  updateEvent(id: string, e: Omit<Event, 'id'>) {
+    return this.http.patch<Event>(`${this.base}/api/events/${id}`, e);
+  }
   deleteEvent(id: string) { return this.http.delete(`${this.base}/api/events/${id}`); }
   cloneEvent(id: string) { return this.http.post<Event>(`${this.base}/api/events/${id}/clone`, {}); }
 

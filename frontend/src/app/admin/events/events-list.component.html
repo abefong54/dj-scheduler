@@ -42,64 +42,70 @@
     </button>
   </div>
 
-  @let rows = activeTab() === 'upcoming' ? upcoming() : past();
-
-  @if (rows.length === 0) {
+  @if (activeTabEvents().length === 0) {
     <p class="empty-state">
       {{ (activeTab() === 'upcoming' ? 'events.noUpcoming' : 'events.noPast') | translate }}
     </p>
   } @else {
-    <div class="events-table-wrap">
-      <table class="events-table">
-        <thead>
-          <tr>
-            <th class="table-header events-th">{{ 'events.col.event' | translate }}</th>
-            <th class="table-header events-th">{{ 'events.col.venue' | translate }}</th>
-            <th class="table-header events-th">{{ 'events.col.dates' | translate }}</th>
-            <th class="table-header events-th">{{ 'events.col.genres' | translate }}</th>
-            <th class="table-header events-th">{{ 'events.col.status' | translate }}</th>
-            <th class="table-header events-th events-th-actions">{{ 'events.col.actions' | translate }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (e of rows; track e.id) {
-            <tr class="events-row" [attr.data-testid]="'event-card-' + e.id">
-              <td class="events-td">
-                <a [routerLink]="['/admin/events', e.id]"
-                  class="events-name-link"
-                  [attr.data-testid]="'event-view-' + e.id">
-                  <span class="events-dot" [class]="'events-dot-' + lifecycle(e)" aria-hidden="true"></span>
-                  <span class="events-name">{{ e.name }}</span>
-                </a>
-              </td>
-              <td class="events-td events-venue">{{ e.venue_name }}</td>
-              <td class="events-td events-dates">{{ formatDates(e) }}</td>
-              <td class="events-td events-genres">{{ e.genres.join(', ') || '—' }}</td>
-              <td class="events-td">
-                @if (isLive(e)) {
-                  <app-status-badge status="live" />
-                } @else {
-                  <span class="events-status-muted">—</span>
-                }
-              </td>
-              <td class="events-td events-td-actions">
-                <app-button variant="secondary" size="icon" icon="edit" [iconOnly]="true"
-                  [label]="'actions.edit' | translate" [testId]="'event-edit-' + e.id"
-                  (click)="edit(e.id)" />
-                <app-button variant="secondary" size="icon" icon="clone" [iconOnly]="true"
-                  [label]="'events.clone' | translate" [testId]="'event-clone-' + e.id"
-                  (click)="clone(e.id)" />
-                @if (activeTab() === 'upcoming') {
-                  <app-button variant="danger" size="icon" icon="trash" [iconOnly]="true"
-                    [label]="'actions.delete' | translate" [testId]="'event-delete-' + e.id"
-                    (click)="delete(e.id)" />
-                }
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+    <app-data-table [columns]="eventColumns()" [data]="rowsForActiveTab()">
+      <ng-template appColumnDef="name" let-row="row">
+        <app-edit-cell type="text" [required]="true" trigger="pencil"
+          [value]="asString(row['name'])" [label]="'events.name' | translate"
+          (commit)="commitName(row, $event)">
+          <a [routerLink]="['/admin/events', row['id']]" class="events-name-link"
+            [attr.data-testid]="'event-view-' + row['id']">
+            <span class="events-dot" [class]="'events-dot-' + row['lifecycle']" aria-hidden="true"></span>
+            <span class="events-name">{{ row['name'] }}</span>
+          </a>
+        </app-edit-cell>
+      </ng-template>
+
+      <ng-template appColumnDef="venue_name" let-row="row">
+        <app-edit-cell type="text" [required]="true"
+          [value]="asString(row['venue_name'])" [label]="'events.col.venue' | translate"
+          (commit)="commitVenue(row, $event)">
+          <span class="events-venue">{{ row['venue_name'] }}</span>
+        </app-edit-cell>
+      </ng-template>
+
+      <ng-template appColumnDef="start_date" let-row="row">
+        <app-edit-cell type="date-range"
+          [value]="asString(row['start_date'])" [endValue]="asString(row['end_date'])"
+          [label]="'events.col.dates' | translate" (commit)="commitDates(row, $event)">
+          <span class="events-dates">{{ row['formattedDates'] }}</span>
+        </app-edit-cell>
+      </ng-template>
+
+      <ng-template appColumnDef="genres" let-row="row">
+        <app-edit-cell type="genres"
+          [value]="genresString(row)" [label]="'events.col.genres' | translate"
+          (commit)="commitGenres(row, $event)">
+          <span class="events-genres">{{ genresString(row) || '—' }}</span>
+        </app-edit-cell>
+      </ng-template>
+
+      <ng-template appColumnDef="status" let-row="row">
+        @if (row['isLive']) {
+          <app-status-badge status="live" />
+        } @else {
+          <span class="events-status-muted">—</span>
+        }
+      </ng-template>
+
+      <ng-template appColumnDef="actions" let-row="row">
+        <app-button variant="secondary" size="icon" icon="edit" [iconOnly]="true"
+          [label]="'actions.edit' | translate" [testId]="'event-edit-' + row['id']"
+          (click)="edit(asString(row['id']))" />
+        <app-button variant="secondary" size="icon" icon="clone" [iconOnly]="true"
+          [label]="'events.clone' | translate" [testId]="'event-clone-' + row['id']"
+          (click)="clone(asString(row['id']))" />
+        @if (activeTab() === 'upcoming') {
+          <app-button variant="danger" size="icon" icon="trash" [iconOnly]="true"
+            [label]="'actions.delete' | translate" [testId]="'event-delete-' + row['id']"
+            (click)="delete(asString(row['id']))" />
+        }
+      </ng-template>
+    </app-data-table>
   }
   }
 </app-admin-shell>
