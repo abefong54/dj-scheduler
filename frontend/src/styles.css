@@ -121,11 +121,15 @@
 
   /* Hover/focus tooltip for icon-only controls (EL-090). Rendered on <body> by
      TooltipDirective with fixed left/top; this styles it and lifts it above the
-     control. Plain CSS (no @apply) so it needs no component-scoped budget. */
+     control. Plain CSS (no @apply) so it needs no component-scoped budget.
+     Background is pinned to Booth Black — NOT var(--ink), which flips to a
+     near-white ink under [data-brand='soundcheck'] in booth/dark mode and left
+     the chip light-gray-on-white and unreadable. A tooltip is a dark chip in
+     both modes, so the dark fill + white text is intentional and mode-agnostic. */
   .app-tooltip {
     position: fixed;
     transform: translate(-50%, calc(-100% - 8px));
-    background: var(--ink);
+    background: var(--sc-neutral-950, #14121c);
     color: #fff;
     font-size: 12px;
     line-height: 1.3;
