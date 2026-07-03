@@ -1,0 +1,27 @@
+@if (editing()) {
+  @if (type() === 'date-range') {
+    <span class="edit-cell-editor" (focusout)="onFocusOut($event)" (keydown)="onKeydown($event)">
+      <input #editor type="date" class="edit-cell-input"
+        [ngModel]="draft()" (ngModelChange)="draft.set($event)"
+        [attr.aria-label]="label() + ' start'" />
+      <input type="date" class="edit-cell-input"
+        [ngModel]="draftEnd()" (ngModelChange)="draftEnd.set($event)"
+        [attr.aria-label]="label() + ' end'" />
+    </span>
+  } @else {
+    <input #editor type="text" class="edit-cell-input"
+      [ngModel]="draft()" (ngModelChange)="draft.set($event)"
+      (keydown)="onKeydown($event)" (blur)="commitEdit()"
+      [attr.aria-label]="label()" />
+  }
+} @else {
+  <span class="edit-cell-display"
+    [class.edit-cell-clickable]="trigger() === 'click' && !disabled()"
+    (click)="trigger() === 'click' && startEdit()">
+    <ng-content></ng-content>
+    @if (trigger() === 'pencil' && !disabled()) {
+      <button type="button" class="edit-cell-pencil" (click)="startEdit()"
+        [attr.aria-label]="label()">✎</button>
+    }
+  </span>
+}
