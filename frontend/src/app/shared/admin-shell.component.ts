@@ -13,7 +13,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 
-export type ShellNav = 'events' | 'djs' | 'performance' | 'schedule';
+export type ShellNav = 'events' | 'djs' | 'performance';
 
 interface NavItem {
   readonly id: ShellNav;
@@ -93,7 +93,6 @@ export class AdminShellComponent {
     { id: 'events', labelKey: 'shell.nav.events', link: '/admin/events' },
     { id: 'djs', labelKey: 'shell.nav.djs', link: '/admin/djs' },
     { id: 'performance', labelKey: 'shell.nav.performance', link: '/admin/performance' },
-    { id: 'schedule', labelKey: 'shell.nav.schedule', link: '/admin/schedule' },
   ];
 
   protected isActive(id: ShellNav): boolean {
