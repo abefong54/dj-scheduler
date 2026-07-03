@@ -65,6 +65,12 @@ export class AdminShellComponent {
    * the default translated "New" label; any other string is used verbatim.
    */
   newLabel = input<string | null>(null);
+  /**
+   * Opt-in topbar search (EL-100). Off by default — only pages that actually
+   * consume `searchValue` (e.g. Event Detail's slot table) set this true. Keeps
+   * a dead search box off every page that doesn't filter anything.
+   */
+  searchable = input(false);
 
   /** Two-way bound topbar search text. */
   searchValue = model('');

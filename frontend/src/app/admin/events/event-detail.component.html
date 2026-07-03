@@ -2,6 +2,7 @@
   activeNav="events"
   [title]="event()?.name ?? ''"
   [breadcrumb]="'shell.nav.events' | translate"
+  [searchable]="true"
   [searchValue]="slotTable.search()"
   (searchValueChange)="slotTable.search.set($event)"
 >
