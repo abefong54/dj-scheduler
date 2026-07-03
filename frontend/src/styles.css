@@ -1300,3 +1300,121 @@ body.shell-drawer-lock {
     transition: none;
   }
 }
+
+/* ── Planner mobile: slot cards + dialog (EL-094) ─────────────────────────
+   Below md the 7-col slot table is replaced by stacked cards; add/edit uses a
+   dialog. Card enter + dialog present use the EL-096 motion tokens, disabled
+   under prefers-reduced-motion. */
+.slot-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.slot-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--space-4);
+  animation: slot-card-in var(--dur-2) var(--ease-out-soft) both;
+}
+@keyframes slot-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.slot-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.slot-card-stage {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 600;
+  color: var(--ink);
+}
+.slot-card-time {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.slot-card-dj {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.slot-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.slot-card-notes {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.slot-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.slot-card-add {
+  width: 100%;
+  min-height: 44px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-card);
+  color: var(--violet);
+  font-weight: 600;
+  background: transparent;
+  transition: background-color var(--dur-1) var(--ease-in-out);
+}
+.slot-card-add:hover {
+  background: var(--surface);
+}
+
+/* Stacked dialog form (reuses .modal-overlay/.modal-box-sm/.form-* + tokens). */
+.slot-dialog-row {
+  display: flex;
+  gap: var(--space-3);
+}
+.slot-dialog-row .form-group {
+  flex: 1;
+}
+
+/* Calm present animation shared by the slot dialogs + add-stage modal. */
+.modal-overlay {
+  animation: modal-overlay-in var(--dur-2) var(--ease-in-out) both;
+}
+.modal-overlay > .modal-box-sm,
+.modal-overlay > .modal-box-md {
+  animation: modal-box-in var(--dur-2) var(--ease-out-soft) both;
+}
+@keyframes modal-overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes modal-box-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slot-card,
+  .modal-overlay,
+  .modal-overlay > .modal-box-sm,
+  .modal-overlay > .modal-box-md {
+    animation: none;
+  }
+}
