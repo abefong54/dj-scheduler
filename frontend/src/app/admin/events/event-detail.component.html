@@ -26,14 +26,41 @@
 
       <!-- Monument header -->
       <header class="detail-hero">
-        <p class="detail-event-name">{{ event()!.name }}</p>
-        <p class="detail-event-meta">{{ dateRange() }} · {{ event()!.venue_name }} · #{{ event()!.id.slice(0, 8) }}</p>
-        @if (event()!.genres?.length) {
-          <div class="genre-pill-row">
-            @for (g of event()!.genres; track g) {
-              <span class="genre-pill">{{ g }}</span>
-            }
+        @if (editingHeader()) {
+          <div class="detail-hero-edit">
+            <input type="text" class="form-input" [ngModel]="hName()" (ngModelChange)="hName.set($event)"
+              [attr.aria-label]="'events.name' | translate" data-testid="detail-edit-name" />
+            <input type="text" class="form-input" [ngModel]="hVenue()" (ngModelChange)="hVenue.set($event)"
+              [attr.aria-label]="'events.col.venue' | translate" data-testid="detail-edit-venue" />
+            <div class="detail-hero-dates">
+              <input type="date" class="form-input" [ngModel]="hStart()" (ngModelChange)="hStart.set($event)"
+                [attr.aria-label]="('events.col.dates' | translate) + ' start'" />
+              <input type="date" class="form-input" [ngModel]="hEnd()" (ngModelChange)="hEnd.set($event)"
+                [attr.aria-label]="('events.col.dates' | translate) + ' end'" />
+            </div>
+            <input type="text" class="form-input" [ngModel]="hGenres()" (ngModelChange)="hGenres.set($event)"
+              [attr.aria-label]="'events.col.genres' | translate" data-testid="detail-edit-genres" />
+            <div class="detail-hero-actions">
+              <app-button variant="primary" [label]="'actions.save' | translate"
+                testId="detail-save" (click)="saveHeader()" />
+              <app-button variant="secondary" [label]="'actions.cancel' | translate"
+                testId="detail-cancel" (click)="cancelHeader()" />
+            </div>
           </div>
+        } @else {
+          <div class="detail-hero-head">
+            <p class="detail-event-name">{{ event()!.name }}</p>
+            <app-button variant="secondary" size="icon" icon="edit" [iconOnly]="true"
+              [label]="'actions.edit' | translate" testId="detail-edit" (click)="startHeaderEdit()" />
+          </div>
+          <p class="detail-event-meta">{{ dateRange() }} · {{ event()!.venue_name }} · #{{ event()!.id.slice(0, 8) }}</p>
+          @if (event()!.genres?.length) {
+            <div class="genre-pill-row">
+              @for (g of event()!.genres; track g) {
+                <span class="genre-pill">{{ g }}</span>
+              }
+            </div>
+          }
         }
       </header>
 
