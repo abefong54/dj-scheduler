@@ -8,11 +8,12 @@ import { addDays } from '../shared/date.util';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ButtonComponent } from '../shared/button.component';
+import { LoadingMeterComponent } from '../shared/loading-meter.component';
 
 @Component({
   selector: 'app-schedule',
   standalone: true,
-  imports: [TranslatePipe, ButtonComponent],
+  imports: [TranslatePipe, ButtonComponent, LoadingMeterComponent],
   templateUrl: './schedule.component.html',
   styleUrl: './schedule.component.css',
 })
@@ -24,6 +25,9 @@ export class ScheduleComponent implements OnDestroy {
   slots = signal<Slot[]>([]);
   selectedDate = signal<string>('');
   timeHeaders = signal<string[]>([]);
+  loading = signal(true);
+  loadError = signal(false);
+  private eventId = '';
 
   dates = computed(() => {
     const e = this.event();
@@ -45,28 +49,44 @@ export class ScheduleComponent implements OnDestroy {
     private route: ActivatedRoute,
     public langService: LanguageService,
   ) {
-    const eventId = this.route.snapshot.paramMap.get('id')!;
-
-    // This page is public (no auth guard), so it must read from the
-    // unauthenticated /public endpoint — the protected endpoints would 401 for
-    // a visitor without a session and bounce them to /login (EL-034).
-    this.api.getPublicSchedule(eventId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(({ event, stages, slots }) => {
-        this.event.set(event);
-        this.stages.set(stages);
-        this.slots.set(slots);
-        const newDates = this.dateRange(event.start_date, event.end_date);
-        if (newDates.length > 0 && this.selectedDate() === '') {
-          this.selectedDate.set(newDates[0]);
-        }
-        this.updateTimeHeaders();
-      });
+    this.eventId = this.route.snapshot.paramMap.get('id')!;
+    this.load();
 
     effect(() => {
       this.slots();
       this.updateTimeHeaders();
     });
+  }
+
+  // This page is public (no auth guard), so it reads the unauthenticated /public
+  // endpoint — the protected endpoints would 401 a visitor and bounce them to
+  // /login (EL-034).
+  load() {
+    this.loading.set(true);
+    this.loadError.set(false);
+    this.api.getPublicSchedule(this.eventId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ({ event, stages, slots }) => {
+          this.event.set(event);
+          this.stages.set(stages);
+          this.slots.set(slots);
+          const newDates = this.dateRange(event.start_date, event.end_date);
+          if (newDates.length > 0 && this.selectedDate() === '') {
+            this.selectedDate.set(newDates[0]);
+          }
+          this.updateTimeHeaders();
+          this.loading.set(false);
+        },
+        error: () => {
+          this.loadError.set(true);
+          this.loading.set(false);
+        },
+      });
+  }
+
+  retry() {
+    this.load();
   }
 
   slotsForStage(stageId: string): Slot[] {

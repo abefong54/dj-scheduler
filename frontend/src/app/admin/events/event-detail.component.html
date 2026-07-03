@@ -14,7 +14,14 @@
     + {{ 'stages.new' | translate }}
   </button>
 
-  @if (event()) {
+  @if (loading()) {
+    <div class="flex justify-center py-16"><app-loading-meter [label]="'common.loading' | translate" /></div>
+  } @else if (loadError()) {
+    <div class="flex flex-col items-center gap-3 py-16">
+      <p class="empty-state">{{ 'common.loadError' | translate }}</p>
+      <button class="btn btn-primary" (click)="retry()">{{ 'common.retry' | translate }}</button>
+    </div>
+  } @else if (event()) {
     <div class="detail">
 
       <!-- Monument header -->
@@ -141,6 +148,7 @@
                     </td>
                     <td class="edit-actions-cell">
                       <button (click)="saveEdit(slot.id)" class="btn-save"
+                        [disabled]="editSlotGuard.pending()"
                         [attr.data-testid]="'edit-save-' + slot.id">{{ 'actions.save' | translate }}</button>
                       <button (click)="cancelEdit()" class="btn-cancel-edit">{{ 'actions.cancel' | translate }}</button>
                     </td>
@@ -265,7 +273,8 @@
                       (keydown.escape)="cancelAddRow()" />
                   </td>
                   <td class="add-cell add-cell-actions">
-                    <button (click)="submitAddRow()" class="btn-save" data-testid="add-slot-save">{{ 'actions.save' | translate }}</button>
+                    <button (click)="submitAddRow()" class="btn-save" data-testid="add-slot-save"
+                      [disabled]="addSlotGuard.pending()">{{ 'actions.save' | translate }}</button>
                     <button (click)="cancelAddRow()" class="btn-cancel-edit">{{ 'actions.cancel' | translate }}</button>
                   </td>
                 </tr>
@@ -323,7 +332,8 @@
         </div>
       </div>
       <div class="form-actions">
-        <button type="button" (click)="submitNewStage()" class="btn-primary" data-testid="stage-create-btn">
+        <button type="button" (click)="submitNewStage()" class="btn-primary" data-testid="stage-create-btn"
+          [disabled]="stageGuard.pending()">
           {{ 'actions.create' | translate }}
         </button>
         <button type="button" (click)="cancelStage()" class="btn-secondary">

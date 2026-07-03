@@ -6,7 +6,7 @@
   <div class="mx-auto max-w-2xl">
 
     @if (loading()) {
-      <p class="text-center py-16" style="color: var(--muted)">…</p>
+      <div class="flex justify-center py-16"><app-loading-meter [label]="'common.loading' | translate" /></div>
     } @else if (error()) {
       <div class="text-center py-16">
         <p class="text-lg font-medium" style="color: var(--ink)">{{ 'dj.portal.error.expired' | translate }}</p>

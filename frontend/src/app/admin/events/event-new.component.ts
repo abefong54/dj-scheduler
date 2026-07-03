@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ApiService } from '../../services/api.service';
 import { AdminShellComponent } from '../../shared/admin-shell.component';
+import { SubmitGuard } from '../../shared/submit-guard';
 
 @Component({
   selector: 'app-event-new',
@@ -22,18 +23,19 @@ export class EventNewComponent {
   start_date = signal('');
   end_date = signal('');
   genres_input = '';
+  readonly submitting = new SubmitGuard();
 
   submit() {
     if (!this.name() || !this.venue_name() || !this.start_date()) return;
 
-    this.api.createEvent({
+    this.submitting.run(this.api.createEvent({
       name: this.name(),
       venue_name: this.venue_name(),
       start_date: this.start_date(),
       end_date: this.end_date(),
       genres: this.genres_input.split(',').map(g => g.trim()).filter(Boolean),
-    }).subscribe(() => {
-      this.router.navigate(['/admin/events']);
+    }), {
+      next: () => this.router.navigate(['/admin/events']),
     });
   }
 }

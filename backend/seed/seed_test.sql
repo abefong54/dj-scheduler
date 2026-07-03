@@ -36,10 +36,12 @@ INSERT INTO djs (id, organizer_id, name, genre_tags, portal_token_hash, portal_t
   ('00000000-0000-0000-0000-0000000000d2', '00000000-0000-0000-0000-000000000001', 'DJ Beta', ARRAY['ambient'],
      NULL, NULL);
 
--- One event with two stages.
+-- One event with two stages. Dates are relative to CURRENT_DATE so the event is
+-- always "upcoming" (the events list defaults to the Upcoming tab) — a fixed date
+-- silently rots into the Past tab once it passes and breaks the events specs.
 INSERT INTO events (id, organizer_id, name, venue_name, start_date, end_date, genres) VALUES
   ('00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-000000000001', 'E2E Fest', 'Test Arena',
-     DATE '2026-07-01', DATE '2026-07-02', ARRAY['house','techno','ambient']);
+     CURRENT_DATE + 7, CURRENT_DATE + 8, ARRAY['house','techno','ambient']);
 
 INSERT INTO stages (id, event_id, name, color, display_order) VALUES
   ('00000000-0000-0000-0000-0000000005a1', '00000000-0000-0000-0000-0000000000e1', 'Main Stage', '#6366F1', 0),
@@ -48,8 +50,8 @@ INSERT INTO stages (id, event_id, name, color, display_order) VALUES
 -- Two slots, one per DJ, both awaiting confirmation (dj_confirmation NULL).
 INSERT INTO slots (id, event_id, stage_id, dj_id, slot_date, start_time, end_time, notes, genre, dj_confirmation) VALUES
   ('00000000-0000-0000-0000-000000005101', '00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000005a1',
-     '00000000-0000-0000-0000-0000000000d1', DATE '2026-07-01', TIME '20:00', TIME '21:00', '', 'house', NULL),
+     '00000000-0000-0000-0000-0000000000d1', CURRENT_DATE + 7, TIME '20:00', TIME '21:00', '', 'house', NULL),
   ('00000000-0000-0000-0000-000000005102', '00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000005a2',
-     '00000000-0000-0000-0000-0000000000d2', DATE '2026-07-01', TIME '21:00', TIME '22:00', '', 'ambient', NULL);
+     '00000000-0000-0000-0000-0000000000d2', CURRENT_DATE + 7, TIME '21:00', TIME '22:00', '', 'ambient', NULL);
 
 COMMIT;
