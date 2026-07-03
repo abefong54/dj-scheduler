@@ -6,6 +6,7 @@ import { vi } from 'vitest';
 
 import { EventsListComponent } from './events-list.component';
 import { ApiService, Event } from '../../services/api.service';
+import { EventsStore } from '../../services/events-store';
 import { DialogService } from '../../shared/dialog.service';
 
 // Deterministic "today" anchor; the component's `today` field is overridden below.
@@ -240,5 +241,75 @@ describe('EventsListComponent — loading state (EL-087)', () => {
 
     expect(el.querySelector('app-loading-meter')).toBeFalsy();
     expect(el.querySelector('button.btn-primary')?.textContent).toContain('common.retry');
+  });
+});
+
+// EL-091: the list is backed by the root EventsStore (stale-while-revalidate), so
+// a re-visit paints from cache with no spinner and every mutation refreshes it.
+describe('EventsListComponent — cached list (EL-091)', () => {
+  const configure = (api: Partial<ApiService>) =>
+    TestBed.configureTestingModule({
+      imports: [EventsListComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: api },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+      ],
+    });
+
+  it('paints cached rows with NO spinner on a second visit (revalidates silently)', () => {
+    const first = new Subject<Event[]>();
+    const second = new Subject<Event[]>(); // stays pending — cache must cover the gap
+    let calls = 0;
+    configure({
+      getEvents: () => (++calls === 1 ? first : second).asObservable(),
+    });
+
+    // First visit: nothing cached → spinner, no table.
+    const f1 = TestBed.createComponent(EventsListComponent);
+    f1.detectChanges();
+    const el1 = f1.nativeElement as HTMLElement;
+    expect(el1.querySelector('app-loading-meter')).toBeTruthy();
+    first.next([FUTURE_EVENT]);
+    first.complete();
+    f1.detectChanges();
+    expect(el1.querySelector('.events-table')).toBeTruthy();
+
+    // Second visit shares the singleton store: cached rows show immediately even
+    // though the revalidation request (`second`) is still in flight — no spinner.
+    const f2 = TestBed.createComponent(EventsListComponent);
+    f2.detectChanges();
+    const el2 = f2.nativeElement as HTMLElement;
+    expect(el2.querySelector('app-loading-meter')).toBeFalsy();
+    expect(el2.querySelector('[data-testid="event-card-evt-future"]')).toBeTruthy();
+  });
+
+  it('refreshes the shared store after deleting an event', async () => {
+    configure({ getEvents: () => of([FUTURE_EVENT]), deleteEvent: () => of({}) });
+    const store = TestBed.inject(EventsStore);
+    const refreshSpy = vi.spyOn(store, 'refresh');
+
+    const fixture = TestBed.createComponent(EventsListComponent);
+    fixture.detectChanges();
+    await fixture.componentInstance.delete('evt-future');
+
+    expect(refreshSpy).toHaveBeenCalled();
+  });
+
+  it('refreshes the shared store after cloning an event', async () => {
+    configure({
+      getEvents: () => of([FUTURE_EVENT]),
+      cloneEvent: () => of({ ...FUTURE_EVENT, id: 'evt-clone' }),
+    });
+    const store = TestBed.inject(EventsStore);
+    const refreshSpy = vi.spyOn(store, 'refresh');
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+    const fixture = TestBed.createComponent(EventsListComponent);
+    fixture.detectChanges();
+    await fixture.componentInstance.clone('evt-future');
+
+    expect(refreshSpy).toHaveBeenCalled();
   });
 });

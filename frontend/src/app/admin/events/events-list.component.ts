@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ApiService, Event } from '../../services/api.service';
+import { EventsStore } from '../../services/events-store';
 import { AdminShellComponent } from '../../shared/admin-shell.component';
 import { StatusBadgeComponent } from '../../shared/status-badge.component';
 import { ButtonComponent } from '../../shared/button.component';
@@ -24,39 +25,27 @@ export class EventsListComponent {
   private translate = inject(TranslateService);
   private dialog = inject(DialogService);
   private router = inject(Router);
+  private store = inject(EventsStore);
 
   activeTab = signal<'upcoming' | 'past'>('upcoming');
   today = new Date().toISOString().slice(0, 10);
   readonly cloneGuard = new SubmitGuard();
 
-  events = signal<Event[]>([]);
-  loading = signal(true);
-  loadError = signal(false);
+  // Backed by the root EventsStore (EL-091): a re-visit paints from cache with no
+  // spinner while the list revalidates in the background.
+  events = this.store.events;
+  loading = this.store.loading;
+  loadError = this.store.error;
 
   upcoming = computed(() => this.events().filter(e => e.end_date >= this.today));
   past = computed(() => this.events().filter(e => e.end_date < this.today));
 
   constructor() {
-    this.loadEvents();
-  }
-
-  private loadEvents() {
-    this.loading.set(true);
-    this.loadError.set(false);
-    this.api.getEvents().subscribe({
-      next: events => {
-        this.events.set(events);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.loadError.set(true);
-        this.loading.set(false);
-      },
-    });
+    this.store.ensure();
   }
 
   retry() {
-    this.loadEvents();
+    this.store.ensure();
   }
 
   formatDates(e: Event): string {
@@ -91,7 +80,7 @@ export class EventsListComponent {
       variant: 'danger',
     });
     if (!ok) return;
-    this.api.deleteEvent(id).subscribe(() => this.loadEvents());
+    this.api.deleteEvent(id).subscribe(() => this.store.refresh());
   }
 
   async clone(id: string) {
@@ -102,7 +91,10 @@ export class EventsListComponent {
     });
     if (!ok) return;
     this.cloneGuard.run(this.api.cloneEvent(id), {
-      next: newEvent => this.router.navigate(['/admin/events', newEvent.id]),
+      next: newEvent => {
+        this.store.refresh(); // keep the cached list current for the return visit
+        this.router.navigate(['/admin/events', newEvent.id]);
+      },
     });
   }
 }

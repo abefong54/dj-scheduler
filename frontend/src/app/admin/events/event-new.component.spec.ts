@@ -6,6 +6,7 @@ import { provideTranslateService } from '@ngx-translate/core';
 
 import { EventNewComponent } from './event-new.component';
 import { ApiService } from '../../services/api.service';
+import { EventsStore } from '../../services/events-store';
 
 describe('EventNewComponent (EL-065 Console restyle)', () => {
   let fixture: ComponentFixture<EventNewComponent>;
@@ -13,7 +14,8 @@ describe('EventNewComponent (EL-065 Console restyle)', () => {
   const root = () => fixture.nativeElement as HTMLElement;
 
   const createEvent = vi.fn(() => of({}));
-  const apiMock = { createEvent } as unknown as ApiService;
+  // getEvents is reached via EventsStore.refresh() after a successful create (EL-091).
+  const apiMock = { createEvent, getEvents: () => of([]) } as unknown as ApiService;
 
   beforeEach(async () => {
     createEvent.mockClear();
@@ -84,5 +86,18 @@ describe('EventNewComponent (EL-065 Console restyle)', () => {
       end_date: '2026-07-02',
       genres: ['House', 'Techno'],
     });
+  });
+
+  // EL-091: creating an event must invalidate the cached events list so the new
+  // event is present when the list repaints from cache.
+  it('refreshes the events cache after a successful create', () => {
+    const refreshSpy = vi.spyOn(TestBed.inject(EventsStore), 'refresh');
+
+    component.name.set('Summer Fest');
+    component.venue_name.set('The Warehouse');
+    component.start_date.set('2026-07-01');
+    component.submit();
+
+    expect(refreshSpy).toHaveBeenCalled();
   });
 });
