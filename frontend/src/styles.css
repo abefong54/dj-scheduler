@@ -1160,3 +1160,261 @@
     animation: none;
   }
 }
+
+/* ── Responsive admin shell (EL-093) ──────────────────────────────────────
+   Desktop (≥lg) keeps the static 240px sidebar + inline topbar actions defined
+   in the components layer above. These unlayered rules add the mobile
+   behaviour: an off-canvas drawer + a ⋯ overflow menu below lg, and a
+   full-width search row below md. Motion uses the EL-096 tokens and collapses
+   to instant under prefers-reduced-motion. */
+
+/* New chrome is desktop-hidden by default; the media queries reveal it. */
+.shell-hamburger,
+.shell-actions-toggle,
+.shell-backdrop {
+  display: none;
+}
+.shell-topbar-actions {
+  position: relative; /* anchor for the mobile actions popover */
+}
+.shell-actions-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+body.shell-drawer-lock {
+  overflow: hidden;
+}
+
+@media (max-width: 1023px) {
+  /* Sidebar → off-canvas drawer. */
+  .admin-shell {
+    grid-template-columns: 1fr;
+  }
+  .shell-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 240px;
+    max-width: 82vw;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform var(--dur-3) var(--ease-out-soft);
+  }
+  .shell-sidebar-open {
+    transform: translateX(0);
+  }
+  .shell-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    background: rgba(10, 8, 18, 0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-3) var(--ease-in-out);
+  }
+  .shell-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Trigger buttons (☰ and ⋯). */
+  .shell-hamburger,
+  .shell-actions-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-input);
+    color: var(--ink);
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+  .shell-hamburger {
+    margin-left: -8px;
+  }
+  .shell-hamburger:hover,
+  .shell-actions-toggle:hover {
+    background: var(--surface);
+  }
+
+  /* Actions fold into a popover anchored under the search field. */
+  .shell-actions-group {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 46;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-1);
+    min-width: 200px;
+    padding: var(--space-2);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition:
+      opacity var(--dur-2) var(--ease-out-soft),
+      transform var(--dur-2) var(--ease-out-soft),
+      visibility var(--dur-2);
+  }
+  .shell-actions-group.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  /* Stacked, comfortably tappable action rows. */
+  .shell-actions-group > * {
+    width: 100%;
+    min-height: 44px;
+    justify-content: flex-start;
+    text-align: left;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Search drops to its own full-width row beneath the title. */
+  .shell-topbar {
+    flex-wrap: wrap;
+    row-gap: var(--space-3);
+  }
+  .shell-topbar-actions {
+    order: 3;
+    flex-basis: 100%;
+  }
+  .shell-search {
+    width: 100%;
+  }
+}
+
+@media (max-width: 1023px) and (prefers-reduced-motion: reduce) {
+  .shell-sidebar,
+  .shell-backdrop,
+  .shell-actions-group {
+    transition: none;
+  }
+}
+
+/* ── Planner mobile: slot cards + dialog (EL-094) ─────────────────────────
+   Below md the 7-col slot table is replaced by stacked cards; add/edit uses a
+   dialog. Card enter + dialog present use the EL-096 motion tokens, disabled
+   under prefers-reduced-motion. */
+.slot-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.slot-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--space-4);
+  animation: slot-card-in var(--dur-2) var(--ease-out-soft) both;
+}
+@keyframes slot-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.slot-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.slot-card-stage {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 600;
+  color: var(--ink);
+}
+.slot-card-time {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.slot-card-dj {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.slot-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.slot-card-notes {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.slot-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.slot-card-add {
+  width: 100%;
+  min-height: 44px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-card);
+  color: var(--violet);
+  font-weight: 600;
+  background: transparent;
+  transition: background-color var(--dur-1) var(--ease-in-out);
+}
+.slot-card-add:hover {
+  background: var(--surface);
+}
+
+/* Stacked dialog form (reuses .modal-overlay/.modal-box-sm/.form-* + tokens). */
+.slot-dialog-row {
+  display: flex;
+  gap: var(--space-3);
+}
+.slot-dialog-row .form-group {
+  flex: 1;
+}
+
+/* Calm present animation shared by the slot dialogs + add-stage modal. */
+.modal-overlay {
+  animation: modal-overlay-in var(--dur-2) var(--ease-in-out) both;
+}
+.modal-overlay > .modal-box-sm,
+.modal-overlay > .modal-box-md {
+  animation: modal-box-in var(--dur-2) var(--ease-out-soft) both;
+}
+@keyframes modal-overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes modal-box-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slot-card,
+  .modal-overlay,
+  .modal-overlay > .modal-box-sm,
+  .modal-overlay > .modal-box-md {
+    animation: none;
+  }
+}

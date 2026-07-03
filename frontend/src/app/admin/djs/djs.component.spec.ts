@@ -1,11 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { vi } from 'vitest';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { DjsComponent } from './djs.component';
-import { ApiService } from '../../services/api.service';
+import { ApiService, DJ } from '../../services/api.service';
+import { DjsStore } from '../../services/djs-store';
 import { DialogService } from '../../shared/dialog.service';
 
 // The DJs page must wrap itself in the console AdminShell so the left sidebar is
@@ -201,5 +202,100 @@ describe('DjsComponent — certification status pills (EL-081)', () => {
     const pill = root.querySelector('.dj-grad-pill') as HTMLElement;
     expect(pill).toBeTruthy();
     expect(pill.querySelector('svg.dj-grad-glyph')).toBeTruthy();
+  });
+});
+
+// EL-092: the roster is backed by the root DjsStore (stale-while-revalidate), so
+// a re-visit paints from cache with no spinner and every roster mutation refreshes
+// it — but generating a portal token (which doesn't change the roster) must not.
+describe('DjsComponent — cached roster (EL-092)', () => {
+  const ROSTER: DJ[] = [
+    { id: 'd1', name: 'Mia', genre_tags: ['House'], certifications: ['House'], is_student: true },
+  ];
+
+  const configure = (api: Partial<ApiService>, dialog: Partial<DialogService> = {}) =>
+    TestBed.configureTestingModule({
+      imports: [DjsComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: api },
+        {
+          provide: DialogService,
+          useValue: { confirm: () => Promise.resolve(true), alert: () => Promise.resolve(), ...dialog },
+        },
+      ],
+    });
+
+  it('paints cached rows with NO spinner on a second visit (revalidates silently)', () => {
+    const first = new Subject<DJ[]>();
+    const second = new Subject<DJ[]>(); // stays pending — cache must cover the gap
+    let calls = 0;
+    configure({ getDJs: () => (++calls === 1 ? first : second).asObservable() });
+
+    // First visit: nothing cached → spinner, no table.
+    const f1 = TestBed.createComponent(DjsComponent);
+    f1.detectChanges();
+    const el1 = f1.nativeElement as HTMLElement;
+    expect(el1.querySelector('app-loading-meter')).toBeTruthy();
+    expect(el1.querySelector('app-data-table')).toBeFalsy();
+    first.next(ROSTER);
+    first.complete();
+    f1.detectChanges();
+    expect(el1.querySelector('app-data-table')).toBeTruthy();
+
+    // Second visit shares the singleton store: cached rows show immediately even
+    // though the revalidation request (`second`) is still in flight — no spinner.
+    const f2 = TestBed.createComponent(DjsComponent);
+    f2.detectChanges();
+    const el2 = f2.nativeElement as HTMLElement;
+    expect(el2.querySelector('app-loading-meter')).toBeFalsy();
+    expect(el2.querySelector('app-data-table')).toBeTruthy();
+  });
+
+  it('refreshes the shared store after adding a DJ', async () => {
+    configure({ getDJs: () => of(ROSTER), createDJ: () => of(ROSTER[0]) });
+    const refreshSpy = vi.spyOn(TestBed.inject(DjsStore), 'refresh');
+
+    const c = TestBed.createComponent(DjsComponent).componentInstance;
+    c.newDJ.set({ name: 'Nova' });
+    c.newDJGenres.set('Techno');
+    await c.addDJ();
+
+    expect(refreshSpy).toHaveBeenCalled();
+  });
+
+  it('refreshes the shared store after deleting a DJ', async () => {
+    configure({ getDJs: () => of(ROSTER), deleteDJ: () => of({}) });
+    const refreshSpy = vi.spyOn(TestBed.inject(DjsStore), 'refresh');
+
+    const c = TestBed.createComponent(DjsComponent).componentInstance;
+    await c.deleteDJ('d1');
+
+    expect(refreshSpy).toHaveBeenCalled();
+  });
+
+  it('refreshes the shared store after saving cert edits', () => {
+    configure({ getDJs: () => of(ROSTER), updateDJ: () => of(ROSTER[0]) });
+    const refreshSpy = vi.spyOn(TestBed.inject(DjsStore), 'refresh');
+
+    const c = TestBed.createComponent(DjsComponent).componentInstance;
+    c.openEdit({ id: 'd1' });
+    c.saveEdit();
+
+    expect(refreshSpy).toHaveBeenCalled();
+  });
+
+  it('does NOT refresh the store when generating a portal link (roster unchanged)', () => {
+    configure(
+      { getDJs: () => of(ROSTER), generateDJPortalToken: () => of({ portal_url: 'https://x/p', expires_at: '' }) },
+      { shareLink: vi.fn() },
+    );
+    const refreshSpy = vi.spyOn(TestBed.inject(DjsStore), 'refresh');
+
+    const c = TestBed.createComponent(DjsComponent).componentInstance;
+    c.copyPortalLink('d1');
+
+    expect(refreshSpy).not.toHaveBeenCalled();
   });
 });

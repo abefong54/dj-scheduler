@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 /**
  * EL-073 — Custom domain icon set guard.
@@ -12,10 +13,12 @@ import { join } from 'node:path';
  * reusable assets: each file must exist and be a single-root <svg> with a
  * viewBox and no external references. Mirrors the source-of-truth style of
  * `styles-tokens.spec.ts`.
- *
- * Vitest runs with the frontend package dir as cwd.
  */
-const ICONS_DIR = join(process.cwd(), 'public', 'brand', 'icons');
+// Anchor fixture reads to this spec's own location (src/), not process.cwd() —
+// the Angular vitest builder resolves cwd inconsistently across invocations, so
+// cwd-relative reads flake with spurious ENOENT (EL-097).
+const FRONTEND_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const ICONS_DIR = join(FRONTEND_ROOT, 'public', 'brand', 'icons');
 
 const ICON_FILES = [
   'waveform-check-line.svg',

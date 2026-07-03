@@ -1,5 +1,11 @@
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// Anchor fixture reads to this spec's own location (src/), not process.cwd() —
+// the Angular vitest builder resolves cwd inconsistently across invocations, so
+// process.cwd()-relative reads flake with spurious ENOENT (EL-097).
+const FRONTEND_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 /**
  * EL-072 — Soundcheck design tokens (source-of-truth) regression guard.
@@ -16,7 +22,7 @@ import { join } from 'node:path';
  */
 // Vitest runs with the frontend package dir as cwd; styles.css is the global
 // SoT stylesheet under src/.
-const css = readFileSync(join(process.cwd(), 'src', 'styles.css'), 'utf8');
+const css = readFileSync(join(FRONTEND_ROOT, 'src', 'styles.css'), 'utf8');
 
 describe('Soundcheck design tokens (EL-072)', () => {
   it('defines the brand accent + status tokens with the spec hex values', () => {
