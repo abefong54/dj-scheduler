@@ -552,3 +552,105 @@ describe('EventDetailComponent — mobile cards + dialog (EL-094)', () => {
     expect(root().querySelector('[data-testid="edit-slot-dialog"]')).toBeNull();
   });
 });
+
+// EL-095: interaction backfill — date tabs and the add-stage colour swatch had
+// no coverage. (Sort headers, keyboard save/cancel, and swatch→create end-to-end
+// are covered by e2e/specs/planner-interactions.spec.ts.)
+describe('EventDetailComponent — date tabs (EL-095)', () => {
+  let fixture: ComponentFixture<EventDetailComponent>;
+  const root = () => fixture.nativeElement as HTMLElement;
+  // Two slots on two different dates → the date tabs render.
+  const MULTI: Slot[] = [
+    { ...SLOT, id: 'd1', slot_date: '2026-07-01', start_time: '19:00', end_time: '20:00' } as Slot,
+    { ...SLOT, id: 'd2', slot_date: '2026-07-02', start_time: '20:00', end_time: '21:00' } as Slot,
+  ];
+  const apiMock = {
+    getEvent: () => of({ ...EVENT, end_date: '2026-07-02' }),
+    getStages: () => of(STAGES),
+    getSlots: () => of(MULTI),
+    getDJs: () => of(DJS),
+    createSlot: () => of({}),
+    updateSlot: () => of({}),
+  };
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [EventDetailComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: apiMock },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'evt-1' } } } },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+        { provide: ScheduleExportService, useValue: { download: () => {} } },
+      ],
+    }).compileComponents();
+    TestBed.inject(TranslateService).use('en');
+    fixture = TestBed.createComponent(EventDetailComponent);
+    fixture.detectChanges();
+  });
+
+  it('renders one tab per date and defaults to the first', () => {
+    expect(root().querySelectorAll('.tab-btn').length).toBe(2);
+    expect(fixture.componentInstance.selectedDate()).toBe('2026-07-01');
+    expect(fixture.componentInstance.slotTable.view().map(s => s.id)).toEqual(['d1']);
+  });
+
+  it('switches the visible date when another tab is clicked', () => {
+    root().querySelectorAll<HTMLButtonElement>('.tab-btn')[1].click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.selectedDate()).toBe('2026-07-02');
+    expect(fixture.componentInstance.slotTable.view().map(s => s.id)).toEqual(['d2']);
+  });
+});
+
+describe('EventDetailComponent — add-stage colour swatch (EL-095)', () => {
+  let fixture: ComponentFixture<EventDetailComponent>;
+  const root = () => fixture.nativeElement as HTMLElement;
+  const createStage = vi.fn(() => of({}));
+  const apiMock = {
+    getEvent: () => of(EVENT),
+    getStages: () => of(STAGES),
+    getSlots: () => of([] as Slot[]),
+    getDJs: () => of(DJS),
+    createSlot: () => of({}),
+    updateSlot: () => of({}),
+    createStage,
+  };
+
+  beforeEach(async () => {
+    createStage.mockClear();
+    await TestBed.configureTestingModule({
+      imports: [EventDetailComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: apiMock },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'evt-1' } } } },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+        { provide: ScheduleExportService, useValue: { download: () => {} } },
+      ],
+    }).compileComponents();
+    TestBed.inject(TranslateService).use('en');
+    fixture = TestBed.createComponent(EventDetailComponent);
+    fixture.detectChanges();
+  });
+
+  it('marks the chosen swatch active and creates the stage with that colour', () => {
+    const comp = fixture.componentInstance;
+    comp.addStage();
+    fixture.detectChanges();
+
+    const swatches = root().querySelectorAll<HTMLButtonElement>('.color-swatch');
+    expect(swatches.length).toBe(comp.stageColors.length);
+    swatches[3].click();
+    fixture.detectChanges();
+
+    expect(comp.newStageColor).toBe(comp.stageColors[3]);
+    expect(swatches[3].className).toContain('swatch-active');
+
+    comp.newStageName = 'Night Stage';
+    root().querySelector<HTMLButtonElement>('[data-testid="stage-create-btn"]')!.click();
+    expect(createStage).toHaveBeenCalledWith('evt-1', { name: 'Night Stage', color: comp.stageColors[3] });
+  });
+});

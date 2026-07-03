@@ -23,6 +23,9 @@ test.describe('planner mobile — cards + dialog (EL-094)', () => {
   test('adds a slot through the add dialog', async ({ page }) => {
     await page.goto(detail);
     const cards = page.locator('.slot-card');
+    // Wait for the seeded cards to finish loading before counting — otherwise
+    // `before` races the async slot fetch and is captured as 0 on slower CI.
+    await expect(cards.first()).toBeVisible();
     const before = await cards.count();
 
     await page.getByTestId('add-slot-trigger').click();
@@ -32,8 +35,8 @@ test.describe('planner mobile — cards + dialog (EL-094)', () => {
     await page.getByTestId('dialog-add-start').fill('22:30');
     await page.getByTestId('dialog-add-save').click();
 
-    await expect(cards).toHaveCount(before + 1);
     await expect(page.locator('.slot-card', { hasText: '22:30' })).toBeVisible();
+    await expect(cards).toHaveCount(before + 1);
   });
 
   test('edits a slot through the edit dialog', async ({ page }) => {
