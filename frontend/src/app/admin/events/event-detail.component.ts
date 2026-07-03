@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { ApiService, Event, Stage, Slot, DJ } from '../../services/api.service';
+import { EventsStore } from '../../services/events-store';
 import { DialogService } from '../../shared/dialog.service';
 import { ScheduleExportService } from '../../services/schedule-export.service';
 import { slotDurationMins } from '../../shared/slot-time.util';
@@ -24,6 +25,7 @@ import { TableSort } from '../../shared/table-sort';
 })
 export class EventDetailComponent implements OnDestroy {
   private api = inject(ApiService);
+  private store = inject(EventsStore);
   private route = inject(ActivatedRoute);
   private translate = inject(TranslateService);
   private dialog = inject(DialogService);
@@ -427,6 +429,7 @@ export class EventDetailComponent implements OnDestroy {
     }).subscribe({
       next: updated => {
         this.event.set(updated);
+        this.store.refresh();
         this.editingHeader.set(false);
       },
       error: () => this.dialog.alert({

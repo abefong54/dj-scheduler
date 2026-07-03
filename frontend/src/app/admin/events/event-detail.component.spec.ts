@@ -7,6 +7,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 
 import { EventDetailComponent } from './event-detail.component';
 import { ApiService, Slot } from '../../services/api.service';
+import { EventsStore } from '../../services/events-store';
 import { DialogService } from '../../shared/dialog.service';
 import { ScheduleExportService } from '../../services/schedule-export.service';
 
@@ -444,6 +445,8 @@ describe('EventDetailComponent — hero editor', () => {
   });
 
   it('saveHeader PATCHes the event and closes the editor', () => {
+    const store = TestBed.inject(EventsStore);
+    vi.spyOn(store, 'refresh').mockImplementation(() => {}); // prevent the implicit getEvents() from leaking into verify()
     const cmp = fixture.componentInstance;
     cmp.startHeaderEdit();
     cmp.hVenue.set('Renamed Venue');
@@ -455,6 +458,18 @@ describe('EventDetailComponent — hero editor', () => {
     fixture.detectChanges();
     expect(cmp.editingHeader()).toBe(false);
     expect(cmp.event()!.venue_name).toBe('Renamed Venue');
+  });
+
+  it('saveHeader calls EventsStore.refresh() on success', () => {
+    const store = TestBed.inject(EventsStore);
+    const refreshSpy = vi.spyOn(store, 'refresh').mockImplementation(() => {});
+    const cmp = fixture.componentInstance;
+    cmp.startHeaderEdit();
+    cmp.hVenue.set('New Venue');
+    cmp.saveHeader();
+    const req = httpMock.expectOne(`/api/events/${cmp.event()!.id}`);
+    req.flush({ ...req.request.body, id: cmp.event()!.id });
+    expect(refreshSpy).toHaveBeenCalled();
   });
 
   it('cancelHeader closes without a request', () => {
