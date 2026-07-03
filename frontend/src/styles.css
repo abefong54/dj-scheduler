@@ -54,6 +54,16 @@
   --space-5: 24px;
   --space-6: 32px;
 
+  /* Motion (EL-096) — the single source of "feel". Calm and fast: soft
+     ease-out deceleration, no overshoot. All animated surfaces reference these
+     by name (never a hard-coded duration/curve) and collapse to instant under
+     prefers-reduced-motion. See Frontend/2026-07-03-motion-view-transition-foundation-design. */
+  --dur-1: 160ms; /* micro: hovers, small state flips */
+  --dur-2: 240ms; /* standard: view cross-fade, dialogs */
+  --dur-3: 320ms; /* deliberate: drawer slide */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1); /* enters / arrivals */
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1); /* symmetric cross-fades */
+
   /* Type families.
      EL-074: 'Noto Sans TC' is appended AFTER the Latin faces in every Console
      stack so Traditional Chinese has real coverage. The live components read
@@ -1120,5 +1130,33 @@
   .vu-loader-bar {
     animation: none;
     transform: scaleY(0.7);
+  }
+}
+
+/* ── Route view transitions (EL-096) ──────────────────────────────────────
+   A calm cross-fade between routes (no slide), driven by the motion tokens.
+   The router opts in via withViewTransitions() in app.config.ts; this styles
+   the browser's ::view-transition pseudo-elements. Progressive enhancement:
+   unsupported browsers simply hard-cut as before. */
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+::view-transition-old(root) {
+  animation: vt-fade-out var(--dur-2) var(--ease-in-out) both;
+}
+::view-transition-new(root) {
+  animation: vt-fade-in var(--dur-2) var(--ease-in-out) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
   }
 }
