@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { WritableSignal, signal } from '@angular/core';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
@@ -7,6 +8,7 @@ import { EventDetailComponent } from './event-detail.component';
 import { ApiService, Slot } from '../../services/api.service';
 import { DialogService } from '../../shared/dialog.service';
 import { ScheduleExportService } from '../../services/schedule-export.service';
+import { BreakpointService } from '../../shared/breakpoint.service';
 
 const EVENT = {
   id: 'evt-1',
@@ -397,5 +399,74 @@ describe('EventDetailComponent — slot search & sort (EL-028)', () => {
     component.slotTable.toggle('dj_name');
     component.slotTable.sortDir.set('desc');
     expect(component.slotTable.view().map(s => s.dj_name)).toEqual(['DJ Beta', 'DJ Alpha']);
+  });
+});
+
+// EL-094: below md the table becomes stacked cards and add/edit moves into a
+// dialog bound to the same state/methods. A stub BreakpointService drives the
+// compact() switch.
+describe('EventDetailComponent — mobile cards + dialog (EL-094)', () => {
+  let fixture: ComponentFixture<EventDetailComponent>;
+  let compact: WritableSignal<boolean>;
+  const root = () => fixture.nativeElement as HTMLElement;
+
+  const apiMock = {
+    getEvent: () => of(EVENT),
+    getStages: () => of(STAGES),
+    getSlots: () => of([SLOT]),
+    getDJs: () => of(DJS),
+    createSlot: () => of({}),
+    updateSlot: () => of({}),
+  };
+
+  beforeEach(async () => {
+    compact = signal(true);
+    await TestBed.configureTestingModule({
+      imports: [EventDetailComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: apiMock },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'evt-1' } } } },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+        { provide: ScheduleExportService, useValue: { download: () => {} } },
+        { provide: BreakpointService, useValue: { compact } },
+      ],
+    }).compileComponents();
+
+    TestBed.inject(TranslateService).use('en');
+    fixture = TestBed.createComponent(EventDetailComponent);
+    fixture.detectChanges();
+  });
+
+  it('renders stacked slot cards (not the table) when compact', () => {
+    expect(root().querySelectorAll('.slot-card').length).toBe(1);
+    expect(root().querySelector('.slot-table')).toBeNull();
+  });
+
+  it('renders the table (not cards) when not compact', () => {
+    compact.set(false);
+    fixture.detectChanges();
+    expect(root().querySelector('.slot-table')).toBeTruthy();
+    expect(root().querySelector('.slot-card')).toBeNull();
+  });
+
+  it('opens the add-slot dialog from the card-list trigger', () => {
+    root().querySelector<HTMLButtonElement>('[data-testid="add-slot-trigger"]')!.click();
+    fixture.detectChanges();
+    expect(root().querySelector('[data-testid="add-slot-dialog"]')).toBeTruthy();
+  });
+
+  it('edits a slot via the dialog through the shared saveEdit path', () => {
+    fixture.componentInstance.startEdit(SLOT);
+    fixture.detectChanges();
+    expect(root().querySelector('[data-testid="edit-slot-dialog"]')).toBeTruthy();
+
+    // Saving through the dialog runs the same saveEdit → updateSlot path; on
+    // success the dialog closes.
+    root().querySelector<HTMLButtonElement>('[data-testid="dialog-edit-save"]')!.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.editingSlotId()).toBeNull();
+    expect(root().querySelector('[data-testid="edit-slot-dialog"]')).toBeNull();
   });
 });
