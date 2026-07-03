@@ -189,4 +189,27 @@ describe('AdminShellComponent', () => {
       expect(q('.shell-actions-group').classList).not.toContain('open');
     });
   });
+
+  // EL-100: the topbar search is opt-in — it only renders when a page actually
+  // wires it (Event Detail). Everywhere else it was a dead input searching
+  // nothing, so it must not render by default.
+  describe('topbar search (opt-in)', () => {
+    let fixture: ComponentFixture<AdminShellComponent>;
+    const root = () => fixture.nativeElement as HTMLElement;
+
+    beforeEach(() => {
+      fixture = TestBed.createComponent(AdminShellComponent);
+    });
+
+    it('does not render the search input by default', () => {
+      fixture.detectChanges();
+      expect(root().querySelector('.shell-search')).toBeNull();
+    });
+
+    it('renders the search input when searchable is set', () => {
+      fixture.componentRef.setInput('searchable', true);
+      fixture.detectChanges();
+      expect(root().querySelector('.shell-search')).toBeTruthy();
+    });
+  });
 });
