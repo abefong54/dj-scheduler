@@ -35,7 +35,8 @@
       <a routerLink="/admin/events" class="console-btn-secondary" data-testid="event-cancel-btn">
         {{ 'actions.cancel' | translate }}
       </a>
-      <button type="submit" class="console-btn-primary" data-testid="event-create-btn">
+      <button type="submit" class="console-btn-primary" data-testid="event-create-btn"
+        [disabled]="submitting.pending()">
         {{ 'actions.create' | translate }}
       </button>
     </div>

@@ -16,7 +16,7 @@
         name="genres" type="text" class="form-input" placeholder="genre1, genre2, genre3" data-testid="dj-genres-input" />
     </div>
     <app-button variant="primary" icon="plus" [label]="'actions.add' | translate"
-      testId="dj-add-btn" (click)="addDJ()" />
+      testId="dj-add-btn" [disabled]="addGuard.pending()" (click)="addDJ()" />
   </div>
 
   @if (loading()) {
@@ -129,7 +129,7 @@
 
       <div class="mt-6 flex gap-2">
         <app-button variant="primary" [label]="'actions.save' | translate"
-          testId="dj-edit-save" (click)="saveEdit()" />
+          testId="dj-edit-save" [disabled]="saveGuard.pending()" (click)="saveEdit()" />
         <app-button [label]="'actions.cancel' | translate"
           testId="dj-edit-cancel" (click)="cancelEdit()" />
       </div>
