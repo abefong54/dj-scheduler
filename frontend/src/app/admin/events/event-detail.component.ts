@@ -9,6 +9,7 @@ import { ScheduleExportService } from '../../services/schedule-export.service';
 import { slotDurationMins } from '../../shared/slot-time.util';
 import { parseLocalDate } from '../../shared/date.util';
 import { AdminShellComponent } from '../../shared/admin-shell.component';
+import { BreakpointService } from '../../shared/breakpoint.service';
 import { LoadingMeterComponent } from '../../shared/loading-meter.component';
 import { SubmitGuard } from '../../shared/submit-guard';
 import { StatusBadgeComponent } from '../../shared/status-badge.component';
@@ -28,6 +29,8 @@ export class EventDetailComponent implements OnDestroy {
   private translate = inject(TranslateService);
   private dialog = inject(DialogService);
   private exporter = inject(ScheduleExportService);
+  /** Drives the mobile (≤md) cards + dialog presentation. */
+  protected readonly breakpoints = inject(BreakpointService);
 
   event = signal<Event | null>(null);
   loading = signal(true);
