@@ -29,7 +29,6 @@ describe('AdminShellComponent', () => {
           { path: 'admin/events', children: [] },
           { path: 'admin/djs', children: [] },
           { path: 'admin/performance', children: [] },
-          { path: 'admin/schedule', children: [] },
         ]),
         provideTranslateService(),
       ],
@@ -61,11 +60,15 @@ describe('AdminShellComponent', () => {
       );
     });
 
-    it('renders the four nav items (Events / DJs / Performance / Schedule)', () => {
+    it('renders the three nav items (Events / DJs / Performance)', () => {
       const items = root().querySelectorAll('.shell-nav-item');
-      expect(items.length).toBe(4);
+      expect(items.length).toBe(3);
       const navIds = Array.from(items).map((el) => el.getAttribute('data-nav'));
-      expect(navIds).toEqual(['events', 'djs', 'performance', 'schedule']);
+      expect(navIds).toEqual(['events', 'djs', 'performance']);
+    });
+
+    it('does not render the removed Lineup/schedule nav item (dead /admin/schedule link)', () => {
+      expect(root().querySelector('[data-nav="schedule"]')).toBeNull();
     });
 
     it('projects arbitrary page content into the light surface', () => {
@@ -89,7 +92,7 @@ describe('AdminShellComponent', () => {
       fixture.detectChanges();
       expect(navClasses('events')).toContain('shell-nav-active');
       expect(navClasses('djs')).not.toContain('shell-nav-active');
-      expect(navClasses('schedule')).not.toContain('shell-nav-active');
+      expect(navClasses('performance')).not.toContain('shell-nav-active');
     });
 
     it('moves the active class when activeNav changes', () => {
