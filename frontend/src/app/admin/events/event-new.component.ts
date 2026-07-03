@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ApiService } from '../../services/api.service';
+import { EventsStore } from '../../services/events-store';
 import { AdminShellComponent } from '../../shared/admin-shell.component';
 import { SubmitGuard } from '../../shared/submit-guard';
 
@@ -17,6 +18,7 @@ export class EventNewComponent {
   private api = inject(ApiService);
   private router = inject(Router);
   private translate = inject(TranslateService);
+  private store = inject(EventsStore);
 
   name = signal('');
   venue_name = signal('');
@@ -35,7 +37,10 @@ export class EventNewComponent {
       end_date: this.end_date(),
       genres: this.genres_input.split(',').map(g => g.trim()).filter(Boolean),
     }), {
-      next: () => this.router.navigate(['/admin/events']),
+      next: () => {
+        this.store.refresh(); // invalidate the cached list so the new event shows
+        this.router.navigate(['/admin/events']);
+      },
     });
   }
 }
