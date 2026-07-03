@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 /**
  * EL-071 — Soundcheck logo system (v1 draft) presence + validity guard.
@@ -9,7 +10,11 @@ import { join } from 'node:path';
  * file is a self-contained, valid single-root <svg> with a viewBox and no
  * external file references (which would break offline / silkscreen use).
  */
-const BRAND_DIR = join(process.cwd(), 'public', 'brand');
+// Anchor fixture reads to this spec's own location (src/), not process.cwd() —
+// the Angular vitest builder resolves cwd inconsistently across invocations, so
+// cwd-relative reads flake with spurious ENOENT (EL-097).
+const FRONTEND_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const BRAND_DIR = join(FRONTEND_ROOT, 'public', 'brand');
 
 const FILES = [
   'lockup-on-dark.svg',
@@ -54,7 +59,7 @@ describe('Soundcheck brand assets (EL-071)', () => {
 const BOOTH_BLACK = '#0B0D10';
 
 describe('Soundcheck shell branding (EL-077)', () => {
-  const index = readFileSync(join(process.cwd(), 'src', 'index.html'), 'utf8');
+  const index = readFileSync(join(FRONTEND_ROOT, 'src', 'index.html'), 'utf8');
 
   it('index.html wires the SVG favicon (+16px variant), not the old .ico', () => {
     expect(index).toContain('href="brand/favicon.svg"');
@@ -69,7 +74,7 @@ describe('Soundcheck shell branding (EL-077)', () => {
   });
 
   it('manifest.webmanifest is valid Soundcheck JSON with Booth Black colours', () => {
-    const raw = readFileSync(join(process.cwd(), 'public', 'manifest.webmanifest'), 'utf8');
+    const raw = readFileSync(join(FRONTEND_ROOT, 'public', 'manifest.webmanifest'), 'utf8');
     const manifest = JSON.parse(raw);
     expect(manifest.name).toBe('Soundcheck');
     expect(manifest.short_name).toBe('Soundcheck');
@@ -80,7 +85,7 @@ describe('Soundcheck shell branding (EL-077)', () => {
     // Every manifest icon must point at a brand asset that actually exists.
     for (const icon of manifest.icons) {
       const rel = String(icon.src).replace(/^\//, '');
-      expect(() => readFileSync(join(process.cwd(), 'public', rel), 'utf8')).not.toThrow();
+      expect(() => readFileSync(join(FRONTEND_ROOT, 'public', rel), 'utf8')).not.toThrow();
     }
     // A maskable icon is present so the installed app icon crops cleanly.
     expect(manifest.icons.some((i: { purpose?: string }) => i.purpose === 'maskable')).toBe(true);
@@ -96,13 +101,13 @@ describe('Soundcheck shell branding (EL-077)', () => {
 
   it('the OG social image referenced by index.html exists and is a PNG', () => {
     expect(index).toContain('/assets/og/soundcheck-og.png');
-    const png = readFileSync(join(process.cwd(), 'src', 'assets', 'og', 'soundcheck-og.png'));
+    const png = readFileSync(join(FRONTEND_ROOT, 'src', 'assets', 'og', 'soundcheck-og.png'));
     // PNG magic number.
     expect(png.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))).toBe(true);
   });
 
   it('the student promo card is attributed to Soundcheck, not EventLineup', () => {
-    const html = readFileSync(join(process.cwd(), 'src', 'app', 'card', 'card.component.html'), 'utf8');
+    const html = readFileSync(join(FRONTEND_ROOT, 'src', 'app', 'card', 'card.component.html'), 'utf8');
     expect(html).toContain('MADE WITH SOUNDCHECK');
     expect(html).not.toMatch(/EVENTLINEUP/i);
   });
