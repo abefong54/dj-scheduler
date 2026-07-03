@@ -156,7 +156,10 @@ export class EventsListComponent {
       end_date: ev.end_date, genres: ev.genres, ...patch,
     };
     this.api.updateEvent(id, body).subscribe({
-      next: updated => this.events.update(list => list.map(e => e.id === id ? updated : e)),
+      next: updated => {
+        this.events.update(list => list.map(e => e.id === id ? updated : e));
+        this.store.refresh(); // keep the cached list current for the return visit
+      },
       error: () => this.dialog.alert({
         title: this.translate.instant('common.loadError'),
         message: this.translate.instant('common.loadError'),

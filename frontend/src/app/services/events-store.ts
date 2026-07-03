@@ -6,8 +6,8 @@ import { CachedList } from '../shared/cached-list';
  * Root-provided stale-while-revalidate cache for the organizer's events list
  * (EL-091). Backs `/admin/events` so a re-visit paints instantly instead of
  * re-fetching behind a spinner. Every write path must call `refresh()` to keep
- * the cache honest — there is no `updateEvent`, so create/delete/clone is the
- * complete set of invalidation points.
+ * the cache honest — create/delete/clone and inline updateEvent edits (Task 3)
+ * are all invalidation points.
  */
 @Injectable({ providedIn: 'root' })
 export class EventsStore {

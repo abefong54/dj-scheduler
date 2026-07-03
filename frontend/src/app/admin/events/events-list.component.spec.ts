@@ -313,6 +313,25 @@ describe('EventsListComponent — cached list (EL-091)', () => {
 
     expect(refreshSpy).toHaveBeenCalled();
   });
+
+  it('refreshes the shared store after a successful inline edit (commitVenue)', () => {
+    configure({
+      getEvents: () => of([LIVE_EVENT, FUTURE_EVENT, PAST_EVENT]),
+      updateEvent: () => of({ ...LIVE_EVENT, venue_name: 'New Venue' }),
+    });
+    const store = TestBed.inject(EventsStore);
+    const refreshSpy = vi.spyOn(store, 'refresh');
+
+    const fixture = TestBed.createComponent(EventsListComponent);
+    (fixture.componentInstance as EventsListComponent).today = TODAY;
+    fixture.detectChanges();
+
+    const cmp = fixture.componentInstance as EventsListComponent;
+    const row = cmp.rowsForActiveTab()[0];
+    cmp.commitVenue(row, { value: 'New Venue', endValue: '' });
+
+    expect(refreshSpy).toHaveBeenCalled();
+  });
 });
 
 // Task 3: editable cells — commitVenue / commitDates / commitGenres call
@@ -359,6 +378,10 @@ describe('EventsListComponent — inline edits (Task 3)', () => {
   it('editing a venue cell PATCHes the event and updates the row', () => {
     const updatedEvent: Event = { ...LIVE_EVENT, venue_name: 'New Venue' };
     updateEventSpy.mockReturnValue(of(updatedEvent));
+    // Stub out the store refresh so the synchronous mock getEvents() doesn't
+    // reset the linkedSignal before we can assert the optimistic update.
+    // (The refresh path is covered separately in the EL-091 cached-list suite.)
+    vi.spyOn(TestBed.inject(EventsStore), 'refresh').mockImplementation(() => {});
 
     const cmp = fixture.componentInstance;
     const row = cmp.rowsForActiveTab()[0];
