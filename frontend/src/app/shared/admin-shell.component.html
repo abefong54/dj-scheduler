@@ -6,8 +6,14 @@
   <aside class="shell-sidebar" [class.shell-sidebar-open]="drawerOpen()">
     <!-- Brand lives once, in the global top bar (app.component). The sidebar
          opens straight into the workspace nav. -->
-    <p class="shell-section-label mono-label">
-      {{ 'shell.workspace' | translate }}
+    <!-- EL-107: show the school name when available; fall back to the i18n label
+         while loading or when the user has no school. Truncate long names. -->
+    <p class="shell-section-label mono-label" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+      @if (schoolName(); as name) {
+        <span [title]="name">{{ name }}</span>
+      } @else {
+        {{ 'shell.workspace' | translate }}
+      }
     </p>
 
     <nav class="shell-nav">

@@ -2,6 +2,32 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
+// EL-106: session/school types for /api/me and /api/schools.
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface School {
+  id: string;
+  name: string;
+  city?: string;
+  role: string;
+}
+
+export interface Member {
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+}
+
+export interface MeResponse {
+  user: User;
+  school: School | null;
+}
+
 export interface DJ {
   id: string;
   name: string;
@@ -133,6 +159,18 @@ export class ApiService {
   private base = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
+
+  // Session / school (EL-106)
+  getMe() { return this.http.get<MeResponse>(`${this.base}/api/me`); }
+  createSchool(body: { name: string; city?: string }) {
+    return this.http.post<School>(`${this.base}/api/schools`, body);
+  }
+  listMembers() {
+    return this.http.get<Member[]>(`${this.base}/api/schools/current/members`);
+  }
+  inviteMember(body: { email: string; role: string }) {
+    return this.http.post<Member>(`${this.base}/api/schools/current/members`, body);
+  }
 
   // DJs
   getDJs() { return this.http.get<DJ[]>(`${this.base}/api/djs`); }

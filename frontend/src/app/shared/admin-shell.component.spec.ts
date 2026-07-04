@@ -2,7 +2,20 @@ import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideTranslateService } from '@ngx-translate/core';
+import { signal } from '@angular/core';
 import { AdminShellComponent, ShellNav } from './admin-shell.component';
+import { SessionStore } from '../services/session.store';
+
+/** Default stub: no school (covers the existing tests unchanged). */
+function makeStubSession(schoolName: string | null = null) {
+  return {
+    school: signal(schoolName ? { id: 's1', name: schoolName, role: 'owner' } : null),
+    user: signal(null),
+    loading: signal(false),
+    ensure: () => {},
+    refresh: () => {},
+  };
+}
 
 @Component({
   standalone: true,
@@ -31,6 +44,8 @@ describe('AdminShellComponent', () => {
           { path: 'admin/performance', children: [] },
         ]),
         provideTranslateService(),
+        // EL-107: stub session so tests don't need HttpClient.
+        { provide: SessionStore, useValue: makeStubSession(null) },
       ],
     }).compileComponents();
   });
@@ -211,5 +226,44 @@ describe('AdminShellComponent', () => {
       fixture.detectChanges();
       expect(root().querySelector('.shell-search')).toBeTruthy();
     });
+  });
+
+});
+
+// ── EL-107: school name in sidebar ───────────────────────────────────────────
+// Separate top-level describe so configureTestingModule doesn't run inside
+// the existing describe's beforeEach and can control the SessionStore stub.
+
+describe('AdminShellComponent — school name in sidebar (EL-107)', () => {
+  it('shows the i18n fallback label when school is null', async () => {
+    await TestBed.configureTestingModule({
+      imports: [AdminShellComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: SessionStore, useValue: makeStubSession(null) },
+      ],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(AdminShellComponent);
+    fixture.detectChanges();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('.shell-section-label')?.textContent?.trim(),
+    ).toContain('shell.workspace');
+  });
+
+  it('shows the school name when session has a school', async () => {
+    await TestBed.configureTestingModule({
+      imports: [AdminShellComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: SessionStore, useValue: makeStubSession('IMDJ School') },
+      ],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(AdminShellComponent);
+    fixture.detectChanges();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('.shell-section-label')?.textContent?.trim(),
+    ).toContain('IMDJ School');
   });
 });

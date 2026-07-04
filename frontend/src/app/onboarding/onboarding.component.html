@@ -1,0 +1,144 @@
+<div class="min-h-screen bg-zinc-950 flex items-center justify-center p-6">
+  <div class="w-full max-w-lg">
+
+    <!-- ── Brand wordmark ──────────────────────────────────────────────────── -->
+    <p class="text-violet-400 font-mono text-sm tracking-widest uppercase mb-8">
+      Soundcheck
+    </p>
+
+    <!-- ══ Step 1: Register school ══════════════════════════════════════════ -->
+    @if (step() === 1) {
+      <h1 class="text-white text-2xl font-semibold mb-2">
+        {{ 'onboarding.step1.title' | translate }}
+      </h1>
+      <p class="text-zinc-400 text-sm mb-8">
+        {{ 'onboarding.step1.subtitle' | translate }}
+      </p>
+
+      <form (ngSubmit)="registerSchool()" novalidate class="flex flex-col gap-5">
+        <div class="flex flex-col gap-1">
+          <label class="text-zinc-300 text-sm font-medium" for="school-name">
+            {{ 'onboarding.schoolName' | translate }}
+          </label>
+          <input
+            id="school-name"
+            type="text"
+            class="bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500"
+            [(ngModel)]="schoolName"
+            name="schoolName"
+            required
+            data-testid="school-name-input"
+          />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-zinc-300 text-sm font-medium" for="school-city">
+            {{ 'onboarding.schoolCity' | translate }}
+          </label>
+          <input
+            id="school-city"
+            type="text"
+            class="bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500"
+            [(ngModel)]="schoolCity"
+            name="schoolCity"
+            data-testid="school-city-input"
+          />
+        </div>
+
+        @if (registerError()) {
+          <p class="text-red-400 text-sm">{{ registerError() | translate }}</p>
+        }
+
+        <button
+          type="submit"
+          class="bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white font-semibold rounded-lg px-6 py-2.5 transition-colors"
+          [disabled]="registering() || !schoolName()"
+          data-testid="register-school-btn"
+        >
+          {{ 'onboarding.registerSchool' | translate }}
+        </button>
+      </form>
+    }
+
+    <!-- ══ Step 2: Add team ══════════════════════════════════════════════════ -->
+    @if (step() === 2) {
+      <h1 class="text-white text-2xl font-semibold mb-2">
+        {{ 'onboarding.step2.title' | translate }}
+      </h1>
+      <p class="text-zinc-400 text-sm mb-8">
+        {{ 'onboarding.step2.subtitle' | translate }}
+      </p>
+
+      <!-- Member list -->
+      @if (members().length > 0) {
+        <ul class="mb-6 flex flex-col gap-2">
+          @for (m of members(); track m.id) {
+            <li class="flex items-center justify-between bg-zinc-900 rounded-lg px-4 py-2.5">
+              <span class="text-zinc-200 text-sm">{{ m.email }}</span>
+              <span class="text-zinc-500 font-mono text-xs uppercase">{{ m.role }}</span>
+            </li>
+          }
+        </ul>
+      }
+
+      <!-- Add member form -->
+      <form (ngSubmit)="addMember()" novalidate class="flex flex-col gap-4 mb-6">
+        <div class="flex gap-3">
+          <div class="flex-1 flex flex-col gap-1">
+            <label class="text-zinc-300 text-sm font-medium" for="member-email">
+              {{ 'onboarding.memberEmail' | translate }}
+            </label>
+            <input
+              id="member-email"
+              type="email"
+              class="bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500"
+              [(ngModel)]="memberEmail"
+              name="memberEmail"
+              data-testid="member-email-input"
+            />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-zinc-300 text-sm font-medium" for="member-role">
+              {{ 'onboarding.memberRole' | translate }}
+            </label>
+            <select
+              id="member-role"
+              class="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+              [(ngModel)]="memberRole"
+              name="memberRole"
+              data-testid="member-role-select"
+            >
+              <option value="member">{{ 'onboarding.role.member' | translate }}</option>
+              <option value="admin">{{ 'onboarding.role.admin' | translate }}</option>
+            </select>
+          </div>
+        </div>
+
+        @if (addError()) {
+          <p class="text-red-400 text-sm">{{ addError() | translate }}</p>
+        }
+
+        <button
+          type="submit"
+          class="bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-white font-medium rounded-lg px-5 py-2.5 transition-colors self-start"
+          [disabled]="adding() || !memberEmail()"
+          data-testid="add-member-btn"
+        >
+          {{ 'onboarding.addMember' | translate }}
+        </button>
+      </form>
+
+      <!-- Done -->
+      <button
+        type="button"
+        class="w-full bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-lg px-6 py-2.5 transition-colors"
+        (click)="done()"
+        data-testid="onboarding-done-btn"
+      >
+        {{ 'onboarding.done' | translate }}
+      </button>
+    }
+
+  </div>
+</div>
