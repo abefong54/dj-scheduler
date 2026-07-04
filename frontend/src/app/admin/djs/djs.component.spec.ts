@@ -299,3 +299,76 @@ describe('DjsComponent — cached roster (EL-092)', () => {
     expect(refreshSpy).not.toHaveBeenCalled();
   });
 });
+
+// EL-099: the "Add a DJ" action moves into the topbar (next to search, like the
+// Events "+ New") and opens the Name+Genres form in a modal — replacing the
+// always-visible inline add card. The modal reuses .modal-overlay/.modal-box-sm
+// so it inherits the shared present-animation (EL-096 motion foundation).
+describe('DjsComponent — add via topbar modal (EL-099)', () => {
+  const ROSTER: DJ[] = [
+    { id: 'd1', name: 'Mia', genre_tags: ['House'], certifications: ['House'], is_student: true },
+  ];
+  const createDJ = vi.fn(() => of(ROSTER[0]));
+
+  const setup = (api: Partial<ApiService> = {}) => {
+    TestBed.configureTestingModule({
+      imports: [DjsComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: { getDJs: () => of(ROSTER), createDJ, ...api } },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true), alert: () => Promise.resolve() } },
+      ],
+    });
+    const fixture = TestBed.createComponent(DjsComponent);
+    fixture.detectChanges();
+    return fixture;
+  };
+
+  beforeEach(() => createDJ.mockClear());
+
+  it('shows no inline add form on load — only a topbar "+ Add" button', () => {
+    const el = setup().nativeElement as HTMLElement;
+    expect(el.querySelector('[data-testid="dj-name-input"]')).toBeNull();  // inline card gone
+    expect(el.querySelector('.modal-overlay')).toBeNull();                 // modal closed
+    expect(el.querySelector('.shell-new-btn')).toBeTruthy();               // topbar add button
+  });
+
+  it('opens the add modal (reusing the shared modal shell) when the topbar button is clicked', () => {
+    const fixture = setup();
+    const el = fixture.nativeElement as HTMLElement;
+    (el.querySelector('.shell-new-btn') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    const modal = el.querySelector('.modal-overlay');
+    expect(modal).toBeTruthy();
+    // uses the shared animated box so it inherits the EL-096 present-animation
+    expect(modal!.querySelector('.modal-box-sm')).toBeTruthy();
+    expect(modal!.querySelector('[data-testid="dj-name-input"]')).toBeTruthy();
+    expect(modal!.querySelector('[data-testid="dj-genres-input"]')).toBeTruthy();
+  });
+
+  it('adds a DJ from the modal and closes it', () => {
+    const fixture = setup();
+    const el = fixture.nativeElement as HTMLElement;
+    const c = fixture.componentInstance;
+    c.openAddModal();
+    c.newDJ.set({ name: 'Nova' });
+    c.newDJGenres.set('Techno');
+    fixture.detectChanges();
+    (el.querySelector('[data-testid="dj-add-btn"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(createDJ).toHaveBeenCalledWith({ name: 'Nova', genre_tags: ['Techno'] });
+    expect(el.querySelector('.modal-overlay')).toBeNull();  // closed on success
+  });
+
+  it('cancel closes the modal without creating a DJ', () => {
+    const fixture = setup();
+    const el = fixture.nativeElement as HTMLElement;
+    fixture.componentInstance.openAddModal();
+    fixture.detectChanges();
+    (el.querySelector('[data-testid="dj-add-cancel"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(el.querySelector('.modal-overlay')).toBeNull();
+    expect(createDJ).not.toHaveBeenCalled();
+  });
+});

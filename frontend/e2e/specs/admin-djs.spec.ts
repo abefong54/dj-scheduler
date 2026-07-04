@@ -12,13 +12,32 @@ test.describe('admin · DJs', () => {
     await expect(page.getByText(SEED.djBeta.name)).toBeVisible();
   });
 
-  test('adds a DJ', async ({ page }) => {
+  // EL-099: the add form is no longer an always-visible inline card — it opens in
+  // a modal from the topbar "+ Add" button (uniform with the Events "+ New").
+  test('adds a DJ via the topbar add modal', async ({ page }) => {
     await page.goto('/admin/djs');
+    // No inline form on load; the fields live inside the modal.
+    await expect(page.getByTestId('dj-name-input')).toHaveCount(0);
+
+    await page.getByTestId('shell-new-btn').click();
+    await expect(page.getByTestId('add-dj-modal')).toBeVisible();
+
     await page.getByTestId('dj-name-input').fill('DJ Gamma');
     await page.getByTestId('dj-genres-input').fill('disco, funk');
     await page.getByTestId('dj-add-btn').click();
 
     await expect(page.getByText('DJ Gamma')).toBeVisible();
+    // Modal closes on a successful add.
+    await expect(page.getByTestId('add-dj-modal')).toHaveCount(0);
+  });
+
+  test('the add modal opens from the topbar and Cancel closes it without adding', async ({ page }) => {
+    await page.goto('/admin/djs');
+    await page.getByTestId('shell-new-btn').click();
+    await expect(page.getByTestId('add-dj-modal')).toBeVisible();
+
+    await page.getByTestId('dj-add-cancel').click();
+    await expect(page.getByTestId('add-dj-modal')).toHaveCount(0);
   });
 
   test('deletes a DJ after confirming the dialog', async ({ page }) => {
