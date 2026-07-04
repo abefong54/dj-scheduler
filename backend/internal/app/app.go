@@ -63,10 +63,12 @@ func Run() {
 	shareHandler := httphandler.NewShareHandler(slotuc.New(slotRepo), eventuc.New(eventRepo), cfg.FrontendURL)
 
 	organizerRepo := database.NewOrganizerRepository(pool)
+	membershipRepo := database.NewMembershipRepository(pool)
 	googleAuth := googleauth.New(cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL)
-	authHandler := httphandler.NewAuthHandler(authuc.New(googleAuth, organizerRepo, cfg.JWTSecret, tokenTTL), cfg.FrontendURL, cfg.SecureCookies)
+	authHandler := httphandler.NewAuthHandler(authuc.New(googleAuth, organizerRepo, membershipRepo, cfg.JWTSecret, tokenTTL), cfg.FrontendURL, cfg.SecureCookies)
 
-	r := httphandler.NewRouter(cfg.FrontendURL, cfg.JWTSecret, publicHandler, shareHandler, djPortalHandler, djHandler, eventHandler, stageHandler, slotHandler, lineHandler, perfHandler, leadHandler)
+	// membershipRepo also resolves the caller's school for the scoping middleware (EL-104).
+	r := httphandler.NewRouter(cfg.FrontendURL, cfg.JWTSecret, membershipRepo, publicHandler, shareHandler, djPortalHandler, djHandler, eventHandler, stageHandler, slotHandler, lineHandler, perfHandler, leadHandler)
 	authHandler.Register(r) // unauthenticated auth routes
 
 	log.Printf("listening on :%s", cfg.Port)

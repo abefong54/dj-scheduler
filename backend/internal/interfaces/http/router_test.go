@@ -46,7 +46,7 @@ func fullRouter(t *testing.T) *gin.Engine {
 	)
 	perf := httphandler.NewPerformanceHandler(perfuc.New(database.NewPerformanceRepository(pool)))
 	lead := httphandler.NewLeadHandler(leaduc.New(database.NewLeadRepository(pool)))
-	return httphandler.NewRouter("http://localhost:4200", routerTestSecret, pub, share, djPortal, dj, ev, st, sl, line, perf, lead)
+	return httphandler.NewRouter("http://localhost:4200", routerTestSecret, database.NewMembershipRepository(pool), pub, share, djPortal, dj, ev, st, sl, line, perf, lead)
 }
 
 func mintRouterToken(t *testing.T) string {

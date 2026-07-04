@@ -25,13 +25,13 @@ func New(repo repository.EventRepository, key []byte) *UseCase {
 // clears it when rawToken is empty (disabling notifications). It returns whether
 // LINE Notify is now enabled. A non-owned event surfaces as apperrors.ErrNotFound
 // from the repository.
-func (uc *UseCase) SetToken(ctx context.Context, eventID, organizerID, rawToken string) (bool, error) {
+func (uc *UseCase) SetToken(ctx context.Context, eventID, schoolID, rawToken string) (bool, error) {
 	if rawToken == "" {
-		return uc.repo.SetLineNotifyToken(ctx, eventID, organizerID, nil)
+		return uc.repo.SetLineNotifyToken(ctx, eventID, schoolID, nil)
 	}
 	enc, err := crypto.Encrypt(rawToken, uc.key)
 	if err != nil {
 		return false, err
 	}
-	return uc.repo.SetLineNotifyToken(ctx, eventID, organizerID, &enc)
+	return uc.repo.SetLineNotifyToken(ctx, eventID, schoolID, &enc)
 }

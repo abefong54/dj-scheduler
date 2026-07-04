@@ -45,8 +45,8 @@ func queryFilter(c *gin.Context) repository.PerformanceFilter {
 // @Failure     500  {object}  map[string]string
 // @Router      /api/djs/{id}/performance [get]
 func (h *PerformanceHandler) djPerformance(c *gin.Context) {
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	p, err := h.uc.DJPerformance(c.Request.Context(), c.Param("id"), organizerID)
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	p, err := h.uc.DJPerformance(c.Request.Context(), c.Param("id"), schoolID)
 	if errors.Is(err, apperrors.ErrNotFound) {
 		c.JSON(http.StatusNotFound, map[string]string{"error": "dj not found"})
 		return
@@ -69,8 +69,8 @@ func (h *PerformanceHandler) djPerformance(c *gin.Context) {
 // @Failure     500  {object}  map[string]string
 // @Router      /api/performance [get]
 func (h *PerformanceHandler) roster(c *gin.Context) {
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	rows, err := h.uc.RosterSummary(c.Request.Context(), organizerID, queryFilter(c))
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	rows, err := h.uc.RosterSummary(c.Request.Context(), schoolID, queryFilter(c))
 	if err != nil {
 		respondError(c, err)
 		return
@@ -90,11 +90,11 @@ func (h *PerformanceHandler) roster(c *gin.Context) {
 // @Failure     500  {object}  map[string]string
 // @Router      /api/performance/underserved [get]
 func (h *PerformanceHandler) underserved(c *gin.Context) {
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
+	schoolID := c.GetString(middleware.SchoolIDKey)
 	// An absent or unparseable threshold yields 0, which the usecase maps to its
 	// default — so a bad value degrades to the default rather than erroring.
 	threshold, _ := strconv.Atoi(c.Query("threshold"))
-	rows, err := h.uc.Underserved(c.Request.Context(), organizerID, queryFilter(c), threshold)
+	rows, err := h.uc.Underserved(c.Request.Context(), schoolID, queryFilter(c), threshold)
 	if err != nil {
 		respondError(c, err)
 		return

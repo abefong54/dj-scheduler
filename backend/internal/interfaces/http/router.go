@@ -11,7 +11,7 @@ import (
 	"eventlineup/internal/interfaces/http/middleware"
 )
 
-func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, share *ShareHandler, djPortal *DJPortalHandler, dj *DJHandler, ev *EventHandler, st *StageHandler, sl *SlotHandler, line *LineHandler, perf *PerformanceHandler, leadHandler *LeadHandler) *gin.Engine {
+func NewRouter(frontendURL, jwtSecret string, schoolResolver middleware.SchoolResolver, public *PublicHandler, share *ShareHandler, djPortal *DJPortalHandler, dj *DJHandler, ev *EventHandler, st *StageHandler, sl *SlotHandler, line *LineHandler, perf *PerformanceHandler, leadHandler *LeadHandler) *gin.Engine {
 	// gin.New() (not gin.Default()) so we control logging: the default logger
 	// writes the full request URL including query strings, leaking OAuth
 	// code/state and DJ portal tokens into access logs (EL-037). RequestLogger
@@ -44,6 +44,9 @@ func NewRouter(frontendURL, jwtSecret string, public *PublicHandler, share *Shar
 	// Protected routes — every request must carry a valid organizer JWT.
 	api := r.Group("/api")
 	api.Use(middleware.Auth(jwtSecret))
+	// Resolve the caller's active school + role into context so scoped handlers
+	// filter by school_id (EL-104). Non-aborting: no membership → no school set.
+	api.Use(middleware.School(schoolResolver))
 	djPortal.RegisterProtected(api)
 	dj.Register(api)
 	ev.Register(api)

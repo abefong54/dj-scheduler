@@ -34,8 +34,8 @@ func overlapConflict(err error) error {
 	return err
 }
 
-func (r *slotRepo) List(ctx context.Context, eventID, organizerID string) ([]model.Slot, error) {
-	rows, err := r.pool.Query(ctx, querySlotList, eventID, organizerID)
+func (r *slotRepo) List(ctx context.Context, eventID, schoolID string) ([]model.Slot, error) {
+	rows, err := r.pool.Query(ctx, querySlotList, eventID, schoolID)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (r *slotRepo) List(ctx context.Context, eventID, organizerID string) ([]mod
 	// An empty result is ambiguous: the event may be the organizer's but have no
 	// slots, or it may belong to someone else. Surface the latter as not-found.
 	if len(slots) == 0 {
-		owned, err := eventOwnedBy(ctx, r.pool, eventID, organizerID)
+		owned, err := eventOwnedBy(ctx, r.pool, eventID, schoolID)
 		if err != nil {
 			return nil, err
 		}
@@ -96,9 +96,9 @@ func (r *slotRepo) ListPublic(ctx context.Context, eventID string) ([]model.Slot
 	return slots, rows.Err()
 }
 
-func (r *slotRepo) Get(ctx context.Context, id, eventID, organizerID string) (model.Slot, error) {
+func (r *slotRepo) Get(ctx context.Context, id, eventID, schoolID string) (model.Slot, error) {
 	var s model.Slot
-	err := r.pool.QueryRow(ctx, querySlotGet, id, eventID, organizerID).Scan(
+	err := r.pool.QueryRow(ctx, querySlotGet, id, eventID, schoolID).Scan(
 		&s.ID, &s.EventID, &s.StageID, &s.StageName,
 		&s.DjID, &s.DjName, &s.Genre,
 		&s.SlotDate, &s.StartTime, &s.EndTime, &s.Notes,
@@ -127,9 +127,9 @@ func (r *slotRepo) GetPublicByID(ctx context.Context, id string) (model.Slot, er
 	return s, err
 }
 
-func (r *slotRepo) Create(ctx context.Context, s model.Slot, eventID, organizerID string) (model.Slot, error) {
+func (r *slotRepo) Create(ctx context.Context, s model.Slot, eventID, schoolID string) (model.Slot, error) {
 	err := r.pool.QueryRow(ctx, querySlotInsert,
-		eventID, s.StageID, s.DjID, s.Genre, s.SlotDate, s.StartTime, s.EndTime, s.Notes, organizerID).
+		eventID, s.StageID, s.DjID, s.Genre, s.SlotDate, s.StartTime, s.EndTime, s.Notes, schoolID).
 		Scan(&s.ID)
 	// No row inserted means the event isn't this organizer's — report not-found.
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -142,10 +142,10 @@ func (r *slotRepo) Create(ctx context.Context, s model.Slot, eventID, organizerI
 	return s, nil
 }
 
-func (r *slotRepo) Update(ctx context.Context, s model.Slot, eventID, organizerID string) (model.Slot, error) {
+func (r *slotRepo) Update(ctx context.Context, s model.Slot, eventID, schoolID string) (model.Slot, error) {
 	err := r.pool.QueryRow(ctx, querySlotUpdate,
 		s.StageID, s.DjID, s.Genre, s.SlotDate, s.StartTime, s.EndTime, s.Notes,
-		s.ID, eventID, organizerID,
+		s.ID, eventID, schoolID,
 	).Scan(
 		&s.ID, &s.EventID, &s.StageID, &s.StageName,
 		&s.DjID, &s.DjName, &s.Genre,
@@ -175,8 +175,8 @@ func (r *slotRepo) SetDJConfirmation(ctx context.Context, slotID, djID, confirma
 	return nil
 }
 
-func (r *slotRepo) Delete(ctx context.Context, id, eventID, organizerID string) error {
-	tag, err := r.pool.Exec(ctx, querySlotDelete, id, eventID, organizerID)
+func (r *slotRepo) Delete(ctx context.Context, id, eventID, schoolID string) error {
+	tag, err := r.pool.Exec(ctx, querySlotDelete, id, eventID, schoolID)
 	if err != nil {
 		return err
 	}

@@ -61,8 +61,8 @@ func (h *DJPortalHandler) RegisterPublic(rg *gin.RouterGroup) {
 // @Failure     500  {object}  map[string]string
 // @Router      /api/djs/{id}/token [post]
 func (h *DJPortalHandler) generateToken(c *gin.Context) {
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	token, expiresAt, err := h.uc.GeneratePortalToken(c.Request.Context(), c.Param("id"), organizerID)
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	token, expiresAt, err := h.uc.GeneratePortalToken(c.Request.Context(), c.Param("id"), schoolID)
 	if errors.Is(err, apperrors.ErrNotFound) {
 		// 404 (not 403) for a DJ the organizer doesn't own — consistent with
 		// US-002 scoping, which avoids leaking the existence of others' rows.

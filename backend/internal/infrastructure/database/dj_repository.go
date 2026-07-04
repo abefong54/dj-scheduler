@@ -19,8 +19,8 @@ func NewDJRepository(pool *pgxpool.Pool) *djRepo {
 	return &djRepo{pool: pool}
 }
 
-func (r *djRepo) List(ctx context.Context, organizerID string, filter repository.DJListFilter) ([]model.DJ, error) {
-	rows, err := r.pool.Query(ctx, queryDJList, organizerID, filter.CertifiedFor, filter.ReadyOnly)
+func (r *djRepo) List(ctx context.Context, schoolID string, filter repository.DJListFilter) ([]model.DJ, error) {
+	rows, err := r.pool.Query(ctx, queryDJList, schoolID, filter.CertifiedFor, filter.ReadyOnly)
 	if err != nil {
 		return nil, err
 	}
@@ -36,9 +36,9 @@ func (r *djRepo) List(ctx context.Context, organizerID string, filter repository
 	return djs, rows.Err()
 }
 
-func (r *djRepo) Get(ctx context.Context, id, organizerID string) (model.DJ, error) {
+func (r *djRepo) Get(ctx context.Context, id, schoolID string) (model.DJ, error) {
 	var d model.DJ
-	err := r.pool.QueryRow(ctx, queryDJGet, id, organizerID).
+	err := r.pool.QueryRow(ctx, queryDJGet, id, schoolID).
 		Scan(&d.ID, &d.Name, &d.GenreTags, &d.Certifications, &d.IsStudent, &d.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return model.DJ{}, apperrors.ErrNotFound
@@ -46,16 +46,16 @@ func (r *djRepo) Get(ctx context.Context, id, organizerID string) (model.DJ, err
 	return d, err
 }
 
-func (r *djRepo) Create(ctx context.Context, name string, tags []string, organizerID string) (model.DJ, error) {
+func (r *djRepo) Create(ctx context.Context, name string, tags []string, schoolID string) (model.DJ, error) {
 	var d model.DJ
-	err := r.pool.QueryRow(ctx, queryDJInsert, name, tags, organizerID).
+	err := r.pool.QueryRow(ctx, queryDJInsert, name, tags, schoolID).
 		Scan(&d.ID, &d.Name, &d.GenreTags, &d.Certifications, &d.IsStudent, &d.CreatedAt)
 	return d, err
 }
 
-func (r *djRepo) Update(ctx context.Context, dj model.DJ, organizerID string) (model.DJ, error) {
+func (r *djRepo) Update(ctx context.Context, dj model.DJ, schoolID string) (model.DJ, error) {
 	var d model.DJ
-	err := r.pool.QueryRow(ctx, queryDJUpdate, dj.Name, dj.GenreTags, dj.Certifications, dj.IsStudent, dj.ID, organizerID).
+	err := r.pool.QueryRow(ctx, queryDJUpdate, dj.Name, dj.GenreTags, dj.Certifications, dj.IsStudent, dj.ID, schoolID).
 		Scan(&d.ID, &d.Name, &d.GenreTags, &d.Certifications, &d.IsStudent, &d.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return model.DJ{}, apperrors.ErrNotFound
@@ -63,15 +63,15 @@ func (r *djRepo) Update(ctx context.Context, dj model.DJ, organizerID string) (m
 	return d, err
 }
 
-func (r *djRepo) Delete(ctx context.Context, id, organizerID string) error {
-	_, err := r.pool.Exec(ctx, queryDJDelete, id, organizerID)
+func (r *djRepo) Delete(ctx context.Context, id, schoolID string) error {
+	_, err := r.pool.Exec(ctx, queryDJDelete, id, schoolID)
 	return err
 }
 
 // SetPortalToken stores a portal token hash + expiry for a DJ the organizer owns.
 // Returns ErrNotFound if the DJ does not exist or belongs to another organizer.
-func (r *djRepo) SetPortalToken(ctx context.Context, djID, organizerID, tokenHash string, expiresAt time.Time) error {
-	tag, err := r.pool.Exec(ctx, queryDJSetPortalToken, tokenHash, expiresAt, djID, organizerID)
+func (r *djRepo) SetPortalToken(ctx context.Context, djID, schoolID, tokenHash string, expiresAt time.Time) error {
+	tag, err := r.pool.Exec(ctx, queryDJSetPortalToken, tokenHash, expiresAt, djID, schoolID)
 	if err != nil {
 		return err
 	}
