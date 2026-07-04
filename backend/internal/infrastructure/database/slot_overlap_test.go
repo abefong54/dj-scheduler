@@ -6,6 +6,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"eventlineup/internal/domain/apperrors"
@@ -98,18 +99,30 @@ func TestSlotUseCase_ConcurrentOverlapsOnlyOneWins(t *testing.T) {
 	}
 	wg.Wait()
 
-	success, conflict := 0, 0
+	// Exactly one create must win. The loser is rejected by the database's
+	// serialization of the concurrent write — which manifests as EITHER the
+	// exclusion-constraint conflict OR a deadlock abort (SQLSTATE 40P01),
+	// depending on lock-acquisition timing. Both mean "this one lost", so both
+	// are accepted; treating only the conflict as valid made this test flaky
+	// (it failed on the Go 1.26 CI runner when the deadlock path was taken).
+	success, lost := 0, 0
 	for _, err := range results {
 		switch {
 		case err == nil:
 			success++
-		case errors.Is(err, apperrors.ErrConflict):
-			conflict++
+		case errors.Is(err, apperrors.ErrConflict) || isDeadlock(err):
+			lost++
 		default:
 			t.Fatalf("unexpected error: %v", err)
 		}
 	}
-	if success != 1 || conflict != 1 {
-		t.Fatalf("expected exactly one success and one conflict, got success=%d conflict=%d", success, conflict)
+	if success != 1 || lost != 1 {
+		t.Fatalf("expected exactly one success and one loss, got success=%d lost=%d", success, lost)
 	}
+}
+
+// isDeadlock reports whether err is a Postgres deadlock (SQLSTATE 40P01).
+func isDeadlock(err error) bool {
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == "40P01"
 }
