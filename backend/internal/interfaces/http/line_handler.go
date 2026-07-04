@@ -41,8 +41,8 @@ func (h *LineHandler) setToken(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
 		return
 	}
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	enabled, err := h.uc.SetToken(c.Request.Context(), c.Param("id"), organizerID, body.LineNotifyToken)
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	enabled, err := h.uc.SetToken(c.Request.Context(), c.Param("id"), schoolID, body.LineNotifyToken)
 	if errors.Is(err, apperrors.ErrNotFound) {
 		// The event isn't the organizer's. Its UUID is already public (shared
 		// schedule link), so 403 here leaks nothing GET /:id/public doesn't.

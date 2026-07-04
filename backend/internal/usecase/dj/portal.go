@@ -21,14 +21,14 @@ const portalTokenTTL = 14 * 24 * time.Hour
 // or logged. Generating a new token overwrites the old hash, which revokes any
 // previously issued token. Returns apperrors.ErrNotFound if the DJ is not the
 // organizer's.
-func (uc *UseCase) GeneratePortalToken(ctx context.Context, djID, organizerID string) (rawToken string, expiresAt time.Time, err error) {
+func (uc *UseCase) GeneratePortalToken(ctx context.Context, djID, schoolID string) (rawToken string, expiresAt time.Time, err error) {
 	buf := make([]byte, 32)
 	if _, err = rand.Read(buf); err != nil {
 		return "", time.Time{}, err
 	}
 	rawToken = hex.EncodeToString(buf)
 	expiresAt = time.Now().Add(portalTokenTTL)
-	if err = uc.repo.SetPortalToken(ctx, djID, organizerID, hashToken(rawToken), expiresAt); err != nil {
+	if err = uc.repo.SetPortalToken(ctx, djID, schoolID, hashToken(rawToken), expiresAt); err != nil {
 		return "", time.Time{}, err
 	}
 	return rawToken, expiresAt, nil

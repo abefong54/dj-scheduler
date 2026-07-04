@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -21,7 +22,7 @@ func stageRouterForOrg(t *testing.T, pool *pgxpool.Pool, organizerID string) *gi
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	r.Use(orgContext(organizerID))
+	r.Use(orgContext(pool, organizerID))
 	httphandler.NewStageHandler(stageuc.New(database.NewStageRepository(pool))).Register(r.Group("/api"))
 	return r
 }
@@ -31,7 +32,7 @@ func slotRouterForOrg(t *testing.T, pool *pgxpool.Pool, organizerID string) *gin
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	r.Use(orgContext(organizerID))
+	r.Use(orgContext(pool, organizerID))
 	httphandler.NewSlotHandler(slotuc.New(database.NewSlotRepository(pool))).Register(r.Group("/api"))
 	return r
 }
@@ -153,6 +154,106 @@ func TestSlotsScopedToOrganizer(t *testing.T) {
 		slotRouterForOrg(t, pool, orgB).ServeHTTP(w, req)
 		if w.Code != http.StatusOK {
 			t.Fatalf("owner should get 200 on their own slot, got %d: %s", w.Code, w.Body.String())
+		}
+	})
+}
+
+func createTestDJForOrg(t *testing.T, pool *pgxpool.Pool, organizerID string) string {
+	t.Helper()
+	var id string
+	if err := pool.QueryRow(context.Background(),
+		`INSERT INTO djs (name, genre_tags, school_id)
+		 VALUES ('Scoped DJ', '{}',
+		         (SELECT school_id FROM memberships WHERE organizer_id = $1 AND status = 'active' LIMIT 1)) RETURNING id`,
+		organizerID).Scan(&id); err != nil {
+		t.Fatalf("createTestDJForOrg: %v", err)
+	}
+	return id
+}
+
+// EL-104: events are school-owned; a member of school A must not reach school B's
+// event, even though event UUIDs are public.
+func TestEventsScopedToSchool(t *testing.T) {
+	pool := setupTestDB(t)
+	orgA := createTestOrganizer(t, pool)
+	orgB := createTestOrganizer(t, pool)
+	eventB := createTestEventForOrg(t, pool, orgB)
+	rA := eventRouterForOrg(t, pool, orgA)
+
+	cases := []struct{ name, method, path, body string }{
+		{"get", http.MethodGet, "/api/events/" + eventB, ""},
+		{"patch", http.MethodPatch, "/api/events/" + eventB, `{"name":"Hijacked","venue_name":"X","start_date":"2026-07-25"}`},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest(tc.method, tc.path, bytes.NewReader([]byte(tc.body)))
+			req.Header.Set("Content-Type", "application/json")
+			rA.ServeHTTP(w, req)
+			if w.Code != http.StatusNotFound {
+				t.Fatalf("school A on B's event %s: expected 404, got %d: %s", tc.name, w.Code, w.Body.String())
+			}
+		})
+	}
+	t.Run("list leaks no rows", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		rA.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/events", nil))
+		var events []map[string]any
+		json.NewDecoder(w.Body).Decode(&events)
+		for _, e := range events {
+			if e["id"] == eventB {
+				t.Fatalf("school A must not see school B's event")
+			}
+		}
+	})
+	t.Run("owner still has access", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		eventRouterForOrg(t, pool, orgB).ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/events/"+eventB, nil))
+		if w.Code != http.StatusOK {
+			t.Fatalf("owner should get 200 on their own event, got %d", w.Code)
+		}
+	})
+}
+
+// EL-104: DJs are school-owned; a member of school A must not reach school B's DJ.
+func TestDJsScopedToSchool(t *testing.T) {
+	pool := setupTestDB(t)
+	orgA := createTestOrganizer(t, pool)
+	orgB := createTestOrganizer(t, pool)
+	djB := createTestDJForOrg(t, pool, orgB)
+	rA := djRouterForOrg(t, pool, orgA)
+
+	cases := []struct{ name, method, path, body string }{
+		{"get", http.MethodGet, "/api/djs/" + djB, ""},
+		{"patch", http.MethodPatch, "/api/djs/" + djB, `{"name":"Hijacked","genre_tags":[]}`},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest(tc.method, tc.path, bytes.NewReader([]byte(tc.body)))
+			req.Header.Set("Content-Type", "application/json")
+			rA.ServeHTTP(w, req)
+			if w.Code != http.StatusNotFound {
+				t.Fatalf("school A on B's DJ %s: expected 404, got %d: %s", tc.name, w.Code, w.Body.String())
+			}
+		})
+	}
+	t.Run("list leaks no rows", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		rA.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/djs", nil))
+		var djs []map[string]any
+		json.NewDecoder(w.Body).Decode(&djs)
+		for _, d := range djs {
+			if d["id"] == djB {
+				t.Fatalf("school A must not see school B's DJ")
+			}
+		}
+	})
+	t.Run("owner still has access", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		djRouterForOrg(t, pool, orgB).ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/djs/"+djB, nil))
+		if w.Code != http.StatusOK {
+			t.Fatalf("owner should get 200 on their own DJ, got %d", w.Code)
 		}
 	})
 }

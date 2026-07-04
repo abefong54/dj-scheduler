@@ -29,14 +29,15 @@ type GoogleAuthenticator interface {
 }
 
 type UseCase struct {
-	google    GoogleAuthenticator
-	repo      repository.OrganizerRepository
-	jwtSecret string
-	tokenTTL  time.Duration
+	google      GoogleAuthenticator
+	repo        repository.OrganizerRepository
+	memberships repository.MembershipRepository
+	jwtSecret   string
+	tokenTTL    time.Duration
 }
 
-func New(google GoogleAuthenticator, repo repository.OrganizerRepository, jwtSecret string, tokenTTL time.Duration) *UseCase {
-	return &UseCase{google: google, repo: repo, jwtSecret: jwtSecret, tokenTTL: tokenTTL}
+func New(google GoogleAuthenticator, repo repository.OrganizerRepository, memberships repository.MembershipRepository, jwtSecret string, tokenTTL time.Duration) *UseCase {
+	return &UseCase{google: google, repo: repo, memberships: memberships, jwtSecret: jwtSecret, tokenTTL: tokenTTL}
 }
 
 // AuthCodeURL returns the Google consent-screen URL to redirect the user to.
@@ -55,6 +56,10 @@ func (uc *UseCase) HandleCallback(ctx context.Context, code string) (string, err
 	if err != nil {
 		return "", err
 	}
+	// Invite auto-link (EL-104): if this person was invited to a school by email,
+	// attach the pending membership to their account on sign-in. Best-effort — a
+	// failure here shouldn't block login, so the error is intentionally ignored.
+	_ = uc.memberships.LinkPendingByEmail(ctx, org.ID, org.Email)
 	return token.Sign(uc.jwtSecret, org.ID, org.Email, uc.tokenTTL)
 }
 

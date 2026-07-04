@@ -15,8 +15,8 @@ func New(repo repository.SlotRepository) *UseCase {
 	return &UseCase{repo: repo}
 }
 
-func (uc *UseCase) List(ctx context.Context, eventID, organizerID string) ([]model.Slot, error) {
-	return uc.repo.List(ctx, eventID, organizerID)
+func (uc *UseCase) List(ctx context.Context, eventID, schoolID string) ([]model.Slot, error) {
+	return uc.repo.List(ctx, eventID, schoolID)
 }
 
 // ListPublic returns slots without organizer scoping, for the public schedule.
@@ -24,8 +24,8 @@ func (uc *UseCase) ListPublic(ctx context.Context, eventID string) ([]model.Slot
 	return uc.repo.ListPublic(ctx, eventID)
 }
 
-func (uc *UseCase) Get(ctx context.Context, id, eventID, organizerID string) (model.Slot, error) {
-	return uc.repo.Get(ctx, id, eventID, organizerID)
+func (uc *UseCase) Get(ctx context.Context, id, eventID, schoolID string) (model.Slot, error) {
+	return uc.repo.Get(ctx, id, eventID, schoolID)
 }
 
 // GetPublicByID reads a slot by id alone, without organizer scoping, for the
@@ -34,30 +34,30 @@ func (uc *UseCase) GetPublicByID(ctx context.Context, id string) (model.Slot, er
 	return uc.repo.GetPublicByID(ctx, id)
 }
 
-func (uc *UseCase) Create(ctx context.Context, s model.Slot, eventID, organizerID string) (model.Slot, error) {
+func (uc *UseCase) Create(ctx context.Context, s model.Slot, eventID, schoolID string) (model.Slot, error) {
 	s.EventID = eventID
-	if err := CheckConflicts(ctx, uc.repo, s, "", organizerID); err != nil {
+	if err := CheckConflicts(ctx, uc.repo, s, "", schoolID); err != nil {
 		return model.Slot{}, err
 	}
-	return uc.repo.Create(ctx, s, eventID, organizerID)
+	return uc.repo.Create(ctx, s, eventID, schoolID)
 }
 
-func (uc *UseCase) Update(ctx context.Context, s model.Slot, eventID, organizerID string) (model.Slot, error) {
+func (uc *UseCase) Update(ctx context.Context, s model.Slot, eventID, schoolID string) (model.Slot, error) {
 	// Confirm the slot exists first so updating a missing slot returns not-found
 	// rather than a conflict against some other slot its payload would overlap.
 	// Get is organizer-scoped, so another organizer's slot also reads as not-found.
-	if _, err := uc.repo.Get(ctx, s.ID, eventID, organizerID); err != nil {
+	if _, err := uc.repo.Get(ctx, s.ID, eventID, schoolID); err != nil {
 		return model.Slot{}, err
 	}
 	s.EventID = eventID
-	if err := CheckConflicts(ctx, uc.repo, s, s.ID, organizerID); err != nil {
+	if err := CheckConflicts(ctx, uc.repo, s, s.ID, schoolID); err != nil {
 		return model.Slot{}, err
 	}
-	return uc.repo.Update(ctx, s, eventID, organizerID)
+	return uc.repo.Update(ctx, s, eventID, schoolID)
 }
 
-func (uc *UseCase) Delete(ctx context.Context, id, eventID, organizerID string) error {
-	return uc.repo.Delete(ctx, id, eventID, organizerID)
+func (uc *UseCase) Delete(ctx context.Context, id, eventID, schoolID string) error {
+	return uc.repo.Delete(ctx, id, eventID, schoolID)
 }
 
 // SetDJConfirmation records a DJ's confirm/flag response on their own slot

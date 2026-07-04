@@ -23,23 +23,23 @@ func New(repo repository.PerformanceRepository) *UseCase {
 }
 
 // DJPerformance returns one DJ's reps across the organizer's events.
-func (uc *UseCase) DJPerformance(ctx context.Context, djID, organizerID string) (model.DJPerformance, error) {
-	return uc.repo.DJPerformance(ctx, djID, organizerID)
+func (uc *UseCase) DJPerformance(ctx context.Context, djID, schoolID string) (model.DJPerformance, error) {
+	return uc.repo.DJPerformance(ctx, djID, schoolID)
 }
 
 // RosterSummary returns every active student's reps in the window.
-func (uc *UseCase) RosterSummary(ctx context.Context, organizerID string, filter repository.PerformanceFilter) ([]model.RosterPerformance, error) {
-	return uc.repo.RosterSummary(ctx, organizerID, filter)
+func (uc *UseCase) RosterSummary(ctx context.Context, schoolID string, filter repository.PerformanceFilter) ([]model.RosterPerformance, error) {
+	return uc.repo.RosterSummary(ctx, schoolID, filter)
 }
 
 // Underserved returns the organizer's active students whose rep count in the
 // window is strictly below threshold. A threshold <= 0 falls back to the default.
 // Graduates are already excluded by RosterSummary (is_student = true only).
-func (uc *UseCase) Underserved(ctx context.Context, organizerID string, filter repository.PerformanceFilter, threshold int) ([]model.RosterPerformance, error) {
+func (uc *UseCase) Underserved(ctx context.Context, schoolID string, filter repository.PerformanceFilter, threshold int) ([]model.RosterPerformance, error) {
 	if threshold <= 0 {
 		threshold = DefaultUnderservedThreshold
 	}
-	roster, err := uc.repo.RosterSummary(ctx, organizerID, filter)
+	roster, err := uc.repo.RosterSummary(ctx, schoolID, filter)
 	if err != nil {
 		return nil, err
 	}

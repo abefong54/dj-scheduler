@@ -24,7 +24,7 @@ func TestEmbeddedMigrationsParse(t *testing.T) {
 	if err != nil {
 		t.Fatalf("goose could not parse embedded migrations: %v", err)
 	}
-	if got := len(p.ListSources()); got != 12 {
-		t.Fatalf("embedded migrations = %d, want 12", got)
+	if got := len(p.ListSources()); got != 13 {
+		t.Fatalf("embedded migrations = %d, want 13", got)
 	}
 }

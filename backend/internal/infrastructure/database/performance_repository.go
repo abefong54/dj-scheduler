@@ -21,9 +21,9 @@ func NewPerformanceRepository(pool *pgxpool.Pool) *performanceRepo {
 // DJPerformance aggregates one DJ's reps across the organizer's events and adds a
 // by-genre breakdown. A DJ that isn't the organizer's yields no aggregate row and
 // maps to apperrors.ErrNotFound (mirrors the 404-not-403 scoping convention).
-func (r *performanceRepo) DJPerformance(ctx context.Context, djID, organizerID string) (model.DJPerformance, error) {
+func (r *performanceRepo) DJPerformance(ctx context.Context, djID, schoolID string) (model.DJPerformance, error) {
 	var p model.DJPerformance
-	err := r.pool.QueryRow(ctx, queryDJPerformance, djID, organizerID).
+	err := r.pool.QueryRow(ctx, queryDJPerformance, djID, schoolID).
 		Scan(&p.DjID, &p.DjName, &p.Reps, &p.TotalMinutes, &p.LastPlayed)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return model.DJPerformance{}, apperrors.ErrNotFound
@@ -32,7 +32,7 @@ func (r *performanceRepo) DJPerformance(ctx context.Context, djID, organizerID s
 		return model.DJPerformance{}, err
 	}
 
-	rows, err := r.pool.Query(ctx, queryDJPerformanceByGenre, djID, organizerID)
+	rows, err := r.pool.Query(ctx, queryDJPerformanceByGenre, djID, schoolID)
 	if err != nil {
 		return model.DJPerformance{}, err
 	}
@@ -50,8 +50,8 @@ func (r *performanceRepo) DJPerformance(ctx context.Context, djID, organizerID s
 
 // RosterSummary returns every active student of the organizer with their reps in
 // the window, including zero-rep students.
-func (r *performanceRepo) RosterSummary(ctx context.Context, organizerID string, filter repository.PerformanceFilter) ([]model.RosterPerformance, error) {
-	rows, err := r.pool.Query(ctx, queryRosterSummary, organizerID, filter.EventID, filter.From, filter.To)
+func (r *performanceRepo) RosterSummary(ctx context.Context, schoolID string, filter repository.PerformanceFilter) ([]model.RosterPerformance, error) {
+	rows, err := r.pool.Query(ctx, queryRosterSummary, schoolID, filter.EventID, filter.From, filter.To)
 	if err != nil {
 		return nil, err
 	}
