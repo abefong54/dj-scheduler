@@ -54,3 +54,9 @@
 .swatch-active {
   border-color: var(--cyan);
 }
+
+/* Hero editor (EL-092): edit-mode layout for name/venue/dates/genres inputs. */
+.detail-hero-head { display: flex; align-items: center; gap: 0.75rem; }
+.detail-hero-edit { display: flex; flex-direction: column; gap: 0.5rem; max-width: 32rem; }
+.detail-hero-dates { display: flex; gap: 0.5rem; }
+.detail-hero-actions { display: flex; gap: 0.5rem; margin-top: 0.25rem; }

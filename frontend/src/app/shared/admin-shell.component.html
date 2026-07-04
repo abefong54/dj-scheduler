@@ -65,13 +65,15 @@
       </button>
 
       <div class="shell-topbar-actions">
-        <input
-          class="shell-search"
-          type="search"
-          [placeholder]="'shell.search' | translate"
-          [value]="searchValue()"
-          (input)="onSearch($event)"
-        />
+        @if (searchable()) {
+          <input
+            class="shell-search"
+            type="search"
+            [placeholder]="'shell.search' | translate"
+            [value]="searchValue()"
+            (input)="onSearch($event)"
+          />
+        }
         <div class="shell-actions-group" [class.open]="actionsOpen()">
           <ng-content select="[shell-actions]"></ng-content>
           @if (newLabel() !== null) {

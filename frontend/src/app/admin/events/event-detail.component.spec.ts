@@ -3,9 +3,12 @@ import { WritableSignal, signal } from '@angular/core';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { EventDetailComponent } from './event-detail.component';
 import { ApiService, Slot } from '../../services/api.service';
+import { EventsStore } from '../../services/events-store';
 import { DialogService } from '../../shared/dialog.service';
 import { ScheduleExportService } from '../../services/schedule-export.service';
 import { BreakpointService } from '../../shared/breakpoint.service';
@@ -402,6 +405,85 @@ describe('EventDetailComponent — slot search & sort (EL-028)', () => {
   });
 });
 
+// Hero editor tests (EL-092): Edit button on the detail hero flips name/venue/
+// dates/genres into inputs; Save PATCHes via updateEvent, Cancel discards.
+// Uses HttpClientTestingModule so we can assert the exact PATCH payload.
+describe('EventDetailComponent — hero editor', () => {
+  let fixture: ComponentFixture<EventDetailComponent>;
+  let httpMock: HttpTestingController;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [EventDetailComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'evt-1' } } } },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true), alert: () => {} } },
+        { provide: ScheduleExportService, useValue: { download: () => {} } },
+      ],
+    }).compileComponents();
+
+    TestBed.inject(TranslateService).use('en');
+    fixture = TestBed.createComponent(EventDetailComponent);
+    httpMock = TestBed.inject(HttpTestingController);
+
+    // Flush the 4 initialization requests so event() is populated.
+    httpMock.expectOne('/api/events/evt-1').flush(EVENT);
+    httpMock.expectOne('/api/events/evt-1/stages').flush(STAGES);
+    httpMock.expectOne('/api/events/evt-1/slots').flush([]);
+    httpMock.expectOne('/api/djs').flush(DJS);
+  });
+
+  afterEach(() => httpMock.verify());
+
+  it('opens the hero editor seeded from the event', () => {
+    const cmp = fixture.componentInstance;
+    cmp.startHeaderEdit();
+    expect(cmp.editingHeader()).toBe(true);
+    expect(cmp.hVenue()).toBe(cmp.event()!.venue_name);
+  });
+
+  it('saveHeader PATCHes the event and closes the editor', () => {
+    const store = TestBed.inject(EventsStore);
+    vi.spyOn(store, 'refresh').mockImplementation(() => {}); // prevent the implicit getEvents() from leaking into verify()
+    const cmp = fixture.componentInstance;
+    cmp.startHeaderEdit();
+    cmp.hVenue.set('Renamed Venue');
+    cmp.saveHeader();
+    const req = httpMock.expectOne(`/api/events/${cmp.event()!.id}`);
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body.venue_name).toBe('Renamed Venue');
+    req.flush({ ...req.request.body, id: cmp.event()!.id });
+    fixture.detectChanges();
+    expect(cmp.editingHeader()).toBe(false);
+    expect(cmp.event()!.venue_name).toBe('Renamed Venue');
+  });
+
+  it('saveHeader calls EventsStore.refresh() on success', () => {
+    const store = TestBed.inject(EventsStore);
+    const refreshSpy = vi.spyOn(store, 'refresh').mockImplementation(() => {});
+    const cmp = fixture.componentInstance;
+    cmp.startHeaderEdit();
+    cmp.hVenue.set('New Venue');
+    cmp.saveHeader();
+    const req = httpMock.expectOne(`/api/events/${cmp.event()!.id}`);
+    req.flush({ ...req.request.body, id: cmp.event()!.id });
+    expect(refreshSpy).toHaveBeenCalled();
+  });
+
+  it('cancelHeader closes without a request', () => {
+    const cmp = fixture.componentInstance;
+    cmp.startHeaderEdit();
+    cmp.hVenue.set('discard me');
+    cmp.cancelHeader();
+    httpMock.expectNone(`/api/events/${cmp.event()!.id}`);
+    expect(cmp.editingHeader()).toBe(false);
+  });
+});
+
 // EL-094: below md the table becomes stacked cards and add/edit moves into a
 // dialog bound to the same state/methods. A stub BreakpointService drives the
 // compact() switch.
@@ -468,5 +550,107 @@ describe('EventDetailComponent — mobile cards + dialog (EL-094)', () => {
     fixture.detectChanges();
     expect(fixture.componentInstance.editingSlotId()).toBeNull();
     expect(root().querySelector('[data-testid="edit-slot-dialog"]')).toBeNull();
+  });
+});
+
+// EL-095: interaction backfill — date tabs and the add-stage colour swatch had
+// no coverage. (Sort headers, keyboard save/cancel, and swatch→create end-to-end
+// are covered by e2e/specs/planner-interactions.spec.ts.)
+describe('EventDetailComponent — date tabs (EL-095)', () => {
+  let fixture: ComponentFixture<EventDetailComponent>;
+  const root = () => fixture.nativeElement as HTMLElement;
+  // Two slots on two different dates → the date tabs render.
+  const MULTI: Slot[] = [
+    { ...SLOT, id: 'd1', slot_date: '2026-07-01', start_time: '19:00', end_time: '20:00' } as Slot,
+    { ...SLOT, id: 'd2', slot_date: '2026-07-02', start_time: '20:00', end_time: '21:00' } as Slot,
+  ];
+  const apiMock = {
+    getEvent: () => of({ ...EVENT, end_date: '2026-07-02' }),
+    getStages: () => of(STAGES),
+    getSlots: () => of(MULTI),
+    getDJs: () => of(DJS),
+    createSlot: () => of({}),
+    updateSlot: () => of({}),
+  };
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [EventDetailComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: apiMock },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'evt-1' } } } },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+        { provide: ScheduleExportService, useValue: { download: () => {} } },
+      ],
+    }).compileComponents();
+    TestBed.inject(TranslateService).use('en');
+    fixture = TestBed.createComponent(EventDetailComponent);
+    fixture.detectChanges();
+  });
+
+  it('renders one tab per date and defaults to the first', () => {
+    expect(root().querySelectorAll('.tab-btn').length).toBe(2);
+    expect(fixture.componentInstance.selectedDate()).toBe('2026-07-01');
+    expect(fixture.componentInstance.slotTable.view().map(s => s.id)).toEqual(['d1']);
+  });
+
+  it('switches the visible date when another tab is clicked', () => {
+    root().querySelectorAll<HTMLButtonElement>('.tab-btn')[1].click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.selectedDate()).toBe('2026-07-02');
+    expect(fixture.componentInstance.slotTable.view().map(s => s.id)).toEqual(['d2']);
+  });
+});
+
+describe('EventDetailComponent — add-stage colour swatch (EL-095)', () => {
+  let fixture: ComponentFixture<EventDetailComponent>;
+  const root = () => fixture.nativeElement as HTMLElement;
+  const createStage = vi.fn(() => of({}));
+  const apiMock = {
+    getEvent: () => of(EVENT),
+    getStages: () => of(STAGES),
+    getSlots: () => of([] as Slot[]),
+    getDJs: () => of(DJS),
+    createSlot: () => of({}),
+    updateSlot: () => of({}),
+    createStage,
+  };
+
+  beforeEach(async () => {
+    createStage.mockClear();
+    await TestBed.configureTestingModule({
+      imports: [EventDetailComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: apiMock },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'evt-1' } } } },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+        { provide: ScheduleExportService, useValue: { download: () => {} } },
+      ],
+    }).compileComponents();
+    TestBed.inject(TranslateService).use('en');
+    fixture = TestBed.createComponent(EventDetailComponent);
+    fixture.detectChanges();
+  });
+
+  it('marks the chosen swatch active and creates the stage with that colour', () => {
+    const comp = fixture.componentInstance;
+    comp.addStage();
+    fixture.detectChanges();
+
+    const swatches = root().querySelectorAll<HTMLButtonElement>('.color-swatch');
+    expect(swatches.length).toBe(comp.stageColors.length);
+    swatches[3].click();
+    fixture.detectChanges();
+
+    expect(comp.newStageColor).toBe(comp.stageColors[3]);
+    expect(swatches[3].className).toContain('swatch-active');
+
+    comp.newStageName = 'Night Stage';
+    root().querySelector<HTMLButtonElement>('[data-testid="stage-create-btn"]')!.click();
+    expect(createStage).toHaveBeenCalledWith('evt-1', { name: 'Night Stage', color: comp.stageColors[3] });
   });
 });

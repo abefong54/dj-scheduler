@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ApiService, Event } from '../../services/api.service';
@@ -7,6 +7,9 @@ import { AdminShellComponent } from '../../shared/admin-shell.component';
 import { StatusBadgeComponent } from '../../shared/status-badge.component';
 import { ButtonComponent } from '../../shared/button.component';
 import { LoadingMeterComponent } from '../../shared/loading-meter.component';
+import { DataTableComponent, TableColumn } from '../../shared/data-table.component';
+import { ColumnDefDirective } from '../../shared/column-def.directive';
+import { EditCellComponent } from '../../shared/edit-cell.component';
 import { DialogService } from '../../shared/dialog.service';
 import { SubmitGuard } from '../../shared/submit-guard';
 
@@ -16,7 +19,7 @@ type EventLifecycle = 'live' | 'upcoming' | 'past';
 @Component({
   selector: 'app-events-list',
   standalone: true,
-  imports: [RouterLink, TranslatePipe, AdminShellComponent, StatusBadgeComponent, ButtonComponent, LoadingMeterComponent],
+  imports: [RouterLink, TranslatePipe, AdminShellComponent, StatusBadgeComponent, ButtonComponent, LoadingMeterComponent, DataTableComponent, ColumnDefDirective, EditCellComponent],
   templateUrl: './events-list.component.html',
   styleUrl: './events-list.component.css',
 })
@@ -33,7 +36,9 @@ export class EventsListComponent {
 
   // Backed by the root EventsStore (EL-091): a re-visit paints from cache with no
   // spinner while the list revalidates in the background.
-  events = this.store.events;
+  // linkedSignal keeps this writable so inline edits can update it optimistically
+  // without a full re-fetch, while still resetting whenever the store refreshes.
+  events = linkedSignal(() => this.store.events());
   loading = this.store.loading;
   loadError = this.store.error;
 
@@ -95,6 +100,70 @@ export class EventsListComponent {
         this.store.refresh(); // keep the cached list current for the return visit
         this.router.navigate(['/admin/events', newEvent.id]);
       },
+    });
+  }
+
+  // ── Inline-edit table (Task 3) ────────────────────────────────────────────
+
+  activeTabEvents = computed(() => (this.activeTab() === 'upcoming' ? this.upcoming() : this.past()));
+
+  rowsForActiveTab = computed((): Record<string, unknown>[] =>
+    this.activeTabEvents().map(e => ({
+      id: e.id,
+      name: e.name,
+      venue_name: e.venue_name,
+      start_date: e.start_date,
+      end_date: e.end_date,
+      genres: e.genres,
+      formattedDates: this.formatDates(e),
+      isLive: this.isLive(e),
+      lifecycle: this.lifecycle(e),
+    }) as Record<string, unknown>));
+
+  eventColumns = computed((): TableColumn[] => [
+    { key: 'name', label: this.translate.instant('events.col.event') },
+    { key: 'venue_name', label: this.translate.instant('events.col.venue') },
+    { key: 'start_date', label: this.translate.instant('events.col.dates') },
+    { key: 'genres', label: this.translate.instant('events.col.genres') },
+    { key: 'status', label: this.translate.instant('events.col.status'), sortable: false, searchable: false },
+    { key: 'actions', label: this.translate.instant('events.col.actions'), sortable: false, searchable: false },
+  ]);
+
+  asString(v: unknown): string { return v == null ? '' : String(v); }
+  genresString(row: Record<string, unknown>): string {
+    return Array.isArray(row['genres']) ? (row['genres'] as string[]).join(', ') : '';
+  }
+
+  commitName(row: Record<string, unknown>, e: { value: string; endValue: string }) {
+    this.save(this.asString(row['id']), { name: e.value.trim() });
+  }
+  commitVenue(row: Record<string, unknown>, e: { value: string; endValue: string }) {
+    this.save(this.asString(row['id']), { venue_name: e.value.trim() });
+  }
+  commitDates(row: Record<string, unknown>, e: { value: string; endValue: string }) {
+    this.save(this.asString(row['id']), { start_date: e.value, end_date: e.endValue || e.value });
+  }
+  commitGenres(row: Record<string, unknown>, e: { value: string; endValue: string }) {
+    const genres = e.value.split(',').map(g => g.trim()).filter(g => g.length > 0);
+    this.save(this.asString(row['id']), { genres });
+  }
+
+  private save(id: string, patch: Partial<Omit<Event, 'id'>>) {
+    const ev = this.events().find(e => e.id === id);
+    if (!ev) return;
+    const body: Omit<Event, 'id'> = {
+      name: ev.name, venue_name: ev.venue_name, start_date: ev.start_date,
+      end_date: ev.end_date, genres: ev.genres, ...patch,
+    };
+    this.api.updateEvent(id, body).subscribe({
+      next: updated => {
+        this.events.update(list => list.map(e => e.id === id ? updated : e));
+        this.store.refresh(); // keep the cached list current for the return visit
+      },
+      error: () => this.dialog.alert({
+        title: this.translate.instant('common.loadError'),
+        message: this.translate.instant('common.loadError'),
+      }),
     });
   }
 }
