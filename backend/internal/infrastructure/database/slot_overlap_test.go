@@ -14,24 +14,31 @@ import (
 	slotuc "eventlineup/internal/usecase/slot"
 )
 
-// seedEventStage inserts an organizer, event, and stage, returning the event,
-// stage, and organizer IDs and registering cleanup.
-func seedEventStage(t *testing.T, pool *pgxpool.Pool) (eventID, stageID, orgID string) {
+// seedEventStage inserts an organizer + their school, an event, and a stage,
+// returning the event, stage, and SCHOOL IDs (EL-104: slots scope by school) and
+// registering cleanup.
+func seedEventStage(t *testing.T, pool *pgxpool.Pool) (eventID, stageID, schoolID string) {
 	t.Helper()
 	ctx := context.Background()
+	var orgID string
 	if err := pool.QueryRow(ctx,
 		`INSERT INTO organizers (email, name, google_id)
 		 VALUES (gen_random_uuid()::text||'@t.local', 't', gen_random_uuid()::text)
 		 RETURNING id`).Scan(&orgID); err != nil {
 		t.Fatalf("insert organizer: %v", err)
 	}
+	if err := pool.QueryRow(ctx,
+		`INSERT INTO schools (name, created_by) VALUES ('School', $1) RETURNING id`, orgID).Scan(&schoolID); err != nil {
+		t.Fatalf("insert school: %v", err)
+	}
 	t.Cleanup(func() {
-		pool.Exec(ctx, "DELETE FROM events WHERE organizer_id = $1", orgID)
+		pool.Exec(ctx, "DELETE FROM events WHERE school_id = $1", schoolID)
+		pool.Exec(ctx, "DELETE FROM schools WHERE id = $1", schoolID)
 		pool.Exec(ctx, "DELETE FROM organizers WHERE id = $1", orgID)
 	})
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO events (name, venue_name, start_date, end_date, organizer_id)
-		 VALUES ('e', 'v', '2026-07-25', '2026-07-26', $1) RETURNING id`, orgID).Scan(&eventID); err != nil {
+		`INSERT INTO events (name, venue_name, start_date, end_date, organizer_id, school_id)
+		 VALUES ('e', 'v', '2026-07-25', '2026-07-26', $1, $2) RETURNING id`, orgID, schoolID).Scan(&eventID); err != nil {
 		t.Fatalf("insert event: %v", err)
 	}
 	if err := pool.QueryRow(ctx,
@@ -39,7 +46,7 @@ func seedEventStage(t *testing.T, pool *pgxpool.Pool) (eventID, stageID, orgID s
 		eventID).Scan(&stageID); err != nil {
 		t.Fatalf("insert stage: %v", err)
 	}
-	return eventID, stageID, orgID
+	return eventID, stageID, schoolID
 }
 
 func TestSlotRepo_RejectsOverlapAtDatabaseLevel(t *testing.T) {

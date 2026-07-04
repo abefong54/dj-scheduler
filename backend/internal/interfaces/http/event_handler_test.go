@@ -22,7 +22,7 @@ func eventRouterForOrg(t *testing.T, pool *pgxpool.Pool, organizerID string) *gi
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	r.Use(orgContext(organizerID))
+	r.Use(orgContext(pool, organizerID))
 	httphandler.NewEventHandler(eventuc.New(database.NewEventRepository(pool))).Register(r.Group("/api"))
 	return r
 }
