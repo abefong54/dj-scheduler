@@ -261,6 +261,35 @@ const (
 		VALUES ($1, $2, $3)
 		RETURNING id, email, name, google_id, created_at::text`
 
+	// School + membership queries (EL-103, multi-tenant schools).
+	querySchoolInsert = `
+		INSERT INTO schools (name, city, created_by)
+		VALUES ($1, $2, $3)
+		RETURNING id, name, city, created_by, created_at::text`
+
+	querySchoolGet = `
+		SELECT id, name, city, created_by, created_at::text
+		FROM schools WHERE id = $1`
+
+	queryMembershipInsert = `
+		INSERT INTO memberships (school_id, organizer_id, email, role, status)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id, school_id, organizer_id, email, role, status, created_at::text`
+
+	queryMembershipActiveForOrganizer = `
+		SELECT id, school_id, organizer_id, email, role, status, created_at::text
+		FROM memberships
+		WHERE organizer_id = $1 AND status = 'active'
+		ORDER BY created_at LIMIT 1`
+
+	queryMembershipListBySchool = `
+		SELECT id, school_id, organizer_id, email, role, status, created_at::text
+		FROM memberships WHERE school_id = $1 ORDER BY created_at`
+
+	queryMembershipLinkPendingByEmail = `
+		UPDATE memberships SET organizer_id = $1, status = 'active'
+		WHERE email = $2 AND organizer_id IS NULL AND status = 'pending'`
+
 	// Performance aggregation (EL-043). Duration is not stored, so it's computed
 	// from start/end TIME: a set whose end is <= start crosses midnight, so add a
 	// full day to count its real length (matches usecase/slot conflict math).

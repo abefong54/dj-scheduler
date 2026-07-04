@@ -85,6 +85,25 @@ type OrganizerRepository interface {
 	Create(ctx context.Context, email, name, googleID string) (model.Organizer, error)
 }
 
+// SchoolRepository manages tenant schools — the owner of events and DJs (EL-103).
+type SchoolRepository interface {
+	Create(ctx context.Context, name, city, createdBy string) (model.School, error)
+	Get(ctx context.Context, id string) (model.School, error)
+}
+
+// MembershipRepository links organizers to schools (EL-103). A pending
+// membership has a NULL organizer_id until the invited person signs in.
+type MembershipRepository interface {
+	Create(ctx context.Context, schoolID string, organizerID *string, email, role, status string) (model.Membership, error)
+	// ActiveForOrganizer returns the organizer's active membership (their current
+	// school), or apperrors.ErrNotFound if they have none yet.
+	ActiveForOrganizer(ctx context.Context, organizerID string) (model.Membership, error)
+	ListBySchool(ctx context.Context, schoolID string) ([]model.Membership, error)
+	// LinkPendingByEmail attaches a pending membership to organizerID on their
+	// first matching sign-in (email match) and activates it.
+	LinkPendingByEmail(ctx context.Context, organizerID, email string) error
+}
+
 // SlotRepository scopes every operation to the organizer who owns the parent
 // event (EL-036), except SetDJConfirmation which is scoped to the DJ instead.
 type SlotRepository interface {
