@@ -74,17 +74,21 @@ func TestSlotRepo_RejectsOverlapAtDatabaseLevel(t *testing.T) {
 	}
 }
 
-// TestSlotUseCase_ConcurrentOverlapsOnlyOneWins fires two identical (definitely
-// overlapping) slot creates at once through the use case. With only the
-// application-level check this could let both through; the database exclusion
-// constraint guarantees exactly one commits and the other gets a conflict.
+// TestSlotUseCase_ConcurrentOverlapsOnlyOneWins fires several identical
+// (definitely overlapping) slot creates at once through the use case. With only
+// the application-level check this could let more than one through; the database
+// exclusion constraint guarantees exactly one commits and the rest get a
+// conflict. Racing many writers also makes Postgres likely to resolve the tie as
+// a deadlock (40P01) rather than a clean 23P01 exclusion violation, which
+// exercises the deadlock-retry path in the repository (regression guard for the
+// flaky "unexpected error: deadlock detected" failure).
 func TestSlotUseCase_ConcurrentOverlapsOnlyOneWins(t *testing.T) {
 	pool := orgTestPool(t)
 	ctx := context.Background()
 	uc := slotuc.New(database.NewSlotRepository(pool))
 	eventID, stageID, orgID := seedEventStage(t, pool)
 
-	const n = 2
+	const n = 8
 	var wg sync.WaitGroup
 	results := make([]error, n)
 	for i := 0; i < n; i++ {
@@ -109,7 +113,7 @@ func TestSlotUseCase_ConcurrentOverlapsOnlyOneWins(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 	}
-	if success != 1 || conflict != 1 {
-		t.Fatalf("expected exactly one success and one conflict, got success=%d conflict=%d", success, conflict)
+	if success != 1 || conflict != n-1 {
+		t.Fatalf("expected exactly one success and %d conflicts, got success=%d conflict=%d", n-1, success, conflict)
 	}
 }
