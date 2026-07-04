@@ -38,6 +38,9 @@ export class DjsComponent {
   loadError = this.store.error;
   readonly addGuard = new SubmitGuard();
   readonly saveGuard = new SubmitGuard();
+  // Add-a-DJ form state. The form lives in a modal opened from the topbar
+  // "+ Add" button (EL-099), not an always-visible inline card.
+  showAddModal = signal(false);
   newDJ = signal({ name: '' });
   newDJGenres = signal('');
 
@@ -56,6 +59,17 @@ export class DjsComponent {
 
   retry() {
     this.store.ensure();
+  }
+
+  /** Open the add-DJ modal from the topbar "+ Add" button, with a fresh form. */
+  openAddModal() {
+    this.newDJ.set({ name: '' });
+    this.newDJGenres.set('');
+    this.showAddModal.set(true);
+  }
+
+  cancelAdd() {
+    this.showAddModal.set(false);
   }
 
   // Convert DJ[] to Record<string, unknown>[] for DataTableComponent
@@ -115,6 +129,7 @@ export class DjsComponent {
       next: () => {
         this.newDJ.set({ name: '' });
         this.newDJGenres.set('');
+        this.showAddModal.set(false);
         this.store.refresh();
       },
     });

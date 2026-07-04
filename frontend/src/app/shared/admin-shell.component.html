@@ -77,7 +77,7 @@
         <div class="shell-actions-group" [class.open]="actionsOpen()">
           <ng-content select="[shell-actions]"></ng-content>
           @if (newLabel() !== null) {
-            <button type="button" class="shell-new-btn" (click)="newClicked.emit()">
+            <button type="button" class="shell-new-btn" data-testid="shell-new-btn" (click)="newClicked.emit()">
               + {{ newLabel() || ('shell.new' | translate) }}
             </button>
           }

@@ -16,6 +16,8 @@ test.describe('double-submit guard', () => {
     });
 
     await page.goto('/admin/djs');
+    // EL-099: open the add modal from the topbar before filling the form.
+    await page.getByTestId('shell-new-btn').click();
     await page.getByTestId('dj-name-input').fill('Dup Guard DJ');
     await page.getByTestId('dj-genres-input').fill('house');
 
