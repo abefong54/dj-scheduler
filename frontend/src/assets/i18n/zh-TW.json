@@ -33,6 +33,8 @@
   "auth.emailPlaceholder": "電子郵件地址",
   "auth.sendMagicLink": "傳送魔法連結",
   "auth.magicLinkComingSoon": "即將推出",
+  "auth.signInWithLine": "使用 LINE 登入",
+  "auth.error.noEmail": "LINE 未提供你的電子郵件，因此無法登入。請改用 Google，或在 LINE 允許電子郵件存取後再試一次。",
   "events.title": "活動",
   "events.new": "新增活動",
   "events.name": "活動名稱",
