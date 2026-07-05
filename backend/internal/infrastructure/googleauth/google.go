@@ -1,5 +1,5 @@
-// Package googleauth implements the auth usecase's GoogleAuthenticator against
-// the real Google OAuth 2.0 endpoints.
+// Package googleauth implements the auth usecase's OAuthProvider against the
+// real Google OAuth 2.0 endpoints.
 package googleauth
 
 import (
@@ -36,19 +36,19 @@ func (a *Authenticator) AuthCodeURL(state string) string {
 
 // UserFromCode exchanges the OAuth code for a token and fetches the Google
 // profile. Secrets and tokens are never logged.
-func (a *Authenticator) UserFromCode(ctx context.Context, code string) (authuc.GoogleUser, error) {
+func (a *Authenticator) UserFromCode(ctx context.Context, code string) (authuc.ExternalUser, error) {
 	tok, err := a.cfg.Exchange(ctx, code)
 	if err != nil {
-		return authuc.GoogleUser{}, fmt.Errorf("oauth exchange failed: %w", err)
+		return authuc.ExternalUser{}, fmt.Errorf("oauth exchange failed: %w", err)
 	}
 
 	resp, err := a.cfg.Client(ctx, tok).Get(userInfoURL)
 	if err != nil {
-		return authuc.GoogleUser{}, fmt.Errorf("fetch userinfo: %w", err)
+		return authuc.ExternalUser{}, fmt.Errorf("fetch userinfo: %w", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return authuc.GoogleUser{}, fmt.Errorf("userinfo status %d", resp.StatusCode)
+		return authuc.ExternalUser{}, fmt.Errorf("userinfo status %d", resp.StatusCode)
 	}
 
 	var info struct {
@@ -57,7 +57,7 @@ func (a *Authenticator) UserFromCode(ctx context.Context, code string) (authuc.G
 		Name  string `json:"name"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
-		return authuc.GoogleUser{}, fmt.Errorf("decode userinfo: %w", err)
+		return authuc.ExternalUser{}, fmt.Errorf("decode userinfo: %w", err)
 	}
-	return authuc.GoogleUser{GoogleID: info.ID, Email: info.Email, Name: info.Name}, nil
+	return authuc.ExternalUser{Provider: authuc.ProviderGoogle, Subject: info.ID, Email: info.Email, Name: info.Name}, nil
 }
