@@ -301,6 +301,7 @@
                   <td class="add-cell">
                     <select [(ngModel)]="addStageId" name="addStageId" class="edit-select"
                       data-testid="add-stage-select"
+                      [attr.aria-invalid]="stageMissing() || null"
                       (keydown.escape)="cancelAddRow()">
                       <option value="">{{ 'slots.selectOption' | translate }}</option>
                       @for (s of stages(); track s.id) {
@@ -372,6 +373,13 @@
                     </td>
                   </tr>
                 }
+                @if (stageMissing()) {
+                  <tr>
+                    <td colspan="7" class="conflict-cell">
+                      <span class="conflict-text" data-testid="add-stage-error"><span aria-hidden="true">⚠</span> {{ 'slots.stageRequired' | translate }}</span>
+                    </td>
+                  </tr>
+                }
               } @else {
                 <tr class="add-trigger-row" (click)="activateAddRow()" data-testid="add-slot-trigger">
                   <td colspan="7" class="add-trigger-cell">
@@ -413,13 +421,9 @@
         </div>
       </div>
       <div class="form-actions">
-        <button type="button" (click)="submitNewStage()" class="btn-primary" data-testid="stage-create-btn"
-          [disabled]="stageGuard.pending()">
-          {{ 'actions.create' | translate }}
-        </button>
-        <button type="button" (click)="cancelStage()" class="btn-secondary">
-          {{ 'actions.cancel' | translate }}
-        </button>
+        <app-button variant="primary" [label]="'actions.create' | translate" testId="stage-create-btn"
+          [disabled]="stageGuard.pending()" (click)="submitNewStage()" />
+        <app-button [label]="'actions.cancel' | translate" (click)="cancelStage()" />
       </div>
     </div>
   </div>
@@ -434,10 +438,14 @@
       <h2 class="modal-title">{{ 'slots.new' | translate }}</h2>
       <div class="form-group">
         <label class="form-label">{{ 'slots.stage' | translate }}</label>
-        <select class="form-input" [(ngModel)]="addStageId" name="da_stage" data-testid="dialog-add-stage">
+        <select class="form-input" [(ngModel)]="addStageId" name="da_stage" data-testid="dialog-add-stage"
+          [attr.aria-invalid]="stageMissing() || null">
           <option value="">{{ 'slots.selectOption' | translate }}</option>
           @for (s of stages(); track s.id) { <option [value]="s.id">{{ s.name }}</option> }
         </select>
+        @if (stageMissing()) {
+          <p class="conflict-text" data-testid="dialog-stage-error"><span aria-hidden="true">⚠</span> {{ 'slots.stageRequired' | translate }}</p>
+        }
       </div>
       <div class="form-group">
         <label class="form-label">{{ 'slots.dj' | translate }}</label>
@@ -476,9 +484,9 @@
         <p class="conflict-text" data-testid="dialog-add-cert"><span aria-hidden="true">⚠</span> {{ addCertWarning() }}</p>
       }
       <div class="form-actions">
-        <button type="button" class="btn-primary" data-testid="dialog-add-save"
-          [disabled]="addSlotGuard.pending()" (click)="submitAddRow()">{{ 'actions.save' | translate }}</button>
-        <button type="button" class="btn-secondary" (click)="cancelAddRow()">{{ 'actions.cancel' | translate }}</button>
+        <app-button variant="primary" [label]="'actions.save' | translate" testId="dialog-add-save"
+          [disabled]="addSlotGuard.pending()" (click)="submitAddRow()" />
+        <app-button [label]="'actions.cancel' | translate" (click)="cancelAddRow()" />
       </div>
     </div>
   </div>
@@ -533,9 +541,9 @@
         <p class="conflict-text" data-testid="dialog-edit-cert"><span aria-hidden="true">⚠</span> {{ editCertWarning() }}</p>
       }
       <div class="form-actions">
-        <button type="button" class="btn-primary" data-testid="dialog-edit-save"
-          [disabled]="editSlotGuard.pending()" (click)="saveEdit(editId)">{{ 'actions.save' | translate }}</button>
-        <button type="button" class="btn-secondary" (click)="cancelEdit()">{{ 'actions.cancel' | translate }}</button>
+        <app-button variant="primary" [label]="'actions.save' | translate" testId="dialog-edit-save"
+          [disabled]="editSlotGuard.pending()" (click)="saveEdit(editId)" />
+        <app-button [label]="'actions.cancel' | translate" (click)="cancelEdit()" />
       </div>
     </div>
   </div>

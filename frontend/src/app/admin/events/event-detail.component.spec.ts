@@ -654,3 +654,109 @@ describe('EventDetailComponent — add-stage colour swatch (EL-095)', () => {
     expect(createStage).toHaveBeenCalledWith('evt-1', { name: 'Night Stage', color: comp.stageColors[3] });
   });
 });
+
+// The add-slot Save button must surface a stage-required error instead of
+// silently doing nothing (the mobile "dead button" — no default stage exists
+// when an event has multiple stages), and the modal action buttons must use the
+// shared <app-button> so they render uniformly (base .btn + variant + size).
+describe('EventDetailComponent — add-slot required-field validation + uniform buttons', () => {
+  let fixture: ComponentFixture<EventDetailComponent>;
+  let component: EventDetailComponent;
+  const root = () => fixture.nativeElement as HTMLElement;
+  const createSlot = vi.fn(() => of({}));
+  // Two stages → activateAddRow() cannot pre-fill a single default, so a pristine
+  // add row has an empty stage (the exact condition behind the dead Save button).
+  const TWO_STAGES = [
+    { id: 'st-1', event_id: 'evt-1', name: 'Main Stage', color: '#000', display_order: 0 },
+    { id: 'st-2', event_id: 'evt-1', name: 'Side Stage', color: '#111', display_order: 1 },
+  ];
+  const apiMock = {
+    getEvent: () => of(EVENT),
+    getStages: () => of(TWO_STAGES),
+    getSlots: () => of([] as Slot[]),
+    getDJs: () => of(DJS),
+    createSlot,
+    updateSlot: () => of({}),
+  };
+
+  beforeEach(async () => {
+    createSlot.mockClear();
+    await TestBed.configureTestingModule({
+      imports: [EventDetailComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: apiMock },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'evt-1' } } } },
+        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+        { provide: ScheduleExportService, useValue: { download: () => {} } },
+        { provide: BreakpointService, useValue: { compact: signal(true) } },
+      ],
+    }).compileComponents();
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en', { 'slots.stageRequired': 'Select a stage' });
+    translate.use('en');
+
+    fixture = TestBed.createComponent(EventDetailComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('leaves the stage empty on a pristine add row when the event has multiple stages', () => {
+    component.activateAddRow();
+    expect(component.addStageId).toBe('');
+  });
+
+  it('pressing Save with no stage surfaces an error and does NOT create a slot', () => {
+    component.activateAddRow();
+    component.addDate = '2026-07-01';
+    component.addStart = '19:00';
+    component.addStageId = '';
+    component.submitAddRow();
+    expect(createSlot).not.toHaveBeenCalled();
+    expect(component.stageMissing()).toBe(true);
+  });
+
+  it('shows the stage-required message in the mobile add dialog only after a Save attempt', () => {
+    component.activateAddRow();
+    component.addStart = '19:00';
+    component.addStageId = '';
+    fixture.detectChanges();
+    expect(root().querySelector('[data-testid="dialog-stage-error"]')).toBeNull();
+
+    root().querySelector<HTMLButtonElement>('[data-testid="dialog-add-save"]')!.click();
+    fixture.detectChanges();
+    expect(root().querySelector('[data-testid="dialog-stage-error"]')).toBeTruthy();
+    // Dialog stays open so the user can fix it.
+    expect(root().querySelector('[data-testid="add-slot-dialog"]')).toBeTruthy();
+  });
+
+  it('clears the error and creates the slot once a stage is picked', () => {
+    component.activateAddRow();
+    component.addDate = '2026-07-01';
+    component.addStart = '19:00';
+    component.addStageId = '';
+    component.submitAddRow();
+    expect(component.stageMissing()).toBe(true);
+
+    component.addStageId = 'st-2';
+    component.submitAddRow();
+    expect(createSlot).toHaveBeenCalled();
+    expect(component.stageMissing()).toBe(false);
+  });
+
+  it('renders the add-dialog and stage-modal action buttons as shared .btn buttons', () => {
+    component.activateAddRow();
+    fixture.detectChanges();
+    const save = root().querySelector('[data-testid="dialog-add-save"]')!;
+    expect(save.className).toContain('btn');
+    expect(save.className).toContain('btn-primary');
+
+    component.addStage();
+    fixture.detectChanges();
+    const create = root().querySelector('[data-testid="stage-create-btn"]')!;
+    expect(create.className).toContain('btn');
+    expect(create.className).toContain('btn-primary');
+  });
+});

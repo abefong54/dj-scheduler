@@ -75,6 +75,16 @@ export class EventDetailComponent implements OnDestroy {
   addDuration = 60;
   addNotes = '';
   addConflictError = signal<string | null>(null);
+  // Flips true on the first Save attempt so the template can reveal why Save is
+  // blocked. Before that we stay quiet. Fixes the mobile "dead button": with
+  // multiple stages there's no default stage, so an un-picked stage silently
+  // aborted submitAddRow() with no feedback.
+  readonly addSubmitted = signal(false);
+
+  /** The one user-fixable required field with no default: the stage. */
+  stageMissing(): boolean {
+    return this.addSubmitted() && !this.addStageId;
+  }
 
   defaultStageId = computed(() => this.stages().length === 1 ? this.stages()[0].id : '');
 
@@ -150,6 +160,7 @@ export class EventDetailComponent implements OnDestroy {
     this.addDuration = 60;
     this.addNotes = '';
     this.addConflictError.set(null);
+    this.addSubmitted.set(false);
     this.addRowActive.set(true);
   }
 
@@ -159,6 +170,9 @@ export class EventDetailComponent implements OnDestroy {
   }
 
   submitAddRow() {
+    // Surface validation before the guard: pressing Save with the stage empty
+    // must show why, not silently do nothing (the mobile "dead button" bug).
+    this.addSubmitted.set(true);
     if (!this.addStageId || !this.addDate || !this.addStart) return;
     const eventId = this.event()!.id;
     this.addSlotGuard.run(this.api.createSlot(eventId, {
