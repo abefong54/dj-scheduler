@@ -85,6 +85,7 @@ type LeadRepository interface {
 
 type OrganizerRepository interface {
 	FindByGoogleID(ctx context.Context, googleID string) (model.Organizer, error)
+	FindByID(ctx context.Context, id string) (model.Organizer, error)
 	Create(ctx context.Context, email, name, googleID string) (model.Organizer, error)
 }
 

@@ -17,14 +17,15 @@ import (
 // their school ID, the same keys the real Auth + School middleware set. The
 // school is resolved once at build time.
 func orgContext(pool *pgxpool.Pool, organizerID string) gin.HandlerFunc {
-	var schoolID string
+	var schoolID, role string
 	pool.QueryRow(context.Background(),
-		`SELECT school_id FROM memberships WHERE organizer_id = $1 AND status = 'active' LIMIT 1`,
-		organizerID).Scan(&schoolID)
+		`SELECT school_id, role FROM memberships WHERE organizer_id = $1 AND status = 'active' LIMIT 1`,
+		organizerID).Scan(&schoolID, &role)
 	return func(c *gin.Context) {
 		c.Set(middleware.OrganizerIDKey, organizerID)
 		if schoolID != "" {
 			c.Set(middleware.SchoolIDKey, schoolID)
+			c.Set(middleware.RoleKey, role)
 		}
 		c.Next()
 	}

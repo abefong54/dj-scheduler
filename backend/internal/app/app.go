@@ -14,6 +14,7 @@ import (
 	leaduc "eventlineup/internal/usecase/lead"
 	linenotifyuc "eventlineup/internal/usecase/linenotify"
 	perfuc "eventlineup/internal/usecase/performance"
+	schooluc "eventlineup/internal/usecase/school"
 	slotuc "eventlineup/internal/usecase/slot"
 	stageuc "eventlineup/internal/usecase/stage"
 )
@@ -64,11 +65,14 @@ func Run() {
 
 	organizerRepo := database.NewOrganizerRepository(pool)
 	membershipRepo := database.NewMembershipRepository(pool)
+	schoolRepo := database.NewSchoolRepository(pool)
 	googleAuth := googleauth.New(cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL)
 	authHandler := httphandler.NewAuthHandler(authuc.New(googleAuth, organizerRepo, membershipRepo, cfg.JWTSecret, tokenTTL), cfg.FrontendURL, cfg.SecureCookies)
+	// Onboarding surface: /api/me, register school, invite members (EL-105).
+	schoolHandler := httphandler.NewSchoolHandler(schooluc.New(organizerRepo, schoolRepo, membershipRepo))
 
 	// membershipRepo also resolves the caller's school for the scoping middleware (EL-104).
-	r := httphandler.NewRouter(cfg.FrontendURL, cfg.JWTSecret, membershipRepo, publicHandler, shareHandler, djPortalHandler, djHandler, eventHandler, stageHandler, slotHandler, lineHandler, perfHandler, leadHandler)
+	r := httphandler.NewRouter(cfg.FrontendURL, cfg.JWTSecret, membershipRepo, publicHandler, shareHandler, djPortalHandler, djHandler, eventHandler, stageHandler, slotHandler, lineHandler, perfHandler, leadHandler, schoolHandler)
 	authHandler.Register(r) // unauthenticated auth routes
 
 	log.Printf("listening on :%s", cfg.Port)
