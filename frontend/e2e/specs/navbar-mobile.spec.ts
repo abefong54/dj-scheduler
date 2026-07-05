@@ -27,13 +27,20 @@ test.describe('navbar · mobile (signed out)', () => {
     await expect(page.getByTestId('signin')).toBeVisible();
   });
 
-  test('the language toggle works from inside the dropdown', async ({ page }) => {
+  test('the language toggle works from inside the dropdown, and picking a language closes it', async ({ page }) => {
     await page.goto('/');
-    await page.getByTestId('nav-menu-toggle').click();
+    const toggle = page.getByTestId('nav-menu-toggle');
+    await toggle.click();
 
     const zh = page.getByTestId('nav-menu').getByRole('button', { name: '中文' });
     await zh.click();
-    await expect(zh).toHaveClass(/lang-btn-active/);
+
+    // Picking a language also closes the dropdown (it's the same as tapping
+    // any other item that leaves the menu, e.g. Sign in). The button is now
+    // hidden (display: none), so re-open the menu to check the selection stuck.
+    await expect(page.getByTestId('nav-menu')).not.toHaveClass(/navbar-menu-open/);
+    await toggle.click();
+    await expect(page.getByTestId('nav-menu').getByRole('button', { name: '中文' })).toHaveClass(/lang-btn-active/);
   });
 
   test('the primary CTA stays in the bar, not the dropdown', async ({ page }) => {

@@ -65,7 +65,10 @@ describe('AppComponent top bar', () => {
     const brand = el.querySelector<HTMLAnchorElement>('[data-testid="brand-wordmark"]');
     expect(brand?.tagName).toBe('A');
     expect(brand?.getAttribute('href')).toBe('/');
-    expect(brand?.getAttribute('aria-label')).toBe('Soundcheck home');
+    // Routed through the translate pipe (i18n); with no translations loaded in
+    // this TestBed, the pipe renders the raw key — which still proves the
+    // aria-label binding is wired up correctly.
+    expect(brand?.getAttribute('aria-label')).toBe('nav.home');
   });
 
   describe('nav "Book a demo" button (landing-only)', () => {
@@ -218,6 +221,30 @@ describe('AppComponent top bar', () => {
       const cta = el.querySelector('[data-testid="nav-book-demo"]');
       expect(cta).toBeTruthy();
       expect(cta?.closest('[data-testid="nav-menu"]')).toBeNull();
+    });
+
+    it('picking a language closes the mobile dropdown', async () => {
+      const fixture = await build(false);
+      const el = fixture.nativeElement as HTMLElement;
+      const toggle = el.querySelector<HTMLButtonElement>('[data-testid="nav-menu-toggle"]');
+      const menu = el.querySelector('[data-testid="nav-menu"]');
+
+      toggle!.click();
+      fixture.detectChanges();
+      expect(menu?.classList.contains('navbar-menu-open')).toBe(true);
+
+      const zhButton = Array.from(menu!.querySelectorAll('button')).find((b) => b.textContent?.includes('中文'));
+      zhButton!.click();
+      fixture.detectChanges();
+      expect(menu?.classList.contains('navbar-menu-open')).toBe(false);
+    });
+
+    it('the hamburger toggle aria-label is wired through the translate pipe', async () => {
+      const el = (await build(false)).nativeElement as HTMLElement;
+      const toggle = el.querySelector<HTMLButtonElement>('[data-testid="nav-menu-toggle"]');
+      // With no translations loaded in this TestBed, the pipe renders the raw
+      // key — which still proves the aria-label binding is wired up correctly.
+      expect(toggle?.getAttribute('aria-label')).toBe('nav.menu');
     });
   });
 });

@@ -917,10 +917,13 @@
   fill: var(--sc-cue-amber, var(--violet));
 }
 
-/* The brand wordmark is a link home; render it as plain text, not a blue underline. */
+/* The brand wordmark is a link home; render it as plain text, not a blue underline.
+   Explicit light color (not `inherit`): the navbar background is always dark
+   (--sc-booth-black), so inheriting the ambient text color would make the
+   wordmark near-black-on-near-black if light mode is ever enabled. */
 a.navbar-brand {
   text-decoration: none;
-  color: inherit;
+  color: #fff;
   cursor: pointer;
 }
 

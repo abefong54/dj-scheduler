@@ -1,6 +1,6 @@
 import { Component, ElementRef, HostListener, inject, signal, viewChild } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
 import { TranslatePipe } from '@ngx-translate/core';
 import { LanguageService } from './services/language.service';
@@ -31,6 +31,17 @@ export class AppComponent {
 
   /** Mobile nav dropdown open state (only meaningful <lg; inline ≥lg). */
   protected readonly menuOpen = signal(false);
+
+  constructor() {
+    // Don't let the dropdown linger open after a navigation (e.g. tapping
+    // Sign in, which routes to /login).
+    this.router.events
+      .pipe(
+        filter((e) => e instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => this.closeMenu());
+  }
 
   protected toggleMenu(): void {
     this.menuOpen.update((open) => !open);

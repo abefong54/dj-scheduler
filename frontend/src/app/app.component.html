@@ -2,7 +2,7 @@
   <!-- EL-078: Soundcheck wordmark — lowercase display face with a single amber
        VU-meter detail. Inline SVG so it doesn't depend on the finalized logo
        asset (EL-071 drops in later). -->
-  <a routerLink="/" class="navbar-brand shell-wordmark" data-testid="brand-wordmark" aria-label="Soundcheck home">
+  <a routerLink="/" class="navbar-brand shell-wordmark" data-testid="brand-wordmark" [attr.aria-label]="'nav.home' | translate">
     <svg class="shell-vu" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
       <rect class="shell-vu-bar" x="1" y="7" width="3" height="8" rx="1" />
       <rect class="shell-vu-bar" x="6.5" y="2" width="3" height="13" rx="1" />
@@ -16,12 +16,12 @@
     <!-- Secondary controls: inline on desktop, a hamburger dropdown <lg. -->
     <div id="navbar-menu" class="navbar-menu lang-switcher"
       [class.navbar-menu-open]="menuOpen()" data-testid="nav-menu">
-      <button (click)="langService.setLanguage('en')"
+      <button (click)="langService.setLanguage('en'); closeMenu()"
         class="lang-btn"
         [class]="langService.currentLang() === 'en' ? 'lang-btn-active' : 'lang-btn-inactive'">
         EN
       </button>
-      <button (click)="langService.setLanguage('zh-TW')"
+      <button (click)="langService.setLanguage('zh-TW'); closeMenu()"
         class="lang-btn"
         [class]="langService.currentLang() === 'zh-TW' ? 'lang-btn-active' : 'lang-btn-inactive'">
         中文
@@ -54,7 +54,7 @@
 
     <button #menuToggle type="button" class="navbar-menu-toggle"
       data-testid="nav-menu-toggle" (click)="toggleMenu()"
-      [attr.aria-expanded]="menuOpen()" aria-controls="navbar-menu" aria-label="Menu">
+      [attr.aria-expanded]="menuOpen()" aria-controls="navbar-menu" [attr.aria-label]="'nav.menu' | translate">
       ☰
     </button>
   </div>
