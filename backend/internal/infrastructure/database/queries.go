@@ -460,7 +460,7 @@ const (
 )
 
 // submissionCols is the SELECT/RETURNING column list for submissions, with
-// nullable columns COALESCE'd to '' and timestamps/uuids cast to text so the
+// nullable columns COALESCE'd to ” and timestamps/uuids cast to text so the
 // model can hold plain strings (mirrors challengeCols).
 const submissionCols = `id, school_id, challenge_id, dj_id, media_kind, media_provider, media_ref,
 	COALESCE(caption,''), status, COALESCE(review_note,''),

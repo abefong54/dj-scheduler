@@ -54,11 +54,11 @@ func TestStudentAuthRejectsOrganizerToken(t *testing.T) {
 
 func TestStudentAuthRejectsMissingAndBadTokens(t *testing.T) {
 	cases := map[string]string{
-		"no header":       "",
-		"not bearer":      "Token abc",
-		"garbage token":   "Bearer not-a-jwt",
-		"wrong secret":    "Bearer " + mustSign(t, "other-secret-other-secret-other-secret-01", time.Hour),
-		"expired token":   "Bearer " + mustSign(t, mwTestSecret, -time.Hour),
+		"no header":     "",
+		"not bearer":    "Token abc",
+		"garbage token": "Bearer not-a-jwt",
+		"wrong secret":  "Bearer " + mustSign(t, "other-secret-other-secret-other-secret-01", time.Hour),
+		"expired token": "Bearer " + mustSign(t, mwTestSecret, -time.Hour),
 	}
 	for name, hdr := range cases {
 		t.Run(name, func(t *testing.T) {
