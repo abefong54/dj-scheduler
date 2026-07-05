@@ -9,7 +9,9 @@ import { CardComponent } from './card.component';
 import { ApiService, PublicSlot } from '../services/api.service';
 
 // Stub the DOM→PNG library so the export flow is testable without a real canvas.
-vi.mock('html-to-image', () => ({ toPng: vi.fn().mockResolvedValue('data:image/png;base64,AAAA') }));
+vi.mock('html-to-image', () => ({
+  toPng: vi.fn().mockResolvedValue('data:image/png;base64,AAAA'),
+}));
 
 const PUBLIC_SLOT: PublicSlot = {
   slot: {
@@ -42,7 +44,10 @@ describe('CardComponent (EL-049)', () => {
 
   const apiMock = { getPublicSlot: () => slotResponse$ };
 
-  async function build(): Promise<{ fixture: ComponentFixture<CardComponent>; component: CardComponent }> {
+  async function build(): Promise<{
+    fixture: ComponentFixture<CardComponent>;
+    component: CardComponent;
+  }> {
     await TestBed.configureTestingModule({
       imports: [CardComponent],
       providers: [

@@ -72,7 +72,9 @@ describe('AppComponent top bar', () => {
   });
 
   describe('nav "Book a demo" button (landing-only)', () => {
-    async function buildWithRouter(authed: boolean): Promise<{ fixture: ComponentFixture<AppComponent>; router: Router }> {
+    async function buildWithRouter(
+      authed: boolean,
+    ): Promise<{ fixture: ComponentFixture<AppComponent>; router: Router }> {
       isAuthenticated = signal(authed);
       await TestBed.configureTestingModule({
         imports: [AppComponent],
@@ -129,8 +131,9 @@ describe('AppComponent top bar', () => {
       const { fixture, router } = await buildWithRouter(true);
       await router.navigate(['/']);
       fixture.detectChanges();
-      const link = (fixture.nativeElement as HTMLElement)
-        .querySelector<HTMLAnchorElement>('[data-testid="nav-console"]');
+      const link = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>(
+        '[data-testid="nav-console"]',
+      );
       expect(link).toBeTruthy();
       expect(link?.getAttribute('href')).toBe('/admin/events');
     });

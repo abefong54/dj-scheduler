@@ -31,7 +31,7 @@ describe('EditCellComponent', () => {
   it('commits a changed value and emits it', () => {
     render({ value: 'Old Venue' });
     const emitted: unknown[] = [];
-    cmp.commit.subscribe(v => emitted.push(v));
+    cmp.commit.subscribe((v) => emitted.push(v));
     cmp.startEdit();
     cmp.draft.set('New Venue');
     cmp.commitEdit();
@@ -42,7 +42,7 @@ describe('EditCellComponent', () => {
   it('does not emit when the value is unchanged', () => {
     render({ value: 'Same' });
     const emitted: unknown[] = [];
-    cmp.commit.subscribe(v => emitted.push(v));
+    cmp.commit.subscribe((v) => emitted.push(v));
     cmp.startEdit();
     cmp.commitEdit();
     expect(emitted).toEqual([]);
@@ -52,7 +52,7 @@ describe('EditCellComponent', () => {
   it('reverts (no emit) on cancel', () => {
     render({ value: 'Original' });
     const emitted: unknown[] = [];
-    cmp.commit.subscribe(v => emitted.push(v));
+    cmp.commit.subscribe((v) => emitted.push(v));
     cmp.startEdit();
     cmp.draft.set('Changed');
     cmp.cancelEdit();
@@ -63,7 +63,7 @@ describe('EditCellComponent', () => {
   it('reverts instead of emitting when a required field is cleared', () => {
     render({ value: 'Name', required: true });
     const emitted: unknown[] = [];
-    cmp.commit.subscribe(v => emitted.push(v));
+    cmp.commit.subscribe((v) => emitted.push(v));
     cmp.startEdit();
     cmp.draft.set('   ');
     cmp.commitEdit();
@@ -74,7 +74,7 @@ describe('EditCellComponent', () => {
   it('date-range reverts when end is before start', () => {
     render({ type: 'date-range', value: '2026-07-04', endValue: '2026-07-06' });
     const emitted: unknown[] = [];
-    cmp.commit.subscribe(v => emitted.push(v));
+    cmp.commit.subscribe((v) => emitted.push(v));
     cmp.startEdit();
     cmp.draftEnd.set('2026-07-01');
     cmp.commitEdit();
@@ -84,7 +84,7 @@ describe('EditCellComponent', () => {
   it('date-range commits both dates when valid', () => {
     render({ type: 'date-range', value: '2026-07-04', endValue: '2026-07-04' });
     const emitted: unknown[] = [];
-    cmp.commit.subscribe(v => emitted.push(v));
+    cmp.commit.subscribe((v) => emitted.push(v));
     cmp.startEdit();
     cmp.draftEnd.set('2026-07-06');
     cmp.commitEdit();

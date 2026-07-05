@@ -59,7 +59,8 @@ describe('DjsStore', () => {
 
   it('surfaces error() on a failed first load', () => {
     store.ensure();
-    httpMock.expectOne((r) => r.url.endsWith('/api/djs'))
+    httpMock
+      .expectOne((r) => r.url.endsWith('/api/djs'))
       .flush('nope', { status: 500, statusText: 'Server Error' });
     expect(store.error()).toBe(true);
     expect(store.loading()).toBe(false);
