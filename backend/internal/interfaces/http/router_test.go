@@ -17,6 +17,7 @@ import (
 	leaduc "eventlineup/internal/usecase/lead"
 	linenotifyuc "eventlineup/internal/usecase/linenotify"
 	perfuc "eventlineup/internal/usecase/performance"
+	schooluc "eventlineup/internal/usecase/school"
 	slotuc "eventlineup/internal/usecase/slot"
 	stageuc "eventlineup/internal/usecase/stage"
 )
@@ -46,7 +47,8 @@ func fullRouter(t *testing.T) *gin.Engine {
 	)
 	perf := httphandler.NewPerformanceHandler(perfuc.New(database.NewPerformanceRepository(pool)))
 	lead := httphandler.NewLeadHandler(leaduc.New(database.NewLeadRepository(pool)))
-	return httphandler.NewRouter("http://localhost:4200", routerTestSecret, database.NewMembershipRepository(pool), pub, share, djPortal, dj, ev, st, sl, line, perf, lead)
+	school := httphandler.NewSchoolHandler(schooluc.New(database.NewOrganizerRepository(pool), database.NewSchoolRepository(pool), database.NewMembershipRepository(pool)))
+	return httphandler.NewRouter("http://localhost:4200", routerTestSecret, database.NewMembershipRepository(pool), pub, share, djPortal, dj, ev, st, sl, line, perf, lead, school)
 }
 
 func mintRouterToken(t *testing.T) string {
