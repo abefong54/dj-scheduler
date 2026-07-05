@@ -86,7 +86,9 @@ func (h *StudentAuthHandler) callback(c *gin.Context) {
 			slog.Warn("student oauth callback: no roster match",
 				"request_id", middleware.GetRequestID(c),
 			)
-			c.JSON(http.StatusForbidden, gin.H{"error": "you're not on a roster yet — ask your teacher to add your email"})
+			// Redirect back to the login page with an error marker so the SPA can
+			// show a friendly "ask your teacher" message rather than a raw JSON 403.
+			c.Redirect(http.StatusFound, h.frontendURL+"/student/login?error=not_on_roster")
 			return
 		}
 		// The wrapped error carries Google's real reason (no secret, no auth code).

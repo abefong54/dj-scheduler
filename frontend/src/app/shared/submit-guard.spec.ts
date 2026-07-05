@@ -7,7 +7,7 @@ describe('SubmitGuard (BUG-008)', () => {
     const src = new Subject<number>();
     const seen: number[] = [];
 
-    guard.run(src, { next: v => seen.push(v) });
+    guard.run(src, { next: (v) => seen.push(v) });
     expect(guard.pending()).toBe(true);
 
     src.next(1);
@@ -23,14 +23,24 @@ describe('SubmitGuard (BUG-008)', () => {
 
     // A double-click: second call arrives before the first resolves.
     let secondSubscribed = false;
-    guard.run(new Observable<void>(() => { secondSubscribed = true; }), {});
+    guard.run(
+      new Observable<void>(() => {
+        secondSubscribed = true;
+      }),
+      {},
+    );
     expect(secondSubscribed).toBe(false);
 
     // Once the first resolves, a fresh call runs again.
     first.complete();
     expect(guard.pending()).toBe(false);
     let thirdSubscribed = false;
-    guard.run(new Observable<void>(() => { thirdSubscribed = true; }), {});
+    guard.run(
+      new Observable<void>(() => {
+        thirdSubscribed = true;
+      }),
+      {},
+    );
     expect(thirdSubscribed).toBe(true);
   });
 
@@ -39,7 +49,11 @@ describe('SubmitGuard (BUG-008)', () => {
     const src = new Subject<void>();
     let errored = false;
 
-    guard.run(src, { error: () => { errored = true; } });
+    guard.run(src, {
+      error: () => {
+        errored = true;
+      },
+    });
     expect(guard.pending()).toBe(true);
 
     src.error(new Error('boom'));

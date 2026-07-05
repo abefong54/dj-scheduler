@@ -5,8 +5,22 @@ import { EventsStore } from './events-store';
 import { Event } from './api.service';
 
 const EVENTS: Event[] = [
-  { id: 'e1', name: 'Summer Fest', venue_name: 'Hall A', start_date: '2026-07-01', end_date: '2026-07-02', genres: ['House'] },
-  { id: 'e2', name: 'Winter Showcase', venue_name: 'Hall B', start_date: '2026-12-10', end_date: '2026-12-10', genres: ['Techno'] },
+  {
+    id: 'e1',
+    name: 'Summer Fest',
+    venue_name: 'Hall A',
+    start_date: '2026-07-01',
+    end_date: '2026-07-02',
+    genres: ['House'],
+  },
+  {
+    id: 'e2',
+    name: 'Winter Showcase',
+    venue_name: 'Hall B',
+    start_date: '2026-12-10',
+    end_date: '2026-12-10',
+    genres: ['Techno'],
+  },
 ];
 
 describe('EventsStore', () => {
@@ -60,7 +74,8 @@ describe('EventsStore', () => {
 
   it('surfaces error() on a failed first load', () => {
     store.ensure();
-    httpMock.expectOne((r) => r.url.endsWith('/api/events'))
+    httpMock
+      .expectOne((r) => r.url.endsWith('/api/events'))
       .flush('nope', { status: 500, statusText: 'Server Error' });
     expect(store.error()).toBe(true);
     expect(store.loading()).toBe(false);

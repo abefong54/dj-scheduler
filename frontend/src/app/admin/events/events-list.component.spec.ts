@@ -56,7 +56,10 @@ describe('EventsListComponent — Console restyle (EL-064)', () => {
         provideRouter([]),
         provideTranslateService(),
         { provide: ApiService, useValue: apiMock },
-        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true), alert: () => Promise.resolve() } },
+        {
+          provide: DialogService,
+          useValue: { confirm: () => Promise.resolve(true), alert: () => Promise.resolve() },
+        },
       ],
     }).compileComponents();
 
@@ -76,8 +79,8 @@ describe('EventsListComponent — Console restyle (EL-064)', () => {
   });
 
   it('renders stat tiles with real derived counts (upcoming / past / total)', () => {
-    const numbers = Array.from(root().querySelectorAll('.stat-tile-number')).map(
-      el => el.textContent?.trim(),
+    const numbers = Array.from(root().querySelectorAll('.stat-tile-number')).map((el) =>
+      el.textContent?.trim(),
     );
     // 2 upcoming (live + future), 1 past, 3 total.
     expect(numbers).toEqual(['2', '1', '3']);
@@ -207,7 +210,10 @@ describe('EventsListComponent — loading state (EL-087)', () => {
         provideRouter([]),
         provideTranslateService(),
         { provide: ApiService, useValue: { getEvents } },
-        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true), alert: () => Promise.resolve() } },
+        {
+          provide: DialogService,
+          useValue: { confirm: () => Promise.resolve(true), alert: () => Promise.resolve() },
+        },
       ],
     });
     const fixture = TestBed.createComponent(EventsListComponent);
@@ -255,7 +261,10 @@ describe('EventsListComponent — cached list (EL-091)', () => {
         provideRouter([]),
         provideTranslateService(),
         { provide: ApiService, useValue: api },
-        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true), alert: () => Promise.resolve() } },
+        {
+          provide: DialogService,
+          useValue: { confirm: () => Promise.resolve(true), alert: () => Promise.resolve() },
+        },
       ],
     });
 
@@ -392,7 +401,7 @@ describe('EventsListComponent — inline edits (Task 3)', () => {
       'evt-live',
       expect.objectContaining({ venue_name: 'New Venue' }),
     );
-    expect(cmp.events().find(e => e.id === 'evt-live')!.venue_name).toBe('New Venue');
+    expect(cmp.events().find((e) => e.id === 'evt-live')!.venue_name).toBe('New Venue');
   });
 
   it('reverts (leaves events unchanged) when the PATCH errors', () => {
@@ -400,11 +409,11 @@ describe('EventsListComponent — inline edits (Task 3)', () => {
 
     const cmp = fixture.componentInstance;
     const row = cmp.rowsForActiveTab()[0];
-    const before = cmp.events().find(e => e.id === String(row['id']))!.venue_name;
+    const before = cmp.events().find((e) => e.id === String(row['id']))!.venue_name;
     cmp.commitVenue(row, { value: 'Broken', endValue: '' });
     fixture.detectChanges();
 
-    expect(cmp.events().find(e => e.id === String(row['id']))!.venue_name).toBe(before);
+    expect(cmp.events().find((e) => e.id === String(row['id']))!.venue_name).toBe(before);
   });
 
   it('commitDates sends start and end', () => {

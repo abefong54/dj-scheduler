@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
+import { studentAuthGuard } from './guards/student-auth.guard';
 import { hasSchoolGuard, onboardingGuard } from './guards/onboarding.guard';
 
 export const routes: Routes = [
@@ -68,8 +69,8 @@ export const routes: Routes = [
     loadComponent: () => import('./card/card.component')
       .then(m => m.CardComponent),
   },
-  // Student features (2026-07-05 sprint) — SCAFFOLD placeholder routes. Auth
-  // gating on the student JWT is a Track E concern; shells load unguarded for now.
+  // Student features (2026-07-05 sprint). /student/login is public (it also lands
+  // the Google callback); the portal surfaces are gated on the student JWT.
   {
     path: 'student/login',
     loadComponent: () => import('./student/student-login.component')
@@ -77,11 +78,13 @@ export const routes: Routes = [
   },
   {
     path: 'student/challenges',
+    canActivate: [studentAuthGuard],
     loadComponent: () => import('./student/student-challenges.component')
       .then(m => m.StudentChallengesComponent),
   },
   {
     path: 'student/feed',
+    canActivate: [studentAuthGuard],
     loadComponent: () => import('./student/student-feed.component')
       .then(m => m.StudentFeedComponent),
   },
