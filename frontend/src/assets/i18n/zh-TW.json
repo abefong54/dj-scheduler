@@ -8,6 +8,8 @@
   "nav.signIn": "登入",
   "nav.bookDemo": "預約導覽",
   "nav.console": "前往控制台",
+  "nav.home": "Soundcheck 首頁",
+  "nav.menu": "選單",
 
   "shell.workspace": "工作區",
   "shell.nav.events": "活動",

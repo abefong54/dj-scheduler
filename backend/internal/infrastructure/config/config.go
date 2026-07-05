@@ -27,6 +27,13 @@ type Config struct {
 	GoogleClientSecret string
 	GoogleRedirectURL  string
 
+	// LINE Login (organizer sign-in via LINE, EL-110). Optional: when all three
+	// are present the /auth/line routes + button turn on; all-empty disables it.
+	// Distinct from LINE Notify (LineNotifyEncryptionKey) below.
+	LineChannelID     string
+	LineChannelSecret string
+	LineRedirectURL   string
+
 	// LineNotifyEncryptionKey is the AES-256 key (decoded from the hex env var
 	// LINE_NOTIFY_ENCRYPTION_KEY) used to encrypt per-event LINE Notify tokens
 	// at rest. nil if unset or not valid hex; ValidateLineNotify rejects that.
@@ -53,6 +60,10 @@ func Load() Config {
 		GoogleClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		GoogleClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
 		GoogleRedirectURL:  os.Getenv("GOOGLE_REDIRECT_URL"),
+
+		LineChannelID:     os.Getenv("LINE_CHANNEL_ID"),
+		LineChannelSecret: os.Getenv("LINE_CHANNEL_SECRET"),
+		LineRedirectURL:   os.Getenv("LINE_REDIRECT_URL"),
 
 		// Invalid hex decodes to nil here; ValidateLineNotify reports it.
 		LineNotifyEncryptionKey: decodeHexKey(os.Getenv("LINE_NOTIFY_ENCRYPTION_KEY")),
@@ -87,6 +98,27 @@ func (c Config) Validate() error {
 func (c Config) ValidateLineNotify() error {
 	if len(c.LineNotifyEncryptionKey) != lineNotifyKeyLen {
 		return errors.New("LINE_NOTIFY_ENCRYPTION_KEY must be a 64-char hex string (32-byte AES-256 key)")
+	}
+	return nil
+}
+
+// LineLoginConfigured reports whether LINE Login is fully configured. LINE login
+// is optional — all-empty means "disabled" (Google stays required).
+func (c Config) LineLoginConfigured() bool {
+	return c.LineChannelID != "" && c.LineChannelSecret != "" && c.LineRedirectURL != ""
+}
+
+// ValidateLine rejects a PARTIAL LINE Login config (some but not all settings)
+// so a typo can't silently disable the button. Fully set or fully empty pass.
+func (c Config) ValidateLine() error {
+	n := 0
+	for _, v := range []string{c.LineChannelID, c.LineChannelSecret, c.LineRedirectURL} {
+		if v != "" {
+			n++
+		}
+	}
+	if n != 0 && n != 3 {
+		return errors.New("LINE Login partially configured — set all of LINE_CHANNEL_ID, LINE_CHANNEL_SECRET, LINE_REDIRECT_URL, or none")
 	}
 	return nil
 }

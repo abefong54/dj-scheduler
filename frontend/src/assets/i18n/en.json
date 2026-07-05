@@ -8,6 +8,8 @@
   "nav.signIn": "Sign in",
   "nav.bookDemo": "Book a demo",
   "nav.console": "Go to console",
+  "nav.home": "Soundcheck home",
+  "nav.menu": "Menu",
 
   "shell.workspace": "The Booth",
   "shell.nav.events": "Events",

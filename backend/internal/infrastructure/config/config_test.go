@@ -90,3 +90,35 @@ func TestValidate(t *testing.T) {
 		})
 	}
 }
+
+func TestLineLoginConfigAndValidate(t *testing.T) {
+	full := Config{LineChannelID: "cid", LineChannelSecret: "sec", LineRedirectURL: "http://x/auth/line/callback"}
+	if !full.LineLoginConfigured() {
+		t.Fatal("expected full LINE config to be configured")
+	}
+	if err := full.ValidateLine(); err != nil {
+		t.Fatalf("full LINE config should validate, got %v", err)
+	}
+
+	empty := Config{}
+	if empty.LineLoginConfigured() {
+		t.Fatal("empty config must not be considered configured")
+	}
+	if err := empty.ValidateLine(); err != nil {
+		t.Fatalf("all-empty LINE config is valid (disabled), got %v", err)
+	}
+
+	// Partial config is a mistake (a typo shouldn't silently disable the button).
+	for _, partial := range []Config{
+		{LineChannelID: "cid"},
+		{LineChannelID: "cid", LineChannelSecret: "sec"},
+		{LineChannelSecret: "sec", LineRedirectURL: "x"},
+	} {
+		if partial.LineLoginConfigured() {
+			t.Errorf("partial config should not be 'configured': %+v", partial)
+		}
+		if err := partial.ValidateLine(); err == nil {
+			t.Errorf("partial LINE config should fail validation: %+v", partial)
+		}
+	}
+}

@@ -3,6 +3,7 @@ package handler
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -16,11 +17,11 @@ import (
 
 const (
 	// oauthStateCookie is the name of the short-lived CSRF cookie that pins the
-	// OAuth state value across the Google consent round-trip.
+	// OAuth state value across the provider consent round-trip.
 	oauthStateCookie = "oauth_state"
 
 	// oauthStateTTL is how long that cookie stays valid — long enough to finish
-	// the Google consent flow, short enough to limit replay of a leaked state.
+	// the consent flow, short enough to limit replay of a leaked state.
 	oauthStateTTL = 5 * time.Minute
 
 	// deleteCookieMaxAge is the Max-Age that tells the browser to drop a cookie
@@ -36,32 +37,39 @@ type AuthHandler struct {
 	uc            *authuc.UseCase
 	frontendURL   string
 	secureCookies bool
+	// providers are the registered provider keys (e.g. "google", "line"); each
+	// gets its own /auth/<name> + /auth/<name>/callback pair.
+	providers []string
 }
 
-func NewAuthHandler(uc *authuc.UseCase, frontendURL string, secureCookies bool) *AuthHandler {
-	return &AuthHandler{uc: uc, frontendURL: frontendURL, secureCookies: secureCookies}
+func NewAuthHandler(uc *authuc.UseCase, frontendURL string, secureCookies bool, providers []string) *AuthHandler {
+	return &AuthHandler{uc: uc, frontendURL: frontendURL, secureCookies: secureCookies, providers: providers}
 }
 
-// Register mounts the auth routes. These are intentionally NOT behind the JWT
-// middleware — they are how a user obtains a JWT in the first place.
+// Register mounts one redirect + callback route per configured provider. These
+// are intentionally NOT behind the JWT middleware — they are how a user obtains
+// a JWT in the first place.
 func (h *AuthHandler) Register(r gin.IRoutes) {
-	r.GET("/auth/google", h.redirect)
-	r.GET("/auth/google/callback", h.callback)
+	for _, name := range h.providers {
+		name := name // capture per iteration
+		r.GET("/auth/"+name, func(c *gin.Context) { h.redirect(c, name) })
+		r.GET("/auth/"+name+"/callback", func(c *gin.Context) { h.callback(c, name) })
+	}
 }
 
-// redirect sends the user to Google's consent screen, seeding a CSRF state
+// redirect sends the user to the provider's consent screen, seeding a CSRF state
 // value in both the redirect URL and a short-lived cookie.
-func (h *AuthHandler) redirect(c *gin.Context) {
+func (h *AuthHandler) redirect(c *gin.Context, provider string) {
 	state, err := randomState()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 		return
 	}
-	// path=/, HttpOnly, SameSite=Lax (survives the Google redirect back).
+	// path=/, HttpOnly, SameSite=Lax (survives the provider redirect back).
 	// Secure is config-driven: true in production, off for local http dev.
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie(oauthStateCookie, state, int(oauthStateTTL.Seconds()), "/", "", h.secureCookies, true)
-	authURL, err := h.uc.AuthCodeURL(authuc.ProviderGoogle, state)
+	authURL, err := h.uc.AuthCodeURL(provider, state)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 		return
@@ -71,7 +79,7 @@ func (h *AuthHandler) redirect(c *gin.Context) {
 
 // callback validates CSRF state, exchanges the code for an organizer JWT, and
 // redirects to the frontend with the token. The code and token are never logged.
-func (h *AuthHandler) callback(c *gin.Context) {
+func (h *AuthHandler) callback(c *gin.Context, provider string) {
 	code := c.Query("code")
 	state := c.Query("state")
 	cookieState, _ := c.Cookie(oauthStateCookie)
@@ -82,6 +90,7 @@ func (h *AuthHandler) callback(c *gin.Context) {
 		// a state-cookie problem can be told apart from a token-exchange one.
 		slog.Warn("oauth callback rejected: state precheck failed",
 			"request_id", middleware.GetRequestID(c),
+			"provider", provider,
 			"has_code", code != "",
 			"has_state", state != "",
 			"has_state_cookie", cookieState != "",
@@ -94,13 +103,23 @@ func (h *AuthHandler) callback(c *gin.Context) {
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie(oauthStateCookie, "", deleteCookieMaxAge, "/", "", h.secureCookies, true)
 
-	jwt, err := h.uc.HandleCallback(c.Request.Context(), authuc.ProviderGoogle, code)
+	jwt, err := h.uc.HandleCallback(c.Request.Context(), provider, code)
 	if err != nil {
-		// The wrapped error carries Google's real reason (e.g. invalid_client,
-		// invalid_grant). It contains no secret — the client secret and the auth
-		// code are not part of the returned error — so it is safe to log.
+		// The provider gave a profile with no email (e.g. a LINE user declined the
+		// email permission). email is the linking key, so we can't make an account
+		// — send them back to sign-in with a friendly, provider-agnostic reason.
+		if errors.Is(err, authuc.ErrNoEmail) {
+			slog.Warn("oauth callback: provider returned no email",
+				"request_id", middleware.GetRequestID(c), "provider", provider)
+			c.Redirect(http.StatusFound, h.frontendURL+"/login?error=no_email")
+			return
+		}
+		// The wrapped error carries the provider's real reason (e.g. invalid_grant).
+		// It contains no secret — the client secret and the auth code are not part
+		// of the returned error — so it is safe to log.
 		slog.Error("oauth callback failed: code exchange / userinfo",
 			"request_id", middleware.GetRequestID(c),
+			"provider", provider,
 			"err", err,
 		)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "oauth exchange failed"})
