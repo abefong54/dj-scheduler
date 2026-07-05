@@ -33,6 +33,8 @@
   "auth.emailPlaceholder": "Email address",
   "auth.sendMagicLink": "Send magic link",
   "auth.magicLinkComingSoon": "Coming soon",
+  "auth.signInWithLine": "Log in with LINE",
+  "auth.error.noEmail": "LINE didn't share your email, so we couldn't sign you in. Please use Google, or allow email access on LINE and try again.",
 
   "events.title": "Events",
   "events.new": "New Event",
