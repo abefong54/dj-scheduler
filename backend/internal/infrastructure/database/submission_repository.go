@@ -89,6 +89,12 @@ func (r *submissionRepo) ListFeed(ctx context.Context, schoolID string) ([]model
 	return r.queryList(ctx, querySubmissionListFeed, schoolID)
 }
 
+// ListForReview returns the school's posted submissions (awaiting sign-off),
+// oldest first — the teacher review queue.
+func (r *submissionRepo) ListForReview(ctx context.Context, schoolID string) ([]model.Submission, error) {
+	return r.queryList(ctx, querySubmissionListForReview, schoolID)
+}
+
 // ListForStudent returns one student's submissions across all their challenges.
 func (r *submissionRepo) ListForStudent(ctx context.Context, djID, schoolID string) ([]model.Submission, error) {
 	return r.queryList(ctx, querySubmissionListForStudent, djID, schoolID)

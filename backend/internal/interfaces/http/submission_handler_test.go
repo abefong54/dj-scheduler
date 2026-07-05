@@ -152,3 +152,38 @@ func TestSubmissionReviewNeedsWorkKeepsNoBadge(t *testing.T) {
 		t.Fatalf("needs_work must not award a badge: %+v", reviewed)
 	}
 }
+
+func TestSubmissionPendingReviewQueue(t *testing.T) {
+	pool := setupTestDB(t)
+	org := createTestOrganizer(t, pool)
+	schoolID := schoolIDForOrg(t, pool, org)
+	dj := seedDJ(t, pool, org, "poster4")
+	chal := seedCoreChallenge(t, pool, schoolID, org, "Headliner")
+
+	sr := submissionStudentRouter(pool, schoolID, dj)
+	w := jsonReq(t, sr, http.MethodPost, "/api/student/submissions", map[string]any{
+		"challenge_id": chal, "media_url": "https://youtu.be/pending01",
+	})
+	var sub model.Submission
+	json.Unmarshal(w.Body.Bytes(), &sub)
+
+	tr := submissionTeacherRouter(pool, org)
+	// Posted submission shows in the review queue.
+	w = jsonReq(t, tr, http.MethodGet, "/api/submissions/pending", nil)
+	if w.Code != http.StatusOK {
+		t.Fatalf("pending: want 200, got %d", w.Code)
+	}
+	var pending []model.Submission
+	json.Unmarshal(w.Body.Bytes(), &pending)
+	if len(pending) != 1 || pending[0].ID != sub.ID {
+		t.Fatalf("posted submission should be in the review queue, got %+v", pending)
+	}
+
+	// After a pass it leaves the queue.
+	jsonReq(t, tr, http.MethodPost, "/api/submissions/"+sub.ID+"/review", map[string]any{"status": "passed"})
+	w = jsonReq(t, tr, http.MethodGet, "/api/submissions/pending", nil)
+	json.Unmarshal(w.Body.Bytes(), &pending)
+	if len(pending) != 0 {
+		t.Fatalf("passed submission should leave the review queue, got %+v", pending)
+	}
+}

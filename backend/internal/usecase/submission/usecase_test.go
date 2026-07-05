@@ -34,6 +34,9 @@ func (f *fakeRepo) Review(ctx context.Context, id, schoolID, status, note, badge
 func (f *fakeRepo) ListFeed(ctx context.Context, schoolID string) ([]model.Submission, error) {
 	return nil, nil
 }
+func (f *fakeRepo) ListForReview(ctx context.Context, schoolID string) ([]model.Submission, error) {
+	return nil, nil
+}
 func (f *fakeRepo) ListForStudent(ctx context.Context, djID, schoolID string) ([]model.Submission, error) {
 	return nil, nil
 }
