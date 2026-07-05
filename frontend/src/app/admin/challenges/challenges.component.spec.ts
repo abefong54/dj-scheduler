@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { provideTranslateService } from '@ngx-translate/core';
 import { of } from 'rxjs';
 
 import { AdminChallengesComponent } from './challenges.component';
@@ -41,6 +42,7 @@ function build(over: Record<string, unknown> = {}) {
     imports: [AdminChallengesComponent],
     providers: [
       provideRouter([]),
+      provideTranslateService(),
       { provide: ChallengesService, useValue: svc },
       { provide: ApiService, useValue: api },
     ],
@@ -58,6 +60,20 @@ function type(el: HTMLElement, testid: string, val: string) {
 }
 
 describe('AdminChallengesComponent (Track H)', () => {
+  it('renders inside the admin shell so the sidebar is present', () => {
+    const { el } = build();
+    // The page must be wrapped in <app-admin-shell> — otherwise it renders bare
+    // with no sidebar (the nav the "Challenges" button links to).
+    expect(el.querySelector('app-admin-shell')).toBeTruthy();
+    expect(el.querySelector('.shell-sidebar')).toBeTruthy();
+    // The active nav item should be Challenges.
+    expect(
+      el.querySelector('.shell-nav-item.shell-nav-active .shell-nav-label')?.textContent,
+    ).toContain('shell.nav.challenges');
+    // The review-queue link is projected into the topbar actions slot.
+    expect(el.querySelector('.shell-actions-group [data-testid="review-link"]')).toBeTruthy();
+  });
+
   it('lists existing challenges', () => {
     const { el } = build();
     expect(el.querySelector('[data-testid="challenge-list"]')?.textContent).toContain(
