@@ -19,7 +19,7 @@
 BEGIN;
 
 -- Wipe everything the suite mutates. CASCADE clears stages/slots via their FKs.
-TRUNCATE slots, stages, events, djs, memberships, schools, organizers RESTART IDENTITY CASCADE;
+TRUNCATE submissions, challenges, slots, stages, events, djs, memberships, schools, organizers RESTART IDENTITY CASCADE;
 
 -- Test organizer. Its id MUST match the organizer_id claim in the minted JWT
 -- (`make e2e-token` / cmd/mintdevtoken default), or scoped queries return empty.
