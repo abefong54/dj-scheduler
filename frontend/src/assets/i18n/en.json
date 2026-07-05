@@ -103,6 +103,7 @@
   "slots.duration": "Duration (mins)",
   "slots.unassigned": "— unassigned —",
   "slots.selectOption": "— select —",
+  "slots.stageRequired": "Select a stage",
   "slots.djFirst": "— DJ first —",
   "slots.deleteConfirm": "Delete this set?",
   "slots.error.djDoubleBooked": "{{djName}} is already booked at this time",
