@@ -41,6 +41,27 @@ const (
 		FROM djs
 		WHERE portal_token_hash = $1 AND portal_token_expires_at > now()`
 
+	// Student Google login queries (migration 014). Identity is resolved before a
+	// school is known, so the two finds are intentionally NOT school-scoped — the
+	// student's school comes from the matched row (school_id). email/google_id are
+	// PII and are never selected here; only the columns the session needs.
+	queryDJFindByGoogleID = `
+		SELECT id, name, COALESCE(genre_tags, '{}'), COALESCE(certifications, '{}'), is_student, school_id, created_at::text
+		FROM djs WHERE google_id = $1`
+
+	// Case-insensitive email match for the first-login auto-link.
+	queryDJFindByEmail = `
+		SELECT id, name, COALESCE(genre_tags, '{}'), COALESCE(certifications, '{}'), is_student, school_id, created_at::text
+		FROM djs WHERE lower(email) = lower($1)`
+
+	// SetGoogleID binds the Google identity on first login. Not school-scoped:
+	// djID is the row just resolved by FindByEmail.
+	queryDJSetGoogleID = `UPDATE djs SET google_id = $1 WHERE id = $2`
+
+	// SetEmail is the teacher provisioning path (the "invite"): school-scoped so a
+	// teacher can only set the email of their own school's student.
+	queryDJSetEmail = `UPDATE djs SET email = $1 WHERE id = $2 AND school_id = $3`
+
 	queryDJPortalSlots = `
 		SELECT sl.id, sl.event_id, e.name, st.name,
 		       COALESCE(sl.genre,''),
@@ -257,19 +278,36 @@ const (
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, name, organization, email, message, source, created_at::text`
 
-	// Organizer queries
+	// Organizer queries. google_id / line_id are nullable (a user has at least
+	// one — see migration 014), so reads COALESCE them to '' for the string model.
 	queryOrganizerFindByGoogleID = `
-		SELECT id, email, name, google_id, created_at::text
+		SELECT id, email, name, COALESCE(google_id, ''), COALESCE(line_id, ''), created_at::text
 		FROM organizers WHERE google_id = $1`
 
+	queryOrganizerFindByLineID = `
+		SELECT id, email, name, COALESCE(google_id, ''), COALESCE(line_id, ''), created_at::text
+		FROM organizers WHERE line_id = $1`
+
+	queryOrganizerFindByEmail = `
+		SELECT id, email, name, COALESCE(google_id, ''), COALESCE(line_id, ''), created_at::text
+		FROM organizers WHERE email = $1`
+
 	queryOrganizerFindByID = `
-		SELECT id, email, name, google_id, created_at::text
+		SELECT id, email, name, COALESCE(google_id, ''), COALESCE(line_id, ''), created_at::text
 		FROM organizers WHERE id = $1`
 
 	queryOrganizerInsert = `
 		INSERT INTO organizers (email, name, google_id)
 		VALUES ($1, $2, $3)
-		RETURNING id, email, name, google_id, created_at::text`
+		RETURNING id, email, name, COALESCE(google_id, ''), COALESCE(line_id, ''), created_at::text`
+
+	queryOrganizerInsertLine = `
+		INSERT INTO organizers (email, name, line_id)
+		VALUES ($1, $2, $3)
+		RETURNING id, email, name, COALESCE(google_id, ''), COALESCE(line_id, ''), created_at::text`
+
+	queryOrganizerLinkLineID = `
+		UPDATE organizers SET line_id = $2 WHERE id = $1`
 
 	// School + membership queries (EL-103, multi-tenant schools). These use
 	// organizer_id as the MEMBERSHIP FK (which person), not as event/DJ scope.
@@ -363,4 +401,127 @@ const (
 		WHERE d.school_id = $1 AND d.is_student = true
 		GROUP BY d.id, d.name, d.is_student
 		ORDER BY reps ASC, d.name`
+
+	// Challenge queries (migration 015). Challenges are school-owned, so every
+	// read/write filters on school_id — a challenge that isn't the caller's school's
+	// simply doesn't match and reads as not-found. The nullable columns (skill,
+	// assigned_dj_id, badge_label, badge_icon) are COALESCE'd to '' on read and
+	// NULLIF('')'d on write, mirroring the slot queries.
+	challengeCols = `id, school_id, type, title, description,
+		COALESCE(skill,''), COALESCE(assigned_dj_id::text,''),
+		COALESCE(badge_label,''), COALESCE(badge_icon,''),
+		sort_order, created_by, archived, created_at::text`
+
+	queryChallengeList = `
+		SELECT ` + challengeCols + `
+		FROM challenges
+		WHERE school_id = $1 AND NOT archived
+		ORDER BY sort_order, created_at`
+
+	queryChallengeGet = `
+		SELECT ` + challengeCols + `
+		FROM challenges
+		WHERE id = $1 AND school_id = $2`
+
+	queryChallengeInsert = `
+		INSERT INTO challenges
+			(school_id, type, title, description, skill, assigned_dj_id, badge_label, badge_icon, sort_order, created_by)
+		VALUES ($1,$2,$3,$4,NULLIF($5,''),NULLIF($6,'')::uuid,NULLIF($7,''),NULLIF($8,''),$9,$10)
+		RETURNING id, created_at::text`
+
+	queryChallengeUpdate = `
+		UPDATE challenges
+		SET type=$1, title=$2, description=$3, skill=NULLIF($4,''),
+		    assigned_dj_id=NULLIF($5,'')::uuid, badge_label=NULLIF($6,''),
+		    badge_icon=NULLIF($7,''), sort_order=$8
+		WHERE id=$9 AND school_id=$10
+		RETURNING ` + challengeCols
+
+	queryChallengeArchive = `
+		UPDATE challenges SET archived = TRUE
+		WHERE id = $1 AND school_id = $2`
+
+	// Core (badge-bearing, school-wide) challenges for "Browse Core".
+	queryChallengeListCore = `
+		SELECT ` + challengeCols + `
+		FROM challenges
+		WHERE school_id = $1 AND type = 'core' AND NOT archived
+		ORDER BY sort_order, created_at`
+
+	// A student's own open custom challenges: the ones assigned to them, scoped to
+	// their school. $1 dj_id, $2 school_id. The usecase merges these with the core
+	// set to form the student's full challenge list.
+	queryChallengeListForStudent = `
+		SELECT ` + challengeCols + `
+		FROM challenges
+		WHERE assigned_dj_id = $1 AND school_id = $2
+		  AND type = 'custom' AND NOT archived
+		ORDER BY sort_order, created_at`
+)
+
+// submissionCols is the SELECT/RETURNING column list for submissions, with
+// nullable columns COALESCE'd to ” and timestamps/uuids cast to text so the
+// model can hold plain strings (mirrors challengeCols).
+const submissionCols = `id, school_id, challenge_id, dj_id, media_kind, media_provider, media_ref,
+	COALESCE(caption,''), status, COALESCE(review_note,''),
+	COALESCE(earned_badge_label,''), COALESCE(earned_badge_icon,''),
+	COALESCE(reviewed_by::text,''), COALESCE(reviewed_at::text,''), created_at::text`
+
+const (
+	querySubmissionGet = `
+		SELECT ` + submissionCols + `
+		FROM submissions
+		WHERE id = $1 AND school_id = $2`
+
+	// querySubmissionUpsert writes the one active submission per (dj_id,
+	// challenge_id): a re-post overwrites the media and resets the row to
+	// 'posted', clearing any prior review/badge snapshot.
+	querySubmissionUpsert = `
+		INSERT INTO submissions
+			(school_id, challenge_id, dj_id, media_kind, media_provider, media_ref, caption, status)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,'posted')
+		ON CONFLICT (dj_id, challenge_id) DO UPDATE SET
+			media_kind = EXCLUDED.media_kind,
+			media_provider = EXCLUDED.media_provider,
+			media_ref = EXCLUDED.media_ref,
+			caption = EXCLUDED.caption,
+			status = 'posted',
+			review_note = NULL,
+			earned_badge_label = NULL,
+			earned_badge_icon = NULL,
+			reviewed_by = NULL,
+			reviewed_at = NULL
+		RETURNING ` + submissionCols
+
+	// querySubmissionReview records a teacher pass/needs_work. On a pass, the
+	// badge is snapshotted from the parent challenge IN SQL, but only when that
+	// challenge is core — so the earned badge is frozen onto the row and survives
+	// later edits/archival of the challenge.
+	querySubmissionReview = `
+		UPDATE submissions SET
+			status = $3,
+			review_note = NULLIF($4,''),
+			reviewed_at = now(),
+			earned_badge_label = CASE WHEN $3 = 'passed'
+				THEN (SELECT badge_label FROM challenges c WHERE c.id = submissions.challenge_id AND c.type = 'core')
+				ELSE NULL END,
+			earned_badge_icon = CASE WHEN $3 = 'passed'
+				THEN (SELECT badge_icon FROM challenges c WHERE c.id = submissions.challenge_id AND c.type = 'core')
+				ELSE NULL END
+		WHERE id = $1 AND school_id = $2
+		RETURNING ` + submissionCols
+
+	// querySubmissionListFeed is the school feed: passed submissions only, newest
+	// review first.
+	querySubmissionListFeed = `
+		SELECT ` + submissionCols + `
+		FROM submissions
+		WHERE school_id = $1 AND status = 'passed'
+		ORDER BY reviewed_at DESC NULLS LAST, created_at DESC`
+
+	querySubmissionListForStudent = `
+		SELECT ` + submissionCols + `
+		FROM submissions
+		WHERE dj_id = $1 AND school_id = $2
+		ORDER BY created_at DESC`
 )

@@ -36,7 +36,7 @@ func TestUpsertOrganizerNoDuplicate(t *testing.T) {
 	pool.Exec(ctx, "DELETE FROM organizers WHERE google_id = $1", gid)
 	t.Cleanup(func() { pool.Exec(ctx, "DELETE FROM organizers WHERE google_id = $1", gid) })
 
-	gu := GoogleUser{GoogleID: gid, Email: "upsert@example.com", Name: "Upsert User"}
+	gu := ExternalUser{Provider: ProviderGoogle, Subject: gid, Email: "upsert@example.com", Name: "Upsert User"}
 
 	first, err := uc.upsertOrganizer(ctx, gu)
 	if err != nil {
@@ -59,10 +59,10 @@ func TestUpsertOrganizerNoDuplicate(t *testing.T) {
 	}
 }
 
-type stubGoogle struct{ user GoogleUser }
+type stubGoogle struct{ user ExternalUser }
 
 func (s stubGoogle) AuthCodeURL(string) string { return "" }
-func (s stubGoogle) UserFromCode(context.Context, string) (GoogleUser, error) {
+func (s stubGoogle) UserFromCode(context.Context, string) (ExternalUser, error) {
 	return s.user, nil
 }
 
@@ -98,10 +98,10 @@ func TestHandleCallbackLinksPendingInvite(t *testing.T) {
 	})
 
 	uc := New(
-		stubGoogle{user: GoogleUser{GoogleID: inviteeGID, Email: inviteeEmail, Name: "Invitee"}},
+		map[string]OAuthProvider{ProviderGoogle: stubGoogle{user: ExternalUser{Provider: ProviderGoogle, Subject: inviteeGID, Email: inviteeEmail, Name: "Invitee"}}},
 		orgRepo, memRepo, "auth-link-secret-auth-link-secret-000001", time.Hour,
 	)
-	if _, err := uc.HandleCallback(ctx, "code"); err != nil {
+	if _, err := uc.HandleCallback(ctx, ProviderGoogle, "code"); err != nil {
 		t.Fatalf("HandleCallback: %v", err)
 	}
 

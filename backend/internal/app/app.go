@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"log"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	"eventlineup/internal/infrastructure/googleauth"
 	httphandler "eventlineup/internal/interfaces/http"
 	authuc "eventlineup/internal/usecase/auth"
+	challengeuc "eventlineup/internal/usecase/challenge"
 	djuc "eventlineup/internal/usecase/dj"
 	eventuc "eventlineup/internal/usecase/event"
 	leaduc "eventlineup/internal/usecase/lead"
@@ -17,7 +19,26 @@ import (
 	schooluc "eventlineup/internal/usecase/school"
 	slotuc "eventlineup/internal/usecase/slot"
 	stageuc "eventlineup/internal/usecase/stage"
+	studentauthuc "eventlineup/internal/usecase/studentauth"
+	submissionuc "eventlineup/internal/usecase/submission"
 )
+
+// googleStudentAdapter adapts the shared OAuth provider (which returns
+// authuc.ExternalUser) to the studentauth.GoogleAuthenticator interface, so
+// student sign-in reuses the same Google client as the organizer flow. The
+// provider's Subject is the stable Google user id. The student callback is a
+// distinct redirect URI — Track A confirms it's registered.
+type googleStudentAdapter struct{ inner authuc.OAuthProvider }
+
+func (a googleStudentAdapter) AuthCodeURL(state string) string { return a.inner.AuthCodeURL(state) }
+
+func (a googleStudentAdapter) UserFromCode(ctx context.Context, code string) (studentauthuc.GoogleUser, error) {
+	u, err := a.inner.UserFromCode(ctx, code)
+	if err != nil {
+		return studentauthuc.GoogleUser{}, err
+	}
+	return studentauthuc.GoogleUser{GoogleID: u.Subject, Email: u.Email, Name: u.Name}, nil
+}
 
 // tokenTTL is how long an issued organizer JWT stays valid.
 const tokenTTL = 24 * time.Hour
@@ -67,12 +88,23 @@ func Run() {
 	membershipRepo := database.NewMembershipRepository(pool)
 	schoolRepo := database.NewSchoolRepository(pool)
 	googleAuth := googleauth.New(cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL)
-	authHandler := httphandler.NewAuthHandler(authuc.New(googleAuth, organizerRepo, membershipRepo, cfg.JWTSecret, tokenTTL), cfg.FrontendURL, cfg.SecureCookies)
+	authProviders := map[string]authuc.OAuthProvider{authuc.ProviderGoogle: googleAuth}
+	authHandler := httphandler.NewAuthHandler(authuc.New(authProviders, organizerRepo, membershipRepo, cfg.JWTSecret, tokenTTL), cfg.FrontendURL, cfg.SecureCookies)
 	// Onboarding surface: /api/me, register school, invite members (EL-105).
 	schoolHandler := httphandler.NewSchoolHandler(schooluc.New(organizerRepo, schoolRepo, membershipRepo))
 
+	// Student features (2026-07-05 sprint). Student auth reuses the Google client
+	// (via adapter) + djRepo; the challenge and submission usecases get their real
+	// school-scoped repos (Tracks B/C).
+	studentAuthHandler := httphandler.NewStudentAuthHandler(
+		studentauthuc.New(googleStudentAdapter{inner: googleAuth}, djRepo, cfg.JWTSecret, tokenTTL),
+		cfg.FrontendURL, cfg.SecureCookies,
+	)
+	challengeHandler := httphandler.NewChallengeHandler(challengeuc.New(database.NewChallengeRepository(pool)))
+	submissionHandler := httphandler.NewSubmissionHandler(submissionuc.New(database.NewSubmissionRepository(pool)))
+
 	// membershipRepo also resolves the caller's school for the scoping middleware (EL-104).
-	r := httphandler.NewRouter(cfg.FrontendURL, cfg.JWTSecret, membershipRepo, publicHandler, shareHandler, djPortalHandler, djHandler, eventHandler, stageHandler, slotHandler, lineHandler, perfHandler, leadHandler, schoolHandler)
+	r := httphandler.NewRouter(cfg.FrontendURL, cfg.JWTSecret, membershipRepo, publicHandler, shareHandler, djPortalHandler, djHandler, eventHandler, stageHandler, slotHandler, lineHandler, perfHandler, leadHandler, schoolHandler, studentAuthHandler, challengeHandler, submissionHandler)
 	authHandler.Register(r) // unauthenticated auth routes
 
 	log.Printf("listening on :%s", cfg.Port)

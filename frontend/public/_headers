@@ -8,8 +8,12 @@
 # connect-src must list the Railway API origin. The placeholder below is
 # rewritten to $RAILWAY_API_URL at build time by netlify.toml's sed step, the
 # same substitution applied to src/environments/environment.prod.ts.
+#
+# frame-src lists the embed providers the Challenges feature renders in iframes
+# (YouTube, SoundCloud, Mixcloud). Without it, default-src 'self' would block the
+# players. frame-ancestors stays 'none' — we embed others, no one embeds us.
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://YOUR_RAILWAY_URL.up.railway.app; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://YOUR_RAILWAY_URL.up.railway.app; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://w.soundcloud.com https://soundcloud.com https://www.mixcloud.com https://player.mixcloud.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
   Referrer-Policy: no-referrer
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY

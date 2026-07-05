@@ -27,6 +27,54 @@ type DJRepository interface {
 	SetPortalToken(ctx context.Context, djID, schoolID, tokenHash string, expiresAt time.Time) error
 	GetByPortalToken(ctx context.Context, tokenHash string) (model.DJ, error)
 	ListSlotsForDJ(ctx context.Context, djID string) ([]model.PortalSlot, error)
+
+	// Student Google login (migration 014). FindByGoogleID/FindByEmail are the
+	// two-step resolution path (returning student, then first-login link) and are
+	// intentionally unscoped: identity is resolved before a school is known — the
+	// student's school comes from the matched DJ row. Both return
+	// apperrors.ErrNotFound when no student matches. SetGoogleID binds the Google
+	// identity on first login; SetEmail is the teacher provisioning path (scoped).
+	FindByGoogleID(ctx context.Context, googleID string) (model.DJ, error)
+	FindByEmail(ctx context.Context, email string) (model.DJ, error)
+	SetGoogleID(ctx context.Context, djID, googleID string) error
+	SetEmail(ctx context.Context, djID, schoolID, email string) error
+}
+
+// ChallengeRepository is scoped to the caller's school (challenges are
+// school-owned), mirroring SlotRepository/PerformanceRepository. A challenge that
+// isn't the school's reads as apperrors.ErrNotFound.
+type ChallengeRepository interface {
+	// List returns every non-archived challenge (core + custom) for the school.
+	List(ctx context.Context, schoolID string) ([]model.Challenge, error)
+	Get(ctx context.Context, id, schoolID string) (model.Challenge, error)
+	Create(ctx context.Context, c model.Challenge, schoolID string) (model.Challenge, error)
+	Update(ctx context.Context, c model.Challenge, schoolID string) (model.Challenge, error)
+	// Archive soft-deletes a challenge (archived=true); earned badges survive.
+	Archive(ctx context.Context, id, schoolID string) error
+	// ListCore returns the school's core (badge-bearing) challenges for "Browse Core".
+	ListCore(ctx context.Context, schoolID string) ([]model.Challenge, error)
+	// ListForStudent returns the challenges relevant to one student: the core set
+	// plus any custom challenges assigned to them.
+	ListForStudent(ctx context.Context, djID, schoolID string) ([]model.Challenge, error)
+}
+
+// SubmissionRepository is scoped to the caller's school (submissions are
+// school-owned), mirroring SlotRepository. A submission that isn't the school's
+// reads as apperrors.ErrNotFound.
+type SubmissionRepository interface {
+	Create(ctx context.Context, s model.Submission, schoolID string) (model.Submission, error)
+	Get(ctx context.Context, id, schoolID string) (model.Submission, error)
+	// UpsertForChallenge writes the one active submission per (dj_id, challenge_id):
+	// re-work updates the existing row rather than appending history.
+	UpsertForChallenge(ctx context.Context, s model.Submission, schoolID string) (model.Submission, error)
+	// Review records a teacher pass/needs_work with an optional note. On a pass of
+	// a core challenge the badge is snapshotted onto the submission (badgeLabel,
+	// badgeIcon); pass empty strings for needs_work or non-core passes.
+	Review(ctx context.Context, id, schoolID, status, note, badgeLabel, badgeIcon string) (model.Submission, error)
+	// ListFeed returns the school's passed submissions, newest first (the feed).
+	ListFeed(ctx context.Context, schoolID string) ([]model.Submission, error)
+	// ListForStudent returns one student's submissions across all their challenges.
+	ListForStudent(ctx context.Context, djID, schoolID string) ([]model.Submission, error)
 }
 
 // EventRepository is scoped to the caller's school (EL-104). Create/Clone also
@@ -85,8 +133,12 @@ type LeadRepository interface {
 
 type OrganizerRepository interface {
 	FindByGoogleID(ctx context.Context, googleID string) (model.Organizer, error)
+	FindByLineID(ctx context.Context, lineID string) (model.Organizer, error)
+	FindByEmail(ctx context.Context, email string) (model.Organizer, error)
 	FindByID(ctx context.Context, id string) (model.Organizer, error)
 	Create(ctx context.Context, email, name, googleID string) (model.Organizer, error)
+	CreateWithLineID(ctx context.Context, email, name, lineID string) (model.Organizer, error)
+	LinkLineID(ctx context.Context, organizerID, lineID string) error
 }
 
 // SchoolRepository manages tenant schools — the owner of events and DJs (EL-103).
