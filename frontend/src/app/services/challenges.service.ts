@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { EMPTY, Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 // Student Challenges & Badges contracts (2026-07-05 sprint). These interfaces
@@ -66,8 +66,10 @@ export interface ReviewInput {
 
 /**
  * ChallengesService is the typed client for the challenge/submission endpoints.
- * SCAFFOLD: every method is a stub returning an empty placeholder — Track F fills
- * the real HTTP calls against `this.base`. Signatures are the contract.
+ * Auth is attached globally by `authInterceptor` (Bearer JWT on every `/api/*`
+ * request), so these methods issue plain HTTP calls against `this.base` and never
+ * touch headers themselves. The exported interfaces above are the snake_case
+ * contract with the backend (model.Challenge / model.Submission).
  */
 @Injectable({ providedIn: 'root' })
 export class ChallengesService {
@@ -78,38 +80,52 @@ export class ChallengesService {
 
   /** List the logged-in student's challenges (assigned custom + picked core). */
   listMyChallenges(): Observable<Challenge[]> {
-    return of([]);
+    return this.http.get<Challenge[]>(`${this.base}/api/student/challenges`);
   }
 
   /** Browse the school's core (badge-bearing) challenges. */
   browseCore(): Observable<Challenge[]> {
-    return of([]);
+    return this.http.get<Challenge[]>(`${this.base}/api/student/challenges/core`);
   }
 
   /** Post (or re-work) an attempt against a challenge. */
   postAttempt(input: PostAttemptInput): Observable<Submission> {
-    return EMPTY;
+    return this.http.post<Submission>(`${this.base}/api/student/submissions`, input);
+  }
+
+  /** The logged-in student's own submissions (any status), for progress/skill map. */
+  listMySubmissions(): Observable<Submission[]> {
+    return this.http.get<Submission[]>(`${this.base}/api/student/submissions`);
   }
 
   /** The school feed of passed submissions, newest first. */
   listFeed(): Observable<Submission[]> {
-    return of([]);
+    return this.http.get<Submission[]>(`${this.base}/api/student/feed`);
   }
 
   // --- teacher surfaces ---
 
   /** Author a custom challenge for one student. */
   authorChallenge(input: Partial<Challenge>): Observable<Challenge> {
-    return EMPTY;
+    return this.http.post<Challenge>(`${this.base}/api/challenges`, input);
   }
 
-  /** Add or edit a core (badge) challenge in the school's set. */
+  /** Update an existing challenge (custom or core) in place. */
+  updateChallenge(id: string, input: Partial<Challenge>): Observable<Challenge> {
+    return this.http.put<Challenge>(`${this.base}/api/challenges/${id}`, input);
+  }
+
+  /**
+   * Add a core (badge) challenge to the school's set. Same route as
+   * `authorChallenge`; the `type: 'core'` field + badge metadata in the body is
+   * what makes it core, so callers should set those on `input`.
+   */
   curateCore(input: Partial<Challenge>): Observable<Challenge> {
-    return EMPTY;
+    return this.http.post<Challenge>(`${this.base}/api/challenges`, { type: 'core', ...input });
   }
 
   /** Pass or return a submission with an optional note. */
   reviewSubmission(id: string, input: ReviewInput): Observable<Submission> {
-    return EMPTY;
+    return this.http.post<Submission>(`${this.base}/api/submissions/${id}/review`, input);
   }
 }
