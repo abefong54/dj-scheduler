@@ -11,7 +11,7 @@ import (
 	"eventlineup/internal/interfaces/http/middleware"
 )
 
-func NewRouter(frontendURL, jwtSecret string, schoolResolver middleware.SchoolResolver, public *PublicHandler, share *ShareHandler, djPortal *DJPortalHandler, dj *DJHandler, ev *EventHandler, st *StageHandler, sl *SlotHandler, line *LineHandler, perf *PerformanceHandler, leadHandler *LeadHandler, school *SchoolHandler) *gin.Engine {
+func NewRouter(frontendURL, jwtSecret string, schoolResolver middleware.SchoolResolver, public *PublicHandler, share *ShareHandler, djPortal *DJPortalHandler, dj *DJHandler, ev *EventHandler, st *StageHandler, sl *SlotHandler, line *LineHandler, perf *PerformanceHandler, leadHandler *LeadHandler, school *SchoolHandler, studentAuth *StudentAuthHandler, challenge *ChallengeHandler, submission *SubmissionHandler) *gin.Engine {
 	// gin.New() (not gin.Default()) so we control logging: the default logger
 	// writes the full request URL including query strings, leaking OAuth
 	// code/state and DJ portal tokens into access logs (EL-037). RequestLogger
@@ -37,6 +37,8 @@ func NewRouter(frontendURL, jwtSecret string, schoolResolver middleware.SchoolRe
 	publicAPI := r.Group("/api")
 	public.Register(publicAPI)
 	djPortal.RegisterPublic(publicAPI)
+	// Student Google sign-in — unauthenticated (how a student obtains a JWT).
+	studentAuth.RegisterPublic(publicAPI)
 	// Lead capture is an unauthenticated write — rate-limit it to blunt spam /
 	// flooding of the leads table (EL-086). ~1 req/s sustained, burst 5, per client.
 	leadHandler.Register(publicAPI, middleware.RateLimit(1, 5))
@@ -55,6 +57,17 @@ func NewRouter(frontendURL, jwtSecret string, schoolResolver middleware.SchoolRe
 	line.Register(api)
 	perf.Register(api)
 	school.Register(api) // /api/me + school registration + members (EL-105)
+	// Teacher-facing challenge/submission routes ride the organizer JWT + school scope.
+	challenge.RegisterProtected(api)
+	submission.RegisterProtected(api)
+
+	// Student routes — validated by the student JWT (role=student). School scope
+	// comes from the token, not a membership lookup (a student = one DJ = one
+	// school), so this group skips the School middleware.
+	studentAPI := r.Group("/api")
+	studentAPI.Use(middleware.StudentAuth(jwtSecret))
+	challenge.RegisterStudent(studentAPI)
+	submission.RegisterStudent(studentAPI)
 
 	// Server-rendered per-DJ share/OG page (EL-049). Tokenless and public; lives
 	// at the engine root (not /api) because social/LINE crawlers fetch it directly

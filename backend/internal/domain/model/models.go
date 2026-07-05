@@ -8,7 +8,13 @@ type DJ struct {
 	Certifications []string `json:"certifications"`
 	// IsStudent is true for active students (the certification gate applies) and
 	// false for graduates/pros (gate bypassed).
-	IsStudent bool   `json:"is_student"`
+	IsStudent bool `json:"is_student"`
+	// Email is the student's roster email, set by the teacher — the "invite" that
+	// enables Google login (migration 014). PII: never log or expose publicly.
+	Email string `json:"email"`
+	// GoogleID is bound on the student's first Google sign-in and matched on every
+	// subsequent login (migration 014). PII: never log or expose publicly.
+	GoogleID  string `json:"google_id"`
 	CreatedAt string `json:"created_at"`
 }
 

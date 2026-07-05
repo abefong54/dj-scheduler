@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"log"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	"eventlineup/internal/infrastructure/googleauth"
 	httphandler "eventlineup/internal/interfaces/http"
 	authuc "eventlineup/internal/usecase/auth"
+	challengeuc "eventlineup/internal/usecase/challenge"
 	djuc "eventlineup/internal/usecase/dj"
 	eventuc "eventlineup/internal/usecase/event"
 	leaduc "eventlineup/internal/usecase/lead"
@@ -17,7 +19,25 @@ import (
 	schooluc "eventlineup/internal/usecase/school"
 	slotuc "eventlineup/internal/usecase/slot"
 	stageuc "eventlineup/internal/usecase/stage"
+	studentauthuc "eventlineup/internal/usecase/studentauth"
+	submissionuc "eventlineup/internal/usecase/submission"
 )
+
+// googleStudentAdapter adapts the shared Google client (which returns
+// authuc.GoogleUser) to the studentauth.GoogleAuthenticator interface, so student
+// sign-in reuses the same OAuth client as the organizer flow. The student
+// callback is a distinct redirect URI — Track A confirms it's registered.
+type googleStudentAdapter struct{ inner authuc.GoogleAuthenticator }
+
+func (a googleStudentAdapter) AuthCodeURL(state string) string { return a.inner.AuthCodeURL(state) }
+
+func (a googleStudentAdapter) UserFromCode(ctx context.Context, code string) (studentauthuc.GoogleUser, error) {
+	u, err := a.inner.UserFromCode(ctx, code)
+	if err != nil {
+		return studentauthuc.GoogleUser{}, err
+	}
+	return studentauthuc.GoogleUser{GoogleID: u.GoogleID, Email: u.Email, Name: u.Name}, nil
+}
 
 // tokenTTL is how long an issued organizer JWT stays valid.
 const tokenTTL = 24 * time.Hour
@@ -71,8 +91,19 @@ func Run() {
 	// Onboarding surface: /api/me, register school, invite members (EL-105).
 	schoolHandler := httphandler.NewSchoolHandler(schooluc.New(organizerRepo, schoolRepo, membershipRepo))
 
+	// Student features (2026-07-05 sprint). Student auth reuses the Google client
+	// (via adapter) + djRepo; challenge/submission repos are Wave-1 deliverables
+	// (Tracks B/C), so their usecases wire nil for now — every route returns 501
+	// until filled, so the nil repo is never dereferenced.
+	studentAuthHandler := httphandler.NewStudentAuthHandler(
+		studentauthuc.New(googleStudentAdapter{inner: googleAuth}, djRepo, cfg.JWTSecret, tokenTTL),
+		cfg.FrontendURL, cfg.SecureCookies,
+	)
+	challengeHandler := httphandler.NewChallengeHandler(challengeuc.New(nil))
+	submissionHandler := httphandler.NewSubmissionHandler(submissionuc.New(nil))
+
 	// membershipRepo also resolves the caller's school for the scoping middleware (EL-104).
-	r := httphandler.NewRouter(cfg.FrontendURL, cfg.JWTSecret, membershipRepo, publicHandler, shareHandler, djPortalHandler, djHandler, eventHandler, stageHandler, slotHandler, lineHandler, perfHandler, leadHandler, schoolHandler)
+	r := httphandler.NewRouter(cfg.FrontendURL, cfg.JWTSecret, membershipRepo, publicHandler, shareHandler, djPortalHandler, djHandler, eventHandler, stageHandler, slotHandler, lineHandler, perfHandler, leadHandler, schoolHandler, studentAuthHandler, challengeHandler, submissionHandler)
 	authHandler.Register(r) // unauthenticated auth routes
 
 	log.Printf("listening on :%s", cfg.Port)

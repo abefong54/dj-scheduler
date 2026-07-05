@@ -113,3 +113,24 @@ func (r *djRepo) ListSlotsForDJ(ctx context.Context, djID string) ([]model.Porta
 	}
 	return slots, rows.Err()
 }
+
+// --- Student Google login (migration 014) — SCAFFOLD STUBS ---
+// These satisfy the DJRepository interface so the app builds. Track A (login
+// backend) fills the real SQL against djs.email / djs.google_id. Until then they
+// return "not implemented" so a wired-but-unfinished path fails loudly.
+
+func (r *djRepo) FindByGoogleID(ctx context.Context, googleID string) (model.DJ, error) {
+	return model.DJ{}, errors.New("not implemented")
+}
+
+func (r *djRepo) FindByEmail(ctx context.Context, email string) (model.DJ, error) {
+	return model.DJ{}, errors.New("not implemented")
+}
+
+func (r *djRepo) SetGoogleID(ctx context.Context, djID, googleID string) error {
+	return errors.New("not implemented")
+}
+
+func (r *djRepo) SetEmail(ctx context.Context, djID, schoolID, email string) error {
+	return errors.New("not implemented")
+}
