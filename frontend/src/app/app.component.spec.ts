@@ -111,5 +111,43 @@ describe('AppComponent top bar', () => {
       const el = fixture.nativeElement as HTMLElement;
       expect(el.querySelector('[data-testid="signin"]')).toBeTruthy();
     });
+
+    // A logged-in visitor who lands on the marketing page needs a way into their
+    // console. On the landing route, the primary CTA becomes "Go to console".
+    it('shows a Go-to-console link to /admin/events for an authenticated landing visitor', async () => {
+      const { fixture, router } = await buildWithRouter(true);
+      await router.navigate(['/']);
+      fixture.detectChanges();
+      const link = (fixture.nativeElement as HTMLElement)
+        .querySelector<HTMLAnchorElement>('[data-testid="nav-console"]');
+      expect(link).toBeTruthy();
+      expect(link?.getAttribute('href')).toBe('/admin/events');
+    });
+
+    it('replaces Book-a-demo with Go-to-console when authenticated on the landing route', async () => {
+      const { fixture, router } = await buildWithRouter(true);
+      await router.navigate(['/']);
+      fixture.detectChanges();
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('[data-testid="nav-console"]')).toBeTruthy();
+      expect(el.querySelector('[data-testid="nav-book-demo"]')).toBeNull();
+    });
+
+    it('does not show Go-to-console for an unauthenticated landing visitor', async () => {
+      const { fixture, router } = await buildWithRouter(false);
+      await router.navigate(['/']);
+      fixture.detectChanges();
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('[data-testid="nav-console"]')).toBeNull();
+      expect(el.querySelector('[data-testid="nav-book-demo"]')).toBeTruthy();
+    });
+
+    it('does not show Go-to-console off the landing route even when authenticated', async () => {
+      const { fixture, router } = await buildWithRouter(true);
+      await router.navigate(['/login']);
+      fixture.detectChanges();
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('[data-testid="nav-console"]')).toBeNull();
+    });
   });
 });

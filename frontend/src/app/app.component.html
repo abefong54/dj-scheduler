@@ -24,9 +24,17 @@
       中文
     </button>
     @if (isLanding()) {
-      <a routerLink="/" fragment="lead-form" data-testid="nav-book-demo" class="btn btn-primary nav-cta">
-        {{ 'nav.bookDemo' | translate }}
-      </a>
+      @if (auth.isAuthenticated()) {
+        <!-- Logged-in visitors on the marketing page: primary CTA is a way back
+             into their console (a prospect's "Book a demo" doesn't apply). -->
+        <a routerLink="/admin/events" data-testid="nav-console" class="btn btn-primary nav-cta">
+          {{ 'nav.console' | translate }}
+        </a>
+      } @else {
+        <a routerLink="/" fragment="lead-form" data-testid="nav-book-demo" class="btn btn-primary nav-cta">
+          {{ 'nav.bookDemo' | translate }}
+        </a>
+      }
     }
     @if (auth.isAuthenticated()) {
       <button (click)="auth.signOut()" data-testid="signout" class="lang-btn lang-btn-inactive">

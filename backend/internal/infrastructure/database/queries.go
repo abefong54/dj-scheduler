@@ -262,6 +262,10 @@ const (
 		SELECT id, email, name, google_id, created_at::text
 		FROM organizers WHERE google_id = $1`
 
+	queryOrganizerFindByID = `
+		SELECT id, email, name, google_id, created_at::text
+		FROM organizers WHERE id = $1`
+
 	queryOrganizerInsert = `
 		INSERT INTO organizers (email, name, google_id)
 		VALUES ($1, $2, $3)

@@ -27,6 +27,16 @@ func (r *organizerRepo) FindByGoogleID(ctx context.Context, googleID string) (mo
 	return o, err
 }
 
+func (r *organizerRepo) FindByID(ctx context.Context, id string) (model.Organizer, error) {
+	var o model.Organizer
+	err := r.pool.QueryRow(ctx, queryOrganizerFindByID, id).
+		Scan(&o.ID, &o.Email, &o.Name, &o.GoogleID, &o.CreatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return model.Organizer{}, apperrors.ErrNotFound
+	}
+	return o, err
+}
+
 func (r *organizerRepo) Create(ctx context.Context, email, name, googleID string) (model.Organizer, error) {
 	var o model.Organizer
 	err := r.pool.QueryRow(ctx, queryOrganizerInsert, email, name, googleID).
