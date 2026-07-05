@@ -30,15 +30,15 @@ describe('CachedList', () => {
     const gate = new Subject<number[]>();
     const cache = new CachedList<number>(() => gate);
     cache.ensure();
-    gate.next([1]);            // first load done
+    gate.next([1]); // first load done
 
     const revalidate = new Subject<number[]>();
     (cache as unknown as { fetcher: () => unknown }).fetcher = () => revalidate;
-    cache.ensure();            // second visit
+    cache.ensure(); // second visit
     // cache present → no spinner even though a request is in flight
     expect(cache.loading()).toBe(false);
     expect(cache.value()).toEqual([1]);
-    revalidate.next([1, 2]);   // fresh data arrives in the background
+    revalidate.next([1, 2]); // fresh data arrives in the background
     expect(cache.value()).toEqual([1, 2]);
   });
 
@@ -72,12 +72,12 @@ describe('CachedList', () => {
     const gate = new Subject<number[]>();
     const cache = new CachedList<number>(() => gate);
     cache.ensure();
-    gate.next([1, 2]);         // good first load
+    gate.next([1, 2]); // good first load
 
-    (cache as unknown as { fetcher: () => unknown }).fetcher =
-      () => throwError(() => new Error('network blip'));
-    cache.refresh();           // background revalidation fails
-    expect(cache.value()).toEqual([1, 2]);   // stale data preserved
-    expect(cache.error()).toBe(false);       // no error UI over cached data
+    (cache as unknown as { fetcher: () => unknown }).fetcher = () =>
+      throwError(() => new Error('network blip'));
+    cache.refresh(); // background revalidation fails
+    expect(cache.value()).toEqual([1, 2]); // stale data preserved
+    expect(cache.error()).toBe(false); // no error UI over cached data
   });
 });

@@ -62,7 +62,7 @@ describe('ChallengesService', () => {
 
   it('listMyChallenges GETs /api/student/challenges', () => {
     let result: Challenge[] | undefined;
-    svc.listMyChallenges().subscribe(r => (result = r));
+    svc.listMyChallenges().subscribe((r) => (result = r));
     const req = httpMock.expectOne('/api/student/challenges');
     expect(req.request.method).toBe('GET');
     req.flush([CHALLENGE]);
@@ -83,7 +83,7 @@ describe('ChallengesService', () => {
       caption: 'my mix',
     };
     let result: Submission | undefined;
-    svc.postAttempt(input).subscribe(r => (result = r));
+    svc.postAttempt(input).subscribe((r) => (result = r));
     const req = httpMock.expectOne('/api/student/submissions');
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(input);
@@ -129,14 +129,18 @@ describe('ChallengesService', () => {
     svc.curateCore({ title: 'Beatmatch', badge_label: 'Beatmatcher' }).subscribe();
     const req = httpMock.expectOne('/api/challenges');
     expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ type: 'core', title: 'Beatmatch', badge_label: 'Beatmatcher' });
+    expect(req.request.body).toEqual({
+      type: 'core',
+      title: 'Beatmatch',
+      badge_label: 'Beatmatcher',
+    });
     req.flush(CHALLENGE);
   });
 
   it('reviewSubmission POSTs to /api/submissions/:id/review', () => {
     const input: ReviewInput = { status: 'passed', review_note: 'nice' };
     let result: Submission | undefined;
-    svc.reviewSubmission('sub-1', input).subscribe(r => (result = r));
+    svc.reviewSubmission('sub-1', input).subscribe((r) => (result = r));
     const req = httpMock.expectOne('/api/submissions/sub-1/review');
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(input);

@@ -22,13 +22,17 @@ function make(rows: Row[] = ROWS, initialSortKey?: string) {
 
 describe('TableSort', () => {
   it('returns all rows in source order by default', () => {
-    expect(make().view().map(r => r.id)).toEqual(['1', '2', '3']);
+    expect(
+      make()
+        .view()
+        .map((r) => r.id),
+    ).toEqual(['1', '2', '3']);
   });
 
   it('filters by search query case-insensitively', () => {
     const t = make();
     t.search.set('dj');
-    expect(t.view().map(r => r.name)).toEqual(['DJ Alpha', 'DJ Beta']);
+    expect(t.view().map((r) => r.name)).toEqual(['DJ Alpha', 'DJ Beta']);
   });
 
   it('filters across every search key', () => {
@@ -66,7 +70,7 @@ describe('TableSort', () => {
     t.search.set('dj');
     t.toggle('name');
     t.sortDir.set('desc');
-    expect(t.view().map(r => r.name)).toEqual(['DJ Beta', 'DJ Alpha']);
+    expect(t.view().map((r) => r.name)).toEqual(['DJ Beta', 'DJ Alpha']);
   });
 
   it('indicator reflects active key and direction', () => {

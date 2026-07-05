@@ -29,9 +29,7 @@ describe('LoadingMeterComponent', () => {
     fixture.detectChanges();
     const label = root().querySelector('.vu-loader-label');
     expect(label?.textContent).toContain('Loading…');
-    expect(root().querySelector('.vu-loader')?.getAttribute('aria-label')).toBe(
-      'Loading…',
-    );
+    expect(root().querySelector('.vu-loader')?.getAttribute('aria-label')).toBe('Loading…');
   });
 
   it('omits the label element when no label is set', () => {

@@ -101,14 +101,18 @@ describe('EventDetailComponent — conflict warnings (US-005)', () => {
 
   it('shows the DJ name on a dj_double_booked conflict (409)', () => {
     fillAddRow();
-    createSlot$ = throwError(() => httpError(409, { type: 'dj_double_booked', conflicting_slot_id: 'x' }));
+    createSlot$ = throwError(() =>
+      httpError(409, { type: 'dj_double_booked', conflicting_slot_id: 'x' }),
+    );
     component.submitAddRow();
     expect(component.addConflictError()).toBe('DJ Alpha is already booked at this time');
   });
 
   it('shows the stage name on a stage_overlap conflict (409)', () => {
     fillAddRow();
-    createSlot$ = throwError(() => httpError(409, { type: 'stage_overlap', conflicting_slot_id: 'x' }));
+    createSlot$ = throwError(() =>
+      httpError(409, { type: 'stage_overlap', conflicting_slot_id: 'x' }),
+    );
     component.submitAddRow();
     expect(component.addConflictError()).toBe('Main Stage already has a set at this time');
   });
@@ -162,9 +166,27 @@ describe('EventDetailComponent — conflict warnings (US-005)', () => {
 
 // EL-042: certification-gated slot assignment.
 describe('EventDetailComponent — certification gating (EL-042)', () => {
-  const MIA = { id: 'mia', name: 'Mia', genre_tags: ['Hip Hop'], certifications: [], is_student: true };
-  const KAI = { id: 'kai', name: 'Kai', genre_tags: ['Hip Hop'], certifications: ['Hip Hop'], is_student: true };
-  const PRO = { id: 'pro', name: 'Pro', genre_tags: ['Hip Hop'], certifications: [], is_student: false };
+  const MIA = {
+    id: 'mia',
+    name: 'Mia',
+    genre_tags: ['Hip Hop'],
+    certifications: [],
+    is_student: true,
+  };
+  const KAI = {
+    id: 'kai',
+    name: 'Kai',
+    genre_tags: ['Hip Hop'],
+    certifications: ['Hip Hop'],
+    is_student: true,
+  };
+  const PRO = {
+    id: 'pro',
+    name: 'Pro',
+    genre_tags: ['Hip Hop'],
+    certifications: [],
+    is_student: false,
+  };
 
   const apiMock = {
     getEvent: () => of(EVENT),
@@ -215,10 +237,10 @@ describe('EventDetailComponent — certification gating (EL-042)', () => {
     component.addGenre = 'Hip Hop';
     const opts = component.djOptionsForAdd();
     // All three remain selectable (uncertified are flagged, not hidden).
-    expect(opts.map(o => o.dj.id).sort()).toEqual(['kai', 'mia', 'pro']);
+    expect(opts.map((o) => o.dj.id).sort()).toEqual(['kai', 'mia', 'pro']);
     // The uncertified student sorts last.
     expect(opts[opts.length - 1].dj.id).toBe('mia');
-    expect(opts.find(o => o.dj.id === 'mia')!.certified).toBe(false);
+    expect(opts.find((o) => o.dj.id === 'mia')!.certified).toBe(false);
   });
 
   it('warns for an uncertified student, but not for certified DJs or graduates', () => {
@@ -344,9 +366,30 @@ describe('EventDetailComponent — Soundcheck reskin (EL-080)', () => {
 // router too even though it only asserts on the engine.
 describe('EventDetailComponent — slot search & sort (EL-028)', () => {
   const slots: Slot[] = [
-    { ...SLOT, id: 's-a', dj_name: 'DJ Alpha', stage_name: 'Main Stage', genre: 'House', start_time: '21:00' } as Slot,
-    { ...SLOT, id: 's-b', dj_name: 'DJ Beta', stage_name: 'Side Stage', genre: 'Techno', start_time: '19:00' } as Slot,
-    { ...SLOT, id: 's-c', dj_name: 'MC Gamma', stage_name: 'Main Stage', genre: 'House', start_time: '20:00' } as Slot,
+    {
+      ...SLOT,
+      id: 's-a',
+      dj_name: 'DJ Alpha',
+      stage_name: 'Main Stage',
+      genre: 'House',
+      start_time: '21:00',
+    } as Slot,
+    {
+      ...SLOT,
+      id: 's-b',
+      dj_name: 'DJ Beta',
+      stage_name: 'Side Stage',
+      genre: 'Techno',
+      start_time: '19:00',
+    } as Slot,
+    {
+      ...SLOT,
+      id: 's-c',
+      dj_name: 'MC Gamma',
+      stage_name: 'Main Stage',
+      genre: 'House',
+      start_time: '20:00',
+    } as Slot,
   ];
 
   const apiMock = {
@@ -377,23 +420,31 @@ describe('EventDetailComponent — slot search & sort (EL-028)', () => {
   });
 
   it('defaults to ascending start_time order', () => {
-    expect(component.slotTable.view().map(s => s.id)).toEqual(['s-b', 's-c', 's-a']);
+    expect(component.slotTable.view().map((s) => s.id)).toEqual(['s-b', 's-c', 's-a']);
     expect(component.slotTable.indicator('start_time')).toBe('↑');
   });
 
   it('filters across dj, stage, and genre case-insensitively', () => {
     component.slotTable.search.set('side');
-    expect(component.slotTable.view().map(s => s.id)).toEqual(['s-b']);
+    expect(component.slotTable.view().map((s) => s.id)).toEqual(['s-b']);
 
     component.slotTable.search.set('techno');
-    expect(component.slotTable.view().map(s => s.id)).toEqual(['s-b']);
+    expect(component.slotTable.view().map((s) => s.id)).toEqual(['s-b']);
   });
 
   it('toggles a column to sort and reverses on a second click', () => {
     component.slotTable.toggle('dj_name');
-    expect(component.slotTable.view().map(s => s.dj_name)).toEqual(['DJ Alpha', 'DJ Beta', 'MC Gamma']);
+    expect(component.slotTable.view().map((s) => s.dj_name)).toEqual([
+      'DJ Alpha',
+      'DJ Beta',
+      'MC Gamma',
+    ]);
     component.slotTable.toggle('dj_name');
-    expect(component.slotTable.view().map(s => s.dj_name)).toEqual(['MC Gamma', 'DJ Beta', 'DJ Alpha']);
+    expect(component.slotTable.view().map((s) => s.dj_name)).toEqual([
+      'MC Gamma',
+      'DJ Beta',
+      'DJ Alpha',
+    ]);
     expect(component.slotTable.indicator('dj_name')).toBe('↓');
   });
 
@@ -401,7 +452,7 @@ describe('EventDetailComponent — slot search & sort (EL-028)', () => {
     component.slotTable.search.set('dj '); // DJ Alpha + DJ Beta
     component.slotTable.toggle('dj_name');
     component.slotTable.sortDir.set('desc');
-    expect(component.slotTable.view().map(s => s.dj_name)).toEqual(['DJ Beta', 'DJ Alpha']);
+    expect(component.slotTable.view().map((s) => s.dj_name)).toEqual(['DJ Beta', 'DJ Alpha']);
   });
 });
 
@@ -421,7 +472,10 @@ describe('EventDetailComponent — hero editor', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'evt-1' } } } },
-        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true), alert: () => {} } },
+        {
+          provide: DialogService,
+          useValue: { confirm: () => Promise.resolve(true), alert: () => {} },
+        },
         { provide: ScheduleExportService, useValue: { download: () => {} } },
       ],
     }).compileComponents();
@@ -593,14 +647,14 @@ describe('EventDetailComponent — date tabs (EL-095)', () => {
   it('renders one tab per date and defaults to the first', () => {
     expect(root().querySelectorAll('.tab-btn').length).toBe(2);
     expect(fixture.componentInstance.selectedDate()).toBe('2026-07-01');
-    expect(fixture.componentInstance.slotTable.view().map(s => s.id)).toEqual(['d1']);
+    expect(fixture.componentInstance.slotTable.view().map((s) => s.id)).toEqual(['d1']);
   });
 
   it('switches the visible date when another tab is clicked', () => {
     root().querySelectorAll<HTMLButtonElement>('.tab-btn')[1].click();
     fixture.detectChanges();
     expect(fixture.componentInstance.selectedDate()).toBe('2026-07-02');
-    expect(fixture.componentInstance.slotTable.view().map(s => s.id)).toEqual(['d2']);
+    expect(fixture.componentInstance.slotTable.view().map((s) => s.id)).toEqual(['d2']);
   });
 });
 
@@ -651,6 +705,9 @@ describe('EventDetailComponent — add-stage colour swatch (EL-095)', () => {
 
     comp.newStageName = 'Night Stage';
     root().querySelector<HTMLButtonElement>('[data-testid="stage-create-btn"]')!.click();
-    expect(createStage).toHaveBeenCalledWith('evt-1', { name: 'Night Stage', color: comp.stageColors[3] });
+    expect(createStage).toHaveBeenCalledWith('evt-1', {
+      name: 'Night Stage',
+      color: comp.stageColors[3],
+    });
   });
 });

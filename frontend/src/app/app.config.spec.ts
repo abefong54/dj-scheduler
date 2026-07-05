@@ -36,7 +36,8 @@ describe('router view transitions (EL-096)', () => {
       };
     });
     // jsdom has no startViewTransition; provide one so Angular's feature runs.
-    (document as unknown as { startViewTransition: unknown }).startViewTransition = startViewTransition;
+    (document as unknown as { startViewTransition: unknown }).startViewTransition =
+      startViewTransition;
 
     TestBed.configureTestingModule({
       providers: [

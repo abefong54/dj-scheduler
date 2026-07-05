@@ -11,7 +11,12 @@ describe('LandingComponent (EL-075 Soundcheck landing)', () => {
   async function build(): Promise<ComponentFixture<LandingComponent>> {
     await TestBed.configureTestingModule({
       imports: [LandingComponent],
-      providers: [provideRouter([]), provideTranslateService(), provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
     }).compileComponents();
     const fixture = TestBed.createComponent(LandingComponent);
     fixture.detectChanges();
@@ -71,7 +76,10 @@ describe('LandingComponent (EL-075 Soundcheck landing)', () => {
     await TestBed.configureTestingModule({
       imports: [LandingComponent],
       providers: [
-        provideRouter([]), provideTranslateService(), provideHttpClient(), provideHttpClientTesting(),
+        provideRouter([]),
+        provideTranslateService(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
         { provide: ActivatedRoute, useValue: { fragment: of('lead-form') } },
       ],
     }).compileComponents();
