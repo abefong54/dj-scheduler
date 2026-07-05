@@ -20,7 +20,8 @@ func authHandler(t *testing.T, secureCookies bool) *httphandler.AuthHandler {
 	pool := setupTestDB(t)
 	repo := database.NewOrganizerRepository(pool)
 	g := googleauth.New("test-client-id", "test-secret", "http://localhost:8080/auth/google/callback")
-	uc := authuc.New(g, repo, database.NewMembershipRepository(pool), "auth-handler-test-secret-auth-handler-0123", time.Hour)
+	providers := map[string]authuc.OAuthProvider{authuc.ProviderGoogle: g}
+	uc := authuc.New(providers, repo, database.NewMembershipRepository(pool), "auth-handler-test-secret-auth-handler-0123", time.Hour)
 	return httphandler.NewAuthHandler(uc, "http://localhost:4200", secureCookies)
 }
 
