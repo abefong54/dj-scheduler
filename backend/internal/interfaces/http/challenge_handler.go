@@ -148,10 +148,3 @@ func (h *ChallengeHandler) browseCore(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, challenges)
 }
-
-// notImplemented is the shared scaffold response: an obvious 501 so downstream
-// agents know the route is wired but the logic is theirs to fill. Still used by
-// submission_handler.go (Track C) until those routes are filled.
-func notImplemented(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, gin.H{"error": "not implemented"})
-}
