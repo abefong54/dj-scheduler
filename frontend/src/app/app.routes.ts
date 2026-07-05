@@ -68,6 +68,23 @@ export const routes: Routes = [
     loadComponent: () => import('./card/card.component')
       .then(m => m.CardComponent),
   },
+  // Student features (2026-07-05 sprint) — SCAFFOLD placeholder routes. Auth
+  // gating on the student JWT is a Track E concern; shells load unguarded for now.
+  {
+    path: 'student/login',
+    loadComponent: () => import('./student/student-login.component')
+      .then(m => m.StudentLoginComponent),
+  },
+  {
+    path: 'student/challenges',
+    loadComponent: () => import('./student/student-challenges.component')
+      .then(m => m.StudentChallengesComponent),
+  },
+  {
+    path: 'student/feed',
+    loadComponent: () => import('./student/student-feed.component')
+      .then(m => m.StudentFeedComponent),
+  },
   {
     // Public Soundcheck marketing landing — the branded front door prospects
     // see before signing in (EL-075). Authenticated users can navigate into the
