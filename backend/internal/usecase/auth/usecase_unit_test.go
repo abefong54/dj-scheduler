@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -145,5 +146,64 @@ func TestAuthCodeURLUnknownProvider(t *testing.T) {
 	uc := newUC(map[string]OAuthProvider{}, newFakeOrgRepo(), &fakeMemRepo{})
 	if _, err := uc.AuthCodeURL("line", "state"); err == nil {
 		t.Fatal("expected an error for an unregistered provider")
+	}
+}
+
+// A LINE sign-in for a brand-new person creates a LINE-first organizer.
+func TestHandleCallbackLineCreatesWhenNew(t *testing.T) {
+	repo, mem := newFakeOrgRepo(), &fakeMemRepo{}
+	uc := newUC(map[string]OAuthProvider{
+		ProviderLine: fakeProvider{user: ExternalUser{Provider: ProviderLine, Subject: "line-1", Email: "new@b.com", Name: "N"}},
+	}, repo, mem)
+
+	tok, err := uc.HandleCallback(context.Background(), ProviderLine, "code")
+	if err != nil {
+		t.Fatalf("HandleCallback: %v", err)
+	}
+	if tok == "" {
+		t.Fatal("expected a signed token")
+	}
+	if len(repo.created) != 1 || repo.created[0].LineID != "line-1" || repo.created[0].GoogleID != "" {
+		t.Fatalf("expected one line-first organizer, got %+v", repo.created)
+	}
+}
+
+// A LINE sign-in whose email matches an existing (Google) organizer links to it
+// instead of creating a second account.
+func TestHandleCallbackLineLinksByEmail(t *testing.T) {
+	repo, mem := newFakeOrgRepo(), &fakeMemRepo{}
+	ctx := context.Background()
+	existing, _ := repo.Create(ctx, "shared@b.com", "G", "g-1") // pre-existing Google org
+
+	uc := newUC(map[string]OAuthProvider{
+		ProviderLine: fakeProvider{user: ExternalUser{Provider: ProviderLine, Subject: "line-2", Email: "shared@b.com", Name: "G"}},
+	}, repo, mem)
+
+	if _, err := uc.HandleCallback(ctx, ProviderLine, "code"); err != nil {
+		t.Fatalf("HandleCallback: %v", err)
+	}
+	if len(repo.created) != 1 {
+		t.Fatalf("link must not create a second account; created=%d", len(repo.created))
+	}
+	linked, err := repo.FindByLineID(ctx, "line-2")
+	if err != nil || linked.ID != existing.ID {
+		t.Fatalf("expected line-2 linked to existing org %s, got %+v (err %v)", existing.ID, linked, err)
+	}
+}
+
+// If the provider returns no email (LINE user declined the email permission), the
+// callback fails with ErrNoEmail — no account is created.
+func TestHandleCallbackNoEmailErrors(t *testing.T) {
+	repo := newFakeOrgRepo()
+	uc := newUC(map[string]OAuthProvider{
+		ProviderLine: fakeProvider{user: ExternalUser{Provider: ProviderLine, Subject: "line-3", Email: "", Name: "X"}},
+	}, repo, &fakeMemRepo{})
+
+	_, err := uc.HandleCallback(context.Background(), ProviderLine, "code")
+	if !errors.Is(err, ErrNoEmail) {
+		t.Fatalf("expected ErrNoEmail, got %v", err)
+	}
+	if len(repo.created) != 0 {
+		t.Fatalf("no account should be created on missing email; created=%d", len(repo.created))
 	}
 }

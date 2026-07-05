@@ -8,6 +8,7 @@ import (
 	"eventlineup/internal/infrastructure/config"
 	"eventlineup/internal/infrastructure/database"
 	"eventlineup/internal/infrastructure/googleauth"
+	"eventlineup/internal/infrastructure/lineauth"
 	httphandler "eventlineup/internal/interfaces/http"
 	authuc "eventlineup/internal/usecase/auth"
 	challengeuc "eventlineup/internal/usecase/challenge"
@@ -57,6 +58,9 @@ func Run() {
 	if err := cfg.ValidateLineNotify(); err != nil {
 		log.Fatal(err)
 	}
+	if err := cfg.ValidateLine(); err != nil {
+		log.Fatal(err)
+	}
 
 	pool, err := database.InitDB(cfg.DatabaseURL)
 	if err != nil {
@@ -89,7 +93,14 @@ func Run() {
 	schoolRepo := database.NewSchoolRepository(pool)
 	googleAuth := googleauth.New(cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL)
 	authProviders := map[string]authuc.OAuthProvider{authuc.ProviderGoogle: googleAuth}
-	authHandler := httphandler.NewAuthHandler(authuc.New(authProviders, organizerRepo, membershipRepo, cfg.JWTSecret, tokenTTL), cfg.FrontendURL, cfg.SecureCookies)
+	authProviderNames := []string{authuc.ProviderGoogle}
+	// LINE Login (EL-110) is opt-in: only wired when fully configured, so local
+	// dev without LINE creds still boots. Google stays the required provider.
+	if cfg.LineLoginConfigured() {
+		authProviders[authuc.ProviderLine] = lineauth.New(cfg.LineChannelID, cfg.LineChannelSecret, cfg.LineRedirectURL)
+		authProviderNames = append(authProviderNames, authuc.ProviderLine)
+	}
+	authHandler := httphandler.NewAuthHandler(authuc.New(authProviders, organizerRepo, membershipRepo, cfg.JWTSecret, tokenTTL), cfg.FrontendURL, cfg.SecureCookies, authProviderNames)
 	// Onboarding surface: /api/me, register school, invite members (EL-105).
 	schoolHandler := httphandler.NewSchoolHandler(schooluc.New(organizerRepo, schoolRepo, membershipRepo))
 

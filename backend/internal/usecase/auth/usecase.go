@@ -20,7 +20,15 @@ import (
 // column an organizer's external identity is stored under.
 const (
 	ProviderGoogle = "google"
+	ProviderLine   = "line"
 )
+
+// ErrNoEmail is returned when a provider completes sign-in but yields no email.
+// email is the account/linking key (invite auto-link is email-based), so we
+// refuse rather than create an unlinkable account — this happens when a LINE
+// user declines the email permission. The handler surfaces it as a friendly
+// "use Google or grant email permission" message.
+var ErrNoEmail = errors.New("auth provider returned no email")
 
 // ExternalUser is the minimal profile an OAuth provider returns. Subject is the
 // provider's stable per-user id (Google's `id`, LINE's `sub`).
@@ -72,6 +80,9 @@ func (uc *UseCase) HandleCallback(ctx context.Context, provider, code string) (s
 	if err != nil {
 		return "", err
 	}
+	if eu.Email == "" {
+		return "", ErrNoEmail
+	}
 	org, err := uc.upsertOrganizer(ctx, eu)
 	if err != nil {
 		return "", err
@@ -96,6 +107,30 @@ func (uc *UseCase) upsertOrganizer(ctx context.Context, eu ExternalUser) (model.
 			return model.Organizer{}, err
 		}
 		return org, nil
+	case ProviderLine:
+		// Known LINE identity → sign in.
+		org, err := uc.repo.FindByLineID(ctx, eu.Subject)
+		if err == nil {
+			return org, nil
+		}
+		if !errors.Is(err, apperrors.ErrNotFound) {
+			return model.Organizer{}, err
+		}
+		// Same email as an existing account (a Google user, or an email invite) →
+		// link LINE to it rather than creating a duplicate.
+		existing, err := uc.repo.FindByEmail(ctx, eu.Email)
+		if err == nil {
+			if err := uc.repo.LinkLineID(ctx, existing.ID, eu.Subject); err != nil {
+				return model.Organizer{}, err
+			}
+			existing.LineID = eu.Subject
+			return existing, nil
+		}
+		if !errors.Is(err, apperrors.ErrNotFound) {
+			return model.Organizer{}, err
+		}
+		// Brand-new person → LINE-first account.
+		return uc.repo.CreateWithLineID(ctx, eu.Email, eu.Name, eu.Subject)
 	default:
 		return model.Organizer{}, fmt.Errorf("unsupported auth provider %q", eu.Provider)
 	}
