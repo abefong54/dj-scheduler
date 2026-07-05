@@ -441,3 +441,70 @@ const (
 		  AND type = 'custom' AND NOT archived
 		ORDER BY sort_order, created_at`
 )
+
+// submissionCols is the SELECT/RETURNING column list for submissions, with
+// nullable columns COALESCE'd to '' and timestamps/uuids cast to text so the
+// model can hold plain strings (mirrors challengeCols).
+const submissionCols = `id, school_id, challenge_id, dj_id, media_kind, media_provider, media_ref,
+	COALESCE(caption,''), status, COALESCE(review_note,''),
+	COALESCE(earned_badge_label,''), COALESCE(earned_badge_icon,''),
+	COALESCE(reviewed_by::text,''), COALESCE(reviewed_at::text,''), created_at::text`
+
+const (
+	querySubmissionGet = `
+		SELECT ` + submissionCols + `
+		FROM submissions
+		WHERE id = $1 AND school_id = $2`
+
+	// querySubmissionUpsert writes the one active submission per (dj_id,
+	// challenge_id): a re-post overwrites the media and resets the row to
+	// 'posted', clearing any prior review/badge snapshot.
+	querySubmissionUpsert = `
+		INSERT INTO submissions
+			(school_id, challenge_id, dj_id, media_kind, media_provider, media_ref, caption, status)
+		VALUES ($1,$2,$3,$4,$5,$6,NULLIF($7,''),'posted')
+		ON CONFLICT (dj_id, challenge_id) DO UPDATE SET
+			media_kind = EXCLUDED.media_kind,
+			media_provider = EXCLUDED.media_provider,
+			media_ref = EXCLUDED.media_ref,
+			caption = EXCLUDED.caption,
+			status = 'posted',
+			review_note = NULL,
+			earned_badge_label = NULL,
+			earned_badge_icon = NULL,
+			reviewed_by = NULL,
+			reviewed_at = NULL
+		RETURNING ` + submissionCols
+
+	// querySubmissionReview records a teacher pass/needs_work. On a pass, the
+	// badge is snapshotted from the parent challenge IN SQL, but only when that
+	// challenge is core — so the earned badge is frozen onto the row and survives
+	// later edits/archival of the challenge.
+	querySubmissionReview = `
+		UPDATE submissions SET
+			status = $3,
+			review_note = NULLIF($4,''),
+			reviewed_at = now(),
+			earned_badge_label = CASE WHEN $3 = 'passed'
+				THEN (SELECT badge_label FROM challenges c WHERE c.id = submissions.challenge_id AND c.type = 'core')
+				ELSE NULL END,
+			earned_badge_icon = CASE WHEN $3 = 'passed'
+				THEN (SELECT badge_icon FROM challenges c WHERE c.id = submissions.challenge_id AND c.type = 'core')
+				ELSE NULL END
+		WHERE id = $1 AND school_id = $2
+		RETURNING ` + submissionCols
+
+	// querySubmissionListFeed is the school feed: passed submissions only, newest
+	// review first.
+	querySubmissionListFeed = `
+		SELECT ` + submissionCols + `
+		FROM submissions
+		WHERE school_id = $1 AND status = 'passed'
+		ORDER BY reviewed_at DESC NULLS LAST, created_at DESC`
+
+	querySubmissionListForStudent = `
+		SELECT ` + submissionCols + `
+		FROM submissions
+		WHERE dj_id = $1 AND school_id = $2
+		ORDER BY created_at DESC`
+)

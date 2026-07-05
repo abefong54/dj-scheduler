@@ -92,15 +92,14 @@ func Run() {
 	schoolHandler := httphandler.NewSchoolHandler(schooluc.New(organizerRepo, schoolRepo, membershipRepo))
 
 	// Student features (2026-07-05 sprint). Student auth reuses the Google client
-	// (via adapter) + djRepo; challenge/submission repos are Wave-1 deliverables
-	// (Tracks B/C), so their usecases wire nil for now — every route returns 501
-	// until filled, so the nil repo is never dereferenced.
+	// (via adapter) + djRepo; the challenge and submission usecases get their real
+	// school-scoped repos (Tracks B/C).
 	studentAuthHandler := httphandler.NewStudentAuthHandler(
 		studentauthuc.New(googleStudentAdapter{inner: googleAuth}, djRepo, cfg.JWTSecret, tokenTTL),
 		cfg.FrontendURL, cfg.SecureCookies,
 	)
 	challengeHandler := httphandler.NewChallengeHandler(challengeuc.New(database.NewChallengeRepository(pool)))
-	submissionHandler := httphandler.NewSubmissionHandler(submissionuc.New(nil))
+	submissionHandler := httphandler.NewSubmissionHandler(submissionuc.New(database.NewSubmissionRepository(pool)))
 
 	// membershipRepo also resolves the caller's school for the scoping middleware (EL-104).
 	r := httphandler.NewRouter(cfg.FrontendURL, cfg.JWTSecret, membershipRepo, publicHandler, shareHandler, djPortalHandler, djHandler, eventHandler, stageHandler, slotHandler, lineHandler, perfHandler, leadHandler, schoolHandler, studentAuthHandler, challengeHandler, submissionHandler)
