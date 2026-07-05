@@ -99,7 +99,7 @@ func Run() {
 		studentauthuc.New(googleStudentAdapter{inner: googleAuth}, djRepo, cfg.JWTSecret, tokenTTL),
 		cfg.FrontendURL, cfg.SecureCookies,
 	)
-	challengeHandler := httphandler.NewChallengeHandler(challengeuc.New(nil))
+	challengeHandler := httphandler.NewChallengeHandler(challengeuc.New(database.NewChallengeRepository(pool)))
 	submissionHandler := httphandler.NewSubmissionHandler(submissionuc.New(nil))
 
 	// membershipRepo also resolves the caller's school for the scoping middleware (EL-104).

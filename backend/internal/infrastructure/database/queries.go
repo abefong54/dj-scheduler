@@ -363,4 +363,60 @@ const (
 		WHERE d.school_id = $1 AND d.is_student = true
 		GROUP BY d.id, d.name, d.is_student
 		ORDER BY reps ASC, d.name`
+
+	// Challenge queries (migration 015). Challenges are school-owned, so every
+	// read/write filters on school_id — a challenge that isn't the caller's school's
+	// simply doesn't match and reads as not-found. The nullable columns (skill,
+	// assigned_dj_id, badge_label, badge_icon) are COALESCE'd to '' on read and
+	// NULLIF('')'d on write, mirroring the slot queries.
+	challengeCols = `id, school_id, type, title, description,
+		COALESCE(skill,''), COALESCE(assigned_dj_id::text,''),
+		COALESCE(badge_label,''), COALESCE(badge_icon,''),
+		sort_order, created_by, archived, created_at::text`
+
+	queryChallengeList = `
+		SELECT ` + challengeCols + `
+		FROM challenges
+		WHERE school_id = $1 AND NOT archived
+		ORDER BY sort_order, created_at`
+
+	queryChallengeGet = `
+		SELECT ` + challengeCols + `
+		FROM challenges
+		WHERE id = $1 AND school_id = $2`
+
+	queryChallengeInsert = `
+		INSERT INTO challenges
+			(school_id, type, title, description, skill, assigned_dj_id, badge_label, badge_icon, sort_order, created_by)
+		VALUES ($1,$2,$3,$4,NULLIF($5,''),NULLIF($6,'')::uuid,NULLIF($7,''),NULLIF($8,''),$9,$10)
+		RETURNING id, created_at::text`
+
+	queryChallengeUpdate = `
+		UPDATE challenges
+		SET type=$1, title=$2, description=$3, skill=NULLIF($4,''),
+		    assigned_dj_id=NULLIF($5,'')::uuid, badge_label=NULLIF($6,''),
+		    badge_icon=NULLIF($7,''), sort_order=$8
+		WHERE id=$9 AND school_id=$10
+		RETURNING ` + challengeCols
+
+	queryChallengeArchive = `
+		UPDATE challenges SET archived = TRUE
+		WHERE id = $1 AND school_id = $2`
+
+	// Core (badge-bearing, school-wide) challenges for "Browse Core".
+	queryChallengeListCore = `
+		SELECT ` + challengeCols + `
+		FROM challenges
+		WHERE school_id = $1 AND type = 'core' AND NOT archived
+		ORDER BY sort_order, created_at`
+
+	// A student's own open custom challenges: the ones assigned to them, scoped to
+	// their school. $1 dj_id, $2 school_id. The usecase merges these with the core
+	// set to form the student's full challenge list.
+	queryChallengeListForStudent = `
+		SELECT ` + challengeCols + `
+		FROM challenges
+		WHERE assigned_dj_id = $1 AND school_id = $2
+		  AND type = 'custom' AND NOT archived
+		ORDER BY sort_order, created_at`
 )
