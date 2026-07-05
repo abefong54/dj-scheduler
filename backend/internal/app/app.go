@@ -23,11 +23,12 @@ import (
 	submissionuc "eventlineup/internal/usecase/submission"
 )
 
-// googleStudentAdapter adapts the shared Google client (which returns
-// authuc.GoogleUser) to the studentauth.GoogleAuthenticator interface, so student
-// sign-in reuses the same OAuth client as the organizer flow. The student
-// callback is a distinct redirect URI — Track A confirms it's registered.
-type googleStudentAdapter struct{ inner authuc.GoogleAuthenticator }
+// googleStudentAdapter adapts the shared OAuth provider (which returns
+// authuc.ExternalUser) to the studentauth.GoogleAuthenticator interface, so
+// student sign-in reuses the same Google client as the organizer flow. The
+// provider's Subject is the stable Google user id. The student callback is a
+// distinct redirect URI — Track A confirms it's registered.
+type googleStudentAdapter struct{ inner authuc.OAuthProvider }
 
 func (a googleStudentAdapter) AuthCodeURL(state string) string { return a.inner.AuthCodeURL(state) }
 
@@ -36,7 +37,7 @@ func (a googleStudentAdapter) UserFromCode(ctx context.Context, code string) (st
 	if err != nil {
 		return studentauthuc.GoogleUser{}, err
 	}
-	return studentauthuc.GoogleUser{GoogleID: u.GoogleID, Email: u.Email, Name: u.Name}, nil
+	return studentauthuc.GoogleUser{GoogleID: u.Subject, Email: u.Email, Name: u.Name}, nil
 }
 
 // tokenTTL is how long an issued organizer JWT stays valid.
@@ -87,7 +88,8 @@ func Run() {
 	membershipRepo := database.NewMembershipRepository(pool)
 	schoolRepo := database.NewSchoolRepository(pool)
 	googleAuth := googleauth.New(cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL)
-	authHandler := httphandler.NewAuthHandler(authuc.New(googleAuth, organizerRepo, membershipRepo, cfg.JWTSecret, tokenTTL), cfg.FrontendURL, cfg.SecureCookies)
+	authProviders := map[string]authuc.OAuthProvider{authuc.ProviderGoogle: googleAuth}
+	authHandler := httphandler.NewAuthHandler(authuc.New(authProviders, organizerRepo, membershipRepo, cfg.JWTSecret, tokenTTL), cfg.FrontendURL, cfg.SecureCookies)
 	// Onboarding surface: /api/me, register school, invite members (EL-105).
 	schoolHandler := httphandler.NewSchoolHandler(schooluc.New(organizerRepo, schoolRepo, membershipRepo))
 

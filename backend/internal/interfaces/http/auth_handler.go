@@ -61,7 +61,12 @@ func (h *AuthHandler) redirect(c *gin.Context) {
 	// Secure is config-driven: true in production, off for local http dev.
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie(oauthStateCookie, state, int(oauthStateTTL.Seconds()), "/", "", h.secureCookies, true)
-	c.Redirect(http.StatusFound, h.uc.AuthCodeURL(state))
+	authURL, err := h.uc.AuthCodeURL(authuc.ProviderGoogle, state)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
+	c.Redirect(http.StatusFound, authURL)
 }
 
 // callback validates CSRF state, exchanges the code for an organizer JWT, and
@@ -89,7 +94,7 @@ func (h *AuthHandler) callback(c *gin.Context) {
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie(oauthStateCookie, "", deleteCookieMaxAge, "/", "", h.secureCookies, true)
 
-	jwt, err := h.uc.HandleCallback(c.Request.Context(), code)
+	jwt, err := h.uc.HandleCallback(c.Request.Context(), authuc.ProviderGoogle, code)
 	if err != nil {
 		// The wrapped error carries Google's real reason (e.g. invalid_client,
 		// invalid_grant). It contains no secret — the client secret and the auth
