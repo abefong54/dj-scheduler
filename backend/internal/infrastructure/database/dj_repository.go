@@ -114,23 +114,58 @@ func (r *djRepo) ListSlotsForDJ(ctx context.Context, djID string) ([]model.Porta
 	return slots, rows.Err()
 }
 
-// --- Student Google login (migration 014) — SCAFFOLD STUBS ---
-// These satisfy the DJRepository interface so the app builds. Track A (login
-// backend) fills the real SQL against djs.email / djs.google_id. Until then they
-// return "not implemented" so a wired-but-unfinished path fails loudly.
+// --- Student Google login (migration 014) ---
 
+// FindByGoogleID returns the student (DJ) bound to googleID, or ErrNotFound if
+// no student has signed in with that Google identity yet. Not school-scoped:
+// identity is resolved before a school is known (the school comes from the row).
 func (r *djRepo) FindByGoogleID(ctx context.Context, googleID string) (model.DJ, error) {
-	return model.DJ{}, errors.New("not implemented")
+	var d model.DJ
+	err := r.pool.QueryRow(ctx, queryDJFindByGoogleID, googleID).
+		Scan(&d.ID, &d.Name, &d.GenreTags, &d.Certifications, &d.IsStudent, &d.SchoolID, &d.CreatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return model.DJ{}, apperrors.ErrNotFound
+	}
+	return d, err
 }
 
+// FindByEmail returns the student (DJ) whose roster email matches (case-
+// insensitive), or ErrNotFound if none — the first-login link path. Not school-
+// scoped for the same reason as FindByGoogleID.
 func (r *djRepo) FindByEmail(ctx context.Context, email string) (model.DJ, error) {
-	return model.DJ{}, errors.New("not implemented")
+	var d model.DJ
+	err := r.pool.QueryRow(ctx, queryDJFindByEmail, email).
+		Scan(&d.ID, &d.Name, &d.GenreTags, &d.Certifications, &d.IsStudent, &d.SchoolID, &d.CreatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return model.DJ{}, apperrors.ErrNotFound
+	}
+	return d, err
 }
 
+// SetGoogleID binds the Google identity to a DJ on first login. djID is a row
+// already resolved by FindByEmail, so this is not school-scoped. Returns
+// ErrNotFound if the DJ no longer exists.
 func (r *djRepo) SetGoogleID(ctx context.Context, djID, googleID string) error {
-	return errors.New("not implemented")
+	tag, err := r.pool.Exec(ctx, queryDJSetGoogleID, googleID, djID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return apperrors.ErrNotFound
+	}
+	return nil
 }
 
+// SetEmail sets a student's roster email (the teacher provisioning "invite"),
+// school-scoped so a teacher can only touch their own school's students.
+// Returns ErrNotFound if the DJ is not the school's.
 func (r *djRepo) SetEmail(ctx context.Context, djID, schoolID, email string) error {
-	return errors.New("not implemented")
+	tag, err := r.pool.Exec(ctx, queryDJSetEmail, email, djID, schoolID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return apperrors.ErrNotFound
+	}
+	return nil
 }

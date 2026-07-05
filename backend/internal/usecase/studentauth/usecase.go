@@ -10,10 +10,11 @@ import (
 	"errors"
 	"time"
 
+	"eventlineup/internal/domain/apperrors"
+	"eventlineup/internal/domain/model"
 	"eventlineup/internal/domain/repository"
+	"eventlineup/internal/token"
 )
-
-var errNotImplemented = errors.New("not implemented")
 
 // GoogleUser is the minimal Google profile the usecase needs.
 type GoogleUser struct {
@@ -48,7 +49,42 @@ func (uc *UseCase) AuthCodeURL(state string) string {
 // HandleCallback exchanges an OAuth code for a student session JWT. It resolves
 // the student by google_id (returning), then by email (first login → auto-link),
 // and returns apperrors.ErrNotFound when the Google user is on no roster (handler
-// maps to 403). SCAFFOLD: not implemented.
+// maps to 403). The returned JWT is scoped to the student's DJ id and school.
 func (uc *UseCase) HandleCallback(ctx context.Context, code string) (string, error) {
-	return "", errNotImplemented
+	gu, err := uc.google.UserFromCode(ctx, code)
+	if err != nil {
+		return "", err
+	}
+	dj, err := uc.resolveStudent(ctx, gu)
+	if err != nil {
+		return "", err
+	}
+	return token.SignStudent(uc.jwtSecret, dj.ID, dj.SchoolID, uc.tokenTTL)
+}
+
+// resolveStudent maps a Google profile to a roster DJ. A returning student is
+// found by google_id; a first-time student is matched by their teacher-set email
+// and has their google_id bound (auto-link). A Google user on no roster yields
+// apperrors.ErrNotFound — enrollment is teacher-controlled, so there is no
+// auto-create.
+func (uc *UseCase) resolveStudent(ctx context.Context, gu GoogleUser) (model.DJ, error) {
+	dj, err := uc.djs.FindByGoogleID(ctx, gu.GoogleID)
+	if err == nil {
+		return dj, nil
+	}
+	if !errors.Is(err, apperrors.ErrNotFound) {
+		return model.DJ{}, err
+	}
+
+	// First login: match the teacher-provisioned roster email, then bind the
+	// Google identity so subsequent logins resolve by google_id.
+	dj, err = uc.djs.FindByEmail(ctx, gu.Email)
+	if err != nil {
+		return model.DJ{}, err // ErrNotFound bubbles up → handler maps to 403.
+	}
+	if err := uc.djs.SetGoogleID(ctx, dj.ID, gu.GoogleID); err != nil {
+		return model.DJ{}, err
+	}
+	dj.GoogleID = gu.GoogleID
+	return dj, nil
 }

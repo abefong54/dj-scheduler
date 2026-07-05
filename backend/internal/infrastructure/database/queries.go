@@ -41,6 +41,27 @@ const (
 		FROM djs
 		WHERE portal_token_hash = $1 AND portal_token_expires_at > now()`
 
+	// Student Google login queries (migration 014). Identity is resolved before a
+	// school is known, so the two finds are intentionally NOT school-scoped — the
+	// student's school comes from the matched row (school_id). email/google_id are
+	// PII and are never selected here; only the columns the session needs.
+	queryDJFindByGoogleID = `
+		SELECT id, name, COALESCE(genre_tags, '{}'), COALESCE(certifications, '{}'), is_student, school_id, created_at::text
+		FROM djs WHERE google_id = $1`
+
+	// Case-insensitive email match for the first-login auto-link.
+	queryDJFindByEmail = `
+		SELECT id, name, COALESCE(genre_tags, '{}'), COALESCE(certifications, '{}'), is_student, school_id, created_at::text
+		FROM djs WHERE lower(email) = lower($1)`
+
+	// SetGoogleID binds the Google identity on first login. Not school-scoped:
+	// djID is the row just resolved by FindByEmail.
+	queryDJSetGoogleID = `UPDATE djs SET google_id = $1 WHERE id = $2`
+
+	// SetEmail is the teacher provisioning path (the "invite"): school-scoped so a
+	// teacher can only set the email of their own school's student.
+	queryDJSetEmail = `UPDATE djs SET email = $1 WHERE id = $2 AND school_id = $3`
+
 	queryDJPortalSlots = `
 		SELECT sl.id, sl.event_id, e.name, st.name,
 		       COALESCE(sl.genre,''),
