@@ -2,6 +2,7 @@ import {
   Component,
   ElementRef,
   HostListener,
+  computed,
   effect,
   inject,
   input,
@@ -12,6 +13,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { SessionStore } from '../services/session.store';
 
 export type ShellNav = 'events' | 'djs' | 'performance';
 
@@ -52,6 +54,14 @@ interface NavItem {
   styleUrl: './admin-shell.component.css',
 })
 export class AdminShellComponent {
+  private readonly session = inject(SessionStore);
+
+  /**
+   * EL-107: Derived school name from the session. Null while loading or when
+   * the user has no school yet — the template falls back to the i18n label.
+   */
+  protected readonly schoolName = computed(() => this.session.school()?.name ?? null);
+
   /** Which nav item renders as active. `null` = none active. */
   activeNav = input<ShellNav | null>(null);
   /** Page title (Space Grotesk). Ignored if a `[shell-title]` node is projected. */

@@ -279,5 +279,20 @@
   "landing.leadform.message": "有什麼想讓我們知道的嗎？",
   "landing.leadform.submit": "預約導覽",
   "landing.leadform.success": "感謝你——我們會盡快與你聯繫。",
-  "landing.leadform.error": "發生了一些問題，請再試一次，或直接寫信給我們。"
+  "landing.leadform.error": "發生了一些問題，請再試一次，或直接寫信給我們。",
+
+  "onboarding.step1.title": "設定您的學校",
+  "onboarding.step1.subtitle": "建立學校資料以開始使用。",
+  "onboarding.schoolName": "學校名稱",
+  "onboarding.schoolCity": "城市（選填）",
+  "onboarding.registerSchool": "建立學校",
+  "onboarding.step2.title": "新增團隊",
+  "onboarding.step2.subtitle": "邀請同事協助管理您的學校。",
+  "onboarding.memberEmail": "電子郵件地址",
+  "onboarding.memberRole": "角色",
+  "onboarding.addMember": "新增成員",
+  "onboarding.done": "前往儀表板",
+  "onboarding.role.member": "成員",
+  "onboarding.role.admin": "管理員",
+  "onboarding.error.generic": "發生錯誤，請再試一次。"
 }

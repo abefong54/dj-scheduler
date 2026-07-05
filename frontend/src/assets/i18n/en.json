@@ -292,5 +292,20 @@
   "landing.leadform.message": "Anything you want us to know?",
   "landing.leadform.submit": "Request a demo",
   "landing.leadform.success": "Thanks — we'll be in touch shortly.",
-  "landing.leadform.error": "Something went wrong. Please try again or email us."
+  "landing.leadform.error": "Something went wrong. Please try again or email us.",
+
+  "onboarding.step1.title": "Set up your school",
+  "onboarding.step1.subtitle": "Create your school profile to get started.",
+  "onboarding.schoolName": "School name",
+  "onboarding.schoolCity": "City (optional)",
+  "onboarding.registerSchool": "Create school",
+  "onboarding.step2.title": "Add your team",
+  "onboarding.step2.subtitle": "Invite colleagues to help manage your school.",
+  "onboarding.memberEmail": "Email address",
+  "onboarding.memberRole": "Role",
+  "onboarding.addMember": "Add member",
+  "onboarding.done": "Go to dashboard",
+  "onboarding.role.member": "Member",
+  "onboarding.role.admin": "Admin",
+  "onboarding.error.generic": "Something went wrong. Please try again."
 }
