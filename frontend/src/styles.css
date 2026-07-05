@@ -917,6 +917,13 @@
   fill: var(--sc-cue-amber, var(--violet));
 }
 
+/* The brand wordmark is a link home; render it as plain text, not a blue underline. */
+a.navbar-brand {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
 /* ── App shell chrome: amber gel replaces the violet bloom ── */
 [data-brand='soundcheck'] .shell-brand::before {
   background: radial-gradient(circle, rgba(255, 158, 44, 0.32), transparent 70%);

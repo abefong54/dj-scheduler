@@ -60,6 +60,14 @@ describe('AppComponent top bar', () => {
     expect(brand?.querySelectorAll('.shell-vu-bar').length).toBe(3);
   });
 
+  it('links the Soundcheck wordmark to the landing route', async () => {
+    const el = (await build(false)).nativeElement as HTMLElement;
+    const brand = el.querySelector<HTMLAnchorElement>('[data-testid="brand-wordmark"]');
+    expect(brand?.tagName).toBe('A');
+    expect(brand?.getAttribute('href')).toBe('/');
+    expect(brand?.getAttribute('aria-label')).toBe('Soundcheck home');
+  });
+
   describe('nav "Book a demo" button (landing-only)', () => {
     async function buildWithRouter(authed: boolean): Promise<{ fixture: ComponentFixture<AppComponent>; router: Router }> {
       isAuthenticated = signal(authed);
