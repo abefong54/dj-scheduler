@@ -67,7 +67,8 @@ func Run() {
 	membershipRepo := database.NewMembershipRepository(pool)
 	schoolRepo := database.NewSchoolRepository(pool)
 	googleAuth := googleauth.New(cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL)
-	authHandler := httphandler.NewAuthHandler(authuc.New(googleAuth, organizerRepo, membershipRepo, cfg.JWTSecret, tokenTTL), cfg.FrontendURL, cfg.SecureCookies)
+	authProviders := map[string]authuc.OAuthProvider{authuc.ProviderGoogle: googleAuth}
+	authHandler := httphandler.NewAuthHandler(authuc.New(authProviders, organizerRepo, membershipRepo, cfg.JWTSecret, tokenTTL), cfg.FrontendURL, cfg.SecureCookies)
 	// Onboarding surface: /api/me, register school, invite members (EL-105).
 	schoolHandler := httphandler.NewSchoolHandler(schooluc.New(organizerRepo, schoolRepo, membershipRepo))
 
