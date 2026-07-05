@@ -25,7 +25,9 @@ const EMBED_HOSTS = [
 
 describe('CSP frame-src for challenge embeds', () => {
   // Pull the single Content-Security-Policy line out of the _headers file.
-  const cspLine = HEADERS.split('\n').find((l) => l.includes('Content-Security-Policy')) ?? '';
+  // Match the actual header line ("  Content-Security-Policy: …"), not the
+  // explanatory comment above it ("# … Content-Security-Policy …").
+  const cspLine = HEADERS.split('\n').find((l) => l.trimStart().startsWith('Content-Security-Policy:')) ?? '';
   const frameSrc = /frame-src ([^;]+);/.exec(cspLine)?.[1] ?? '';
 
   it('declares a frame-src directive', () => {
