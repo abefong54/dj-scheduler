@@ -1,6 +1,8 @@
 import { Component, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../services/auth.service';
+import { environment } from '../../environments/environment';
 
 /**
  * EL-079 — Login reskinned onto the Soundcheck dark-"booth" system: a raised
@@ -29,6 +31,16 @@ import { AuthService } from '../services/auth.service';
         style="background: var(--card); border-color: var(--border); box-shadow: var(--shadow-lg);">
         <h1 class="font-display text-3xl font-bold tracking-tight" style="color: var(--ink);">Soundcheck</h1>
 
+        @if (errorMessageKey()) {
+          <p
+            data-testid="login-error"
+            role="alert"
+            class="mt-6 rounded-[var(--radius-input)] border px-4 py-3 text-sm"
+            style="border-color: var(--danger); color: var(--danger); background: rgba(239, 68, 68, 0.08);">
+            {{ errorMessageKey()! | translate }}
+          </p>
+        }
+
         <!-- Primary action: reuse the shared Cue-Amber .btn-primary (dark ink +
              Deck-Cyan focus ring come from the token layer). -->
         <button
@@ -44,6 +56,22 @@ import { AuthService } from '../services/auth.service';
           </svg>
           {{ 'auth.continueWithGoogle' | translate }}
         </button>
+
+        <!-- Second working SSO: LINE Login (EL-111). Opt-in via
+             environment.lineLoginEnabled; LINE brand green with white ink. -->
+        @if (lineEnabled) {
+          <button
+            type="button"
+            (click)="loginLine()"
+            data-testid="line-signin"
+            class="btn mt-3 w-full gap-3 px-6 py-3 text-sm font-medium"
+            style="background: #06c755; color: #fff;">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+              <path d="M12 2C6.48 2 2 5.64 2 10.13c0 4.02 3.55 7.39 8.35 8.03.32.07.77.21.88.49.1.26.07.65.03.9l-.14.86c-.04.25-.2 1 .87.54 1.08-.45 5.8-3.42 7.92-5.85 1.46-1.6 2.16-3.23 2.16-5.02C22 5.64 17.52 2 12 2z"/>
+            </svg>
+            {{ 'auth.signInWithLine' | translate }}
+          </button>
+        }
 
         <div
           class="my-6 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.18em]"
@@ -79,8 +107,23 @@ import { AuthService } from '../services/auth.service';
 })
 export class LoginComponent {
   private auth = inject(AuthService);
+  private route = inject(ActivatedRoute);
+
+  /** Whether to show the "Log in with LINE" button (backend LINE Login live). */
+  protected readonly lineEnabled = environment.lineLoginEnabled;
 
   login(): void {
     this.auth.signInWithGoogle();
+  }
+
+  loginLine(): void {
+    this.auth.signInWithLine();
+  }
+
+  /** Maps a `?error=` code from a failed sign-in to a translated message key. */
+  protected errorMessageKey(): string | null {
+    return this.route.snapshot.queryParamMap.get('error') === 'no_email'
+      ? 'auth.error.noEmail'
+      : null;
   }
 }
