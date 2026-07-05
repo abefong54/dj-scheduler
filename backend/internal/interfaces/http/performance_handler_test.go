@@ -24,7 +24,7 @@ func perfRouter(t *testing.T, pool *pgxpool.Pool, organizerID string) *gin.Engin
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	api := r.Group("/api")
-	api.Use(orgContext(organizerID))
+	api.Use(orgContext(pool, organizerID))
 	httphandler.NewPerformanceHandler(perfuc.New(database.NewPerformanceRepository(pool))).Register(api)
 	return r
 }
@@ -46,7 +46,8 @@ func seedStudentDJ(t *testing.T, pool *pgxpool.Pool, organizerID, name string, i
 	t.Helper()
 	var id string
 	err := pool.QueryRow(context.Background(),
-		`INSERT INTO djs (name, organizer_id, is_student) VALUES ($1, $2, $3) RETURNING id`,
+		`INSERT INTO djs (name, organizer_id, is_student, school_id) VALUES ($1, $2, $3,
+		 (SELECT school_id FROM memberships WHERE organizer_id = $2 AND status = 'active' LIMIT 1)) RETURNING id`,
 		name, organizerID, isStudent).Scan(&id)
 	if err != nil {
 		t.Fatalf("seedDJ: %v", err)

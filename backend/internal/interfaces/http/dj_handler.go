@@ -35,12 +35,12 @@ func (h *DJHandler) Register(rg *gin.RouterGroup) {
 // @Failure     500  {object}  map[string]string
 // @Router      /api/djs [get]
 func (h *DJHandler) list(c *gin.Context) {
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
+	schoolID := c.GetString(middleware.SchoolIDKey)
 	filter := repository.DJListFilter{
 		CertifiedFor: c.Query("certified_for"),
 		ReadyOnly:    c.Query("ready") == "true",
 	}
-	djs, err := h.uc.List(c.Request.Context(), organizerID, filter)
+	djs, err := h.uc.List(c.Request.Context(), schoolID, filter)
 	if err != nil {
 		respondError(c, err)
 		return
@@ -58,8 +58,8 @@ func (h *DJHandler) list(c *gin.Context) {
 // @Failure     500  {object}  map[string]string
 // @Router      /api/djs/{id} [get]
 func (h *DJHandler) get(c *gin.Context) {
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	d, err := h.uc.Get(c.Request.Context(), c.Param("id"), organizerID)
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	d, err := h.uc.Get(c.Request.Context(), c.Param("id"), schoolID)
 	if errors.Is(err, apperrors.ErrNotFound) {
 		c.JSON(http.StatusNotFound, map[string]string{"error": "dj not found"})
 		return
@@ -94,8 +94,8 @@ func (h *DJHandler) create(c *gin.Context) {
 	if body.GenreTags == nil {
 		body.GenreTags = []string{}
 	}
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	d, err := h.uc.Create(c.Request.Context(), body.Name, body.GenreTags, organizerID)
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	d, err := h.uc.Create(c.Request.Context(), body.Name, body.GenreTags, schoolID)
 	if err != nil {
 		respondError(c, err)
 		return
@@ -135,8 +135,8 @@ func (h *DJHandler) patch(c *gin.Context) {
 		body.Certifications = []string{}
 	}
 	body.ID = c.Param("id")
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	d, err := h.uc.Update(c.Request.Context(), body, organizerID)
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	d, err := h.uc.Update(c.Request.Context(), body, schoolID)
 	if errors.Is(err, apperrors.ErrNotFound) {
 		c.JSON(http.StatusNotFound, map[string]string{"error": "dj not found"})
 		return
@@ -156,8 +156,8 @@ func (h *DJHandler) patch(c *gin.Context) {
 // @Failure     500  {object}  map[string]string
 // @Router      /api/djs/{id} [delete]
 func (h *DJHandler) delete(c *gin.Context) {
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	if err := h.uc.Delete(c.Request.Context(), c.Param("id"), organizerID); err != nil {
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	if err := h.uc.Delete(c.Request.Context(), c.Param("id"), schoolID); err != nil {
 		respondError(c, err)
 		return
 	}

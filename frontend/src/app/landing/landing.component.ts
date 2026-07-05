@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Meta, Title } from '@angular/platform-browser';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -23,7 +23,7 @@ import { LeadFormComponent } from './lead-form.component';
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [TranslatePipe, LeadFormComponent],
+  imports: [TranslatePipe, LeadFormComponent, RouterLink],
   templateUrl: './landing.component.html',
   styleUrl: './landing.component.css',
 })

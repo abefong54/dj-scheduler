@@ -59,14 +59,14 @@ func (r *shareFakeEventRepo) Get(context.Context, string, string) (model.Event, 
 func (r *shareFakeEventRepo) GetPublic(context.Context, string) (model.Event, error) {
 	return r.event, r.err
 }
-func (r *shareFakeEventRepo) Create(_ context.Context, e model.Event, _ string) (model.Event, error) {
+func (r *shareFakeEventRepo) Create(_ context.Context, e model.Event, _, _ string) (model.Event, error) {
 	return e, nil
 }
 func (r *shareFakeEventRepo) Update(_ context.Context, e model.Event, _ string) (model.Event, error) {
 	return e, nil
 }
 func (r *shareFakeEventRepo) Delete(context.Context, string, string) error { return nil }
-func (r *shareFakeEventRepo) Clone(context.Context, string, string) (model.Event, error) {
+func (r *shareFakeEventRepo) Clone(context.Context, string, string, string) (model.Event, error) {
 	return model.Event{}, nil
 }
 func (r *shareFakeEventRepo) SetLineNotifyToken(context.Context, string, string, *string) (bool, error) {

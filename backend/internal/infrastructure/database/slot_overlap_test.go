@@ -14,24 +14,31 @@ import (
 	slotuc "eventlineup/internal/usecase/slot"
 )
 
-// seedEventStage inserts an organizer, event, and stage, returning the event,
-// stage, and organizer IDs and registering cleanup.
-func seedEventStage(t *testing.T, pool *pgxpool.Pool) (eventID, stageID, orgID string) {
+// seedEventStage inserts an organizer + their school, an event, and a stage,
+// returning the event, stage, and SCHOOL IDs (EL-104: slots scope by school) and
+// registering cleanup.
+func seedEventStage(t *testing.T, pool *pgxpool.Pool) (eventID, stageID, schoolID string) {
 	t.Helper()
 	ctx := context.Background()
+	var orgID string
 	if err := pool.QueryRow(ctx,
 		`INSERT INTO organizers (email, name, google_id)
 		 VALUES (gen_random_uuid()::text||'@t.local', 't', gen_random_uuid()::text)
 		 RETURNING id`).Scan(&orgID); err != nil {
 		t.Fatalf("insert organizer: %v", err)
 	}
+	if err := pool.QueryRow(ctx,
+		`INSERT INTO schools (name, created_by) VALUES ('School', $1) RETURNING id`, orgID).Scan(&schoolID); err != nil {
+		t.Fatalf("insert school: %v", err)
+	}
 	t.Cleanup(func() {
-		pool.Exec(ctx, "DELETE FROM events WHERE organizer_id = $1", orgID)
+		pool.Exec(ctx, "DELETE FROM events WHERE school_id = $1", schoolID)
+		pool.Exec(ctx, "DELETE FROM schools WHERE id = $1", schoolID)
 		pool.Exec(ctx, "DELETE FROM organizers WHERE id = $1", orgID)
 	})
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO events (name, venue_name, start_date, end_date, organizer_id)
-		 VALUES ('e', 'v', '2026-07-25', '2026-07-26', $1) RETURNING id`, orgID).Scan(&eventID); err != nil {
+		`INSERT INTO events (name, venue_name, start_date, end_date, organizer_id, school_id)
+		 VALUES ('e', 'v', '2026-07-25', '2026-07-26', $1, $2) RETURNING id`, orgID, schoolID).Scan(&eventID); err != nil {
 		t.Fatalf("insert event: %v", err)
 	}
 	if err := pool.QueryRow(ctx,
@@ -39,7 +46,7 @@ func seedEventStage(t *testing.T, pool *pgxpool.Pool) (eventID, stageID, orgID s
 		eventID).Scan(&stageID); err != nil {
 		t.Fatalf("insert stage: %v", err)
 	}
-	return eventID, stageID, orgID
+	return eventID, stageID, schoolID
 }
 
 func TestSlotRepo_RejectsOverlapAtDatabaseLevel(t *testing.T) {
@@ -67,17 +74,21 @@ func TestSlotRepo_RejectsOverlapAtDatabaseLevel(t *testing.T) {
 	}
 }
 
-// TestSlotUseCase_ConcurrentOverlapsOnlyOneWins fires two identical (definitely
-// overlapping) slot creates at once through the use case. With only the
-// application-level check this could let both through; the database exclusion
-// constraint guarantees exactly one commits and the other gets a conflict.
+// TestSlotUseCase_ConcurrentOverlapsOnlyOneWins fires several identical
+// (definitely overlapping) slot creates at once through the use case. With only
+// the application-level check this could let more than one through; the database
+// exclusion constraint guarantees exactly one commits and the rest get a
+// conflict. Racing many writers also makes Postgres likely to resolve the tie as
+// a deadlock (40P01) rather than a clean 23P01 exclusion violation, which
+// exercises the deadlock-retry path in the repository (regression guard for the
+// flaky "unexpected error: deadlock detected" failure).
 func TestSlotUseCase_ConcurrentOverlapsOnlyOneWins(t *testing.T) {
 	pool := orgTestPool(t)
 	ctx := context.Background()
 	uc := slotuc.New(database.NewSlotRepository(pool))
 	eventID, stageID, orgID := seedEventStage(t, pool)
 
-	const n = 2
+	const n = 8
 	var wg sync.WaitGroup
 	results := make([]error, n)
 	for i := 0; i < n; i++ {
@@ -102,7 +113,7 @@ func TestSlotUseCase_ConcurrentOverlapsOnlyOneWins(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 	}
-	if success != 1 || conflict != 1 {
-		t.Fatalf("expected exactly one success and one conflict, got success=%d conflict=%d", success, conflict)
+	if success != 1 || conflict != n-1 {
+		t.Fatalf("expected exactly one success and %d conflicts, got success=%d conflict=%d", n-1, success, conflict)
 	}
 }

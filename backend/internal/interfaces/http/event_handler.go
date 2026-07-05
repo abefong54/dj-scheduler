@@ -33,8 +33,8 @@ func (h *EventHandler) Register(rg *gin.RouterGroup) {
 // @Failure     500  {object}  map[string]string
 // @Router      /api/events [get]
 func (h *EventHandler) list(c *gin.Context) {
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	events, err := h.uc.List(c.Request.Context(), organizerID)
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	events, err := h.uc.List(c.Request.Context(), schoolID)
 	if err != nil {
 		respondError(c, err)
 		return
@@ -51,8 +51,8 @@ func (h *EventHandler) list(c *gin.Context) {
 // @Failure     404  {object}  map[string]string
 // @Router      /api/events/{id} [get]
 func (h *EventHandler) get(c *gin.Context) {
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	e, err := h.uc.Get(c.Request.Context(), c.Param("id"), organizerID)
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	e, err := h.uc.Get(c.Request.Context(), c.Param("id"), schoolID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return
@@ -83,8 +83,9 @@ func (h *EventHandler) create(c *gin.Context) {
 	if body.EndDate == "" {
 		body.EndDate = body.StartDate
 	}
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	e, err := h.uc.Create(c.Request.Context(), body, organizerID)
+	createdBy := c.GetString(middleware.OrganizerIDKey)
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	e, err := h.uc.Create(c.Request.Context(), body, createdBy, schoolID)
 	if err != nil {
 		respondError(c, err)
 		return
@@ -121,8 +122,8 @@ func (h *EventHandler) patch(c *gin.Context) {
 		body.Genres = []string{}
 	}
 	body.ID = c.Param("id")
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	e, err := h.uc.Update(c.Request.Context(), body, organizerID)
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	e, err := h.uc.Update(c.Request.Context(), body, schoolID)
 	if errors.Is(err, apperrors.ErrNotFound) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "event not found"})
 		return
@@ -142,8 +143,8 @@ func (h *EventHandler) patch(c *gin.Context) {
 // @Failure     500  {object}  map[string]string
 // @Router      /api/events/{id} [delete]
 func (h *EventHandler) delete(c *gin.Context) {
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	if err := h.uc.Delete(c.Request.Context(), c.Param("id"), organizerID); err != nil {
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	if err := h.uc.Delete(c.Request.Context(), c.Param("id"), schoolID); err != nil {
 		respondError(c, err)
 		return
 	}
@@ -159,8 +160,9 @@ func (h *EventHandler) delete(c *gin.Context) {
 // @Failure     404  {object}  map[string]string
 // @Router      /api/events/{id}/clone [post]
 func (h *EventHandler) clone(c *gin.Context) {
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	e, err := h.uc.Clone(c.Request.Context(), c.Param("id"), organizerID)
+	createdBy := c.GetString(middleware.OrganizerIDKey)
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	e, err := h.uc.Clone(c.Request.Context(), c.Param("id"), createdBy, schoolID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return

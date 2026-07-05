@@ -40,7 +40,9 @@ describe('LeadFormComponent (EL-085)', () => {
     c.name.set('Aria');
     c.email.set('aria@example.com');
     c.submit();
-    http.expectOne('/api/leads').flush({ error: 'bad' }, { status: 400, statusText: 'Bad Request' });
+    http
+      .expectOne('/api/leads')
+      .flush({ error: 'bad' }, { status: 400, statusText: 'Bad Request' });
     expect(c.state()).toBe('error');
   });
 });

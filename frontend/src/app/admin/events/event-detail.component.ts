@@ -4,11 +4,13 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { ApiService, Event, Stage, Slot, DJ } from '../../services/api.service';
+import { EventsStore } from '../../services/events-store';
 import { DialogService } from '../../shared/dialog.service';
 import { ScheduleExportService } from '../../services/schedule-export.service';
 import { slotDurationMins } from '../../shared/slot-time.util';
 import { parseLocalDate } from '../../shared/date.util';
 import { AdminShellComponent } from '../../shared/admin-shell.component';
+import { BreakpointService } from '../../shared/breakpoint.service';
 import { LoadingMeterComponent } from '../../shared/loading-meter.component';
 import { SubmitGuard } from '../../shared/submit-guard';
 import { StatusBadgeComponent } from '../../shared/status-badge.component';
@@ -24,10 +26,13 @@ import { TableSort } from '../../shared/table-sort';
 })
 export class EventDetailComponent implements OnDestroy {
   private api = inject(ApiService);
+  private store = inject(EventsStore);
   private route = inject(ActivatedRoute);
   private translate = inject(TranslateService);
   private dialog = inject(DialogService);
   private exporter = inject(ScheduleExportService);
+  /** Drives the mobile (≤md) cards + dialog presentation. */
+  protected readonly breakpoints = inject(BreakpointService);
 
   event = signal<Event | null>(null);
   loading = signal(true);
@@ -70,6 +75,16 @@ export class EventDetailComponent implements OnDestroy {
   addDuration = 60;
   addNotes = '';
   addConflictError = signal<string | null>(null);
+  // Flips true on the first Save attempt so the template can reveal why Save is
+  // blocked. Before that we stay quiet. Fixes the mobile "dead button": with
+  // multiple stages there's no default stage, so an un-picked stage silently
+  // aborted submitAddRow() with no feedback.
+  readonly addSubmitted = signal(false);
+
+  /** The one user-fixable required field with no default: the stage. */
+  stageMissing(): boolean {
+    return this.addSubmitted() && !this.addStageId;
+  }
 
   defaultStageId = computed(() => this.stages().length === 1 ? this.stages()[0].id : '');
 
@@ -145,6 +160,7 @@ export class EventDetailComponent implements OnDestroy {
     this.addDuration = 60;
     this.addNotes = '';
     this.addConflictError.set(null);
+    this.addSubmitted.set(false);
     this.addRowActive.set(true);
   }
 
@@ -154,6 +170,9 @@ export class EventDetailComponent implements OnDestroy {
   }
 
   submitAddRow() {
+    // Surface validation before the guard: pressing Save with the stage empty
+    // must show why, not silently do nothing (the mobile "dead button" bug).
+    this.addSubmitted.set(true);
     if (!this.addStageId || !this.addDate || !this.addStart) return;
     const eventId = this.event()!.id;
     this.addSlotGuard.run(this.api.createSlot(eventId, {
@@ -387,6 +406,54 @@ export class EventDetailComponent implements OnDestroy {
     const h = Math.floor(total / 60) % 24;
     const m = total % 60;
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+
+  // ── Hero editor (EL-092) ──────────────────────────────────────────────
+  editingHeader = signal(false);
+  hName = signal('');
+  hVenue = signal('');
+  hStart = signal('');
+  hEnd = signal('');
+  hGenres = signal('');
+
+  startHeaderEdit() {
+    const e = this.event();
+    if (!e) return;
+    this.hName.set(e.name);
+    this.hVenue.set(e.venue_name);
+    this.hStart.set(e.start_date);
+    this.hEnd.set(e.end_date);
+    this.hGenres.set(e.genres.join(', '));
+    this.editingHeader.set(true);
+  }
+
+  cancelHeader() {
+    this.editingHeader.set(false);
+  }
+
+  saveHeader() {
+    const e = this.event();
+    if (!e) return;
+    const name = this.hName().trim();
+    const venue = this.hVenue().trim();
+    const start = this.hStart();
+    if (!name || !venue || !start) return;
+    const end = this.hEnd() || start;
+    if (end < start) return;
+    const genres = this.hGenres().split(',').map(g => g.trim()).filter(g => g.length > 0);
+    this.api.updateEvent(e.id, {
+      name, venue_name: venue, start_date: start, end_date: end, genres,
+    }).subscribe({
+      next: updated => {
+        this.event.set(updated);
+        this.store.refresh();
+        this.editingHeader.set(false);
+      },
+      error: () => this.dialog.alert({
+        title: this.translate.instant('common.loadError'),
+        message: this.translate.instant('common.loadError'),
+      }),
+    });
   }
 
   editingSlotId = signal<string | null>(null);

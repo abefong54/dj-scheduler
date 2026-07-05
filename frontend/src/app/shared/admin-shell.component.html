@@ -1,9 +1,19 @@
 <div class="admin-shell">
-  <aside class="shell-sidebar">
+  <!-- Backdrop behind the mobile drawer. Persistent in the DOM (fades via the
+       .open class); non-interactive and hidden ≥lg via global CSS. -->
+  <div class="shell-backdrop" [class.open]="drawerOpen()" (click)="closeDrawer()" aria-hidden="true"></div>
+
+  <aside class="shell-sidebar" [class.shell-sidebar-open]="drawerOpen()">
     <!-- Brand lives once, in the global top bar (app.component). The sidebar
          opens straight into the workspace nav. -->
-    <p class="shell-section-label mono-label">
-      {{ 'shell.workspace' | translate }}
+    <!-- EL-107: show the school name when available; fall back to the i18n label
+         while loading or when the user has no school. Truncate long names. -->
+    <p class="shell-section-label mono-label" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+      @if (schoolName(); as name) {
+        <span [title]="name">{{ name }}</span>
+      } @else {
+        {{ 'shell.workspace' | translate }}
+      }
     </p>
 
     <nav class="shell-nav">
@@ -13,6 +23,7 @@
           [routerLink]="item.link"
           [class.shell-nav-active]="isActive(item.id)"
           [attr.data-nav]="item.id"
+          (click)="closeDrawer()"
         >
           <span class="shell-nav-tick" aria-hidden="true"></span>
           <span class="shell-nav-label">{{ item.labelKey | translate }}</span>
@@ -28,6 +39,16 @@
   <div class="shell-main">
     <header class="shell-topbar">
       <div class="shell-topbar-titles">
+        <button
+          #hamburger
+          type="button"
+          class="shell-hamburger"
+          (click)="toggleDrawer()"
+          [attr.aria-expanded]="drawerOpen()"
+          [attr.aria-label]="'shell.toggleNav' | translate"
+        >
+          <span aria-hidden="true">☰</span>
+        </button>
         <h1 class="shell-page-title">
           <ng-content select="[shell-title]">{{ title() }}</ng-content>
         </h1>
@@ -36,20 +57,37 @@
         }
       </div>
 
+      <!-- Overflow trigger — hidden ≥lg; below lg it reveals the actions group
+           as a popover so the projected actions are never clipped off-screen. -->
+      <button
+        type="button"
+        class="shell-actions-toggle"
+        (click)="toggleActions()"
+        aria-haspopup="true"
+        [attr.aria-expanded]="actionsOpen()"
+        [attr.aria-label]="'shell.moreActions' | translate"
+      >
+        <span aria-hidden="true">⋯</span>
+      </button>
+
       <div class="shell-topbar-actions">
-        <input
-          class="shell-search"
-          type="search"
-          [placeholder]="'shell.search' | translate"
-          [value]="searchValue()"
-          (input)="onSearch($event)"
-        />
-        <ng-content select="[shell-actions]"></ng-content>
-        @if (newLabel() !== null) {
-          <button type="button" class="shell-new-btn" (click)="newClicked.emit()">
-            + {{ newLabel() || ('shell.new' | translate) }}
-          </button>
+        @if (searchable()) {
+          <input
+            class="shell-search"
+            type="search"
+            [placeholder]="'shell.search' | translate"
+            [value]="searchValue()"
+            (input)="onSearch($event)"
+          />
         }
+        <div class="shell-actions-group" [class.open]="actionsOpen()">
+          <ng-content select="[shell-actions]"></ng-content>
+          @if (newLabel() !== null) {
+            <button type="button" class="shell-new-btn" data-testid="shell-new-btn" (click)="newClicked.emit()">
+              + {{ newLabel() || ('shell.new' | translate) }}
+            </button>
+          }
+        </div>
       </div>
     </header>
 

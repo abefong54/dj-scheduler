@@ -12,13 +12,17 @@ import (
 	"eventlineup/internal/infrastructure/database"
 	httphandler "eventlineup/internal/interfaces/http"
 	"eventlineup/internal/interfaces/http/middleware"
+	challengeuc "eventlineup/internal/usecase/challenge"
 	djuc "eventlineup/internal/usecase/dj"
 	eventuc "eventlineup/internal/usecase/event"
 	leaduc "eventlineup/internal/usecase/lead"
 	linenotifyuc "eventlineup/internal/usecase/linenotify"
 	perfuc "eventlineup/internal/usecase/performance"
+	schooluc "eventlineup/internal/usecase/school"
 	slotuc "eventlineup/internal/usecase/slot"
 	stageuc "eventlineup/internal/usecase/stage"
+	studentauthuc "eventlineup/internal/usecase/studentauth"
+	submissionuc "eventlineup/internal/usecase/submission"
 )
 
 const routerTestSecret = "router-test-secret-router-test-secret-0123"
@@ -46,7 +50,11 @@ func fullRouter(t *testing.T) *gin.Engine {
 	)
 	perf := httphandler.NewPerformanceHandler(perfuc.New(database.NewPerformanceRepository(pool)))
 	lead := httphandler.NewLeadHandler(leaduc.New(database.NewLeadRepository(pool)))
-	return httphandler.NewRouter("http://localhost:4200", routerTestSecret, pub, share, djPortal, dj, ev, st, sl, line, perf, lead)
+	school := httphandler.NewSchoolHandler(schooluc.New(database.NewOrganizerRepository(pool), database.NewSchoolRepository(pool), database.NewMembershipRepository(pool)))
+	studentAuth := httphandler.NewStudentAuthHandler(studentauthuc.New(nil, database.NewDJRepository(pool), routerTestSecret, time.Hour), "http://localhost:4200", false)
+	challenge := httphandler.NewChallengeHandler(challengeuc.New(nil))
+	submission := httphandler.NewSubmissionHandler(submissionuc.New(nil))
+	return httphandler.NewRouter("http://localhost:4200", routerTestSecret, database.NewMembershipRepository(pool), pub, share, djPortal, dj, ev, st, sl, line, perf, lead, school, studentAuth, challenge, submission)
 }
 
 func mintRouterToken(t *testing.T) string {

@@ -16,7 +16,7 @@ class HostComponent {
 // scrolling data table) on hover, and is removed on leave.
 describe('TooltipDirective (EL-090)', () => {
   afterEach(() => {
-    document.body.querySelectorAll('.app-tooltip').forEach(el => el.remove());
+    document.body.querySelectorAll('.app-tooltip').forEach((el) => el.remove());
   });
 
   function host(text?: string) {

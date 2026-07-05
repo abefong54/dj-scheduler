@@ -44,6 +44,11 @@ export class AuthService {
     window.location.href = `${environment.apiUrl}/auth/google`;
   }
 
+  /** Begin the LINE Login flow by navigating to the backend redirect route. */
+  signInWithLine(): void {
+    window.location.href = `${environment.apiUrl}/auth/line`;
+  }
+
   signOut(): void {
     this.clear();
     this.router.navigate(['/login']);

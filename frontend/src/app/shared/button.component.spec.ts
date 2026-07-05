@@ -74,7 +74,12 @@ describe('ButtonComponent', () => {
   });
 
   it('lets ariaLabel override the label for the accessible name', () => {
-    const { button } = render({ icon: 'link', iconOnly: true, label: 'Copy', ariaLabel: 'Copy portal link' });
+    const { button } = render({
+      icon: 'link',
+      iconOnly: true,
+      label: 'Copy',
+      ariaLabel: 'Copy portal link',
+    });
     expect(button.getAttribute('aria-label')).toBe('Copy portal link');
   });
 

@@ -1,11 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { vi } from 'vitest';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { DjsComponent } from './djs.component';
-import { ApiService } from '../../services/api.service';
+import { ApiService, DJ } from '../../services/api.service';
+import { DjsStore } from '../../services/djs-store';
 import { DialogService } from '../../shared/dialog.service';
 
 // The DJs page must wrap itself in the console AdminShell so the left sidebar is
@@ -33,9 +34,9 @@ describe('DjsComponent — Console shell', () => {
     const root = render();
     expect(root.querySelector('app-admin-shell')).toBeTruthy();
     expect(root.querySelector('.shell-sidebar')).toBeTruthy();
-    expect(
-      root.querySelector('[data-nav="djs"]')?.classList.contains('shell-nav-active'),
-    ).toBe(true);
+    expect(root.querySelector('[data-nav="djs"]')?.classList.contains('shell-nav-active')).toBe(
+      true,
+    );
   });
 });
 
@@ -50,7 +51,8 @@ describe('DjsComponent — portal link dialog (US-012 / EL-089)', () => {
       of({
         portal_url: 'http://localhost:4200/dj/portal?token=tok',
         expires_at: '2026-07-17T00:00:00Z',
-      })),
+      }),
+    ),
   };
 
   beforeEach(() => {
@@ -82,7 +84,13 @@ describe('DjsComponent — portal link dialog (US-012 / EL-089)', () => {
 
 // EL-020: the certifications edit panel.
 describe('DjsComponent — certifications edit panel (EL-020)', () => {
-  const DJ = { id: 'dj-1', name: 'Mia', genre_tags: ['House'], certifications: ['House'], is_student: true };
+  const DJ = {
+    id: 'dj-1',
+    name: 'Mia',
+    genre_tags: ['House'],
+    certifications: ['House'],
+    is_student: true,
+  };
   const updateDJ = vi.fn(() => of({ ...DJ }));
   const apiMock = {
     getDJs: vi.fn(() => of([DJ])),
@@ -134,7 +142,7 @@ describe('DjsComponent — certifications edit panel (EL-020)', () => {
     // Adding the same value again is a no-op.
     c.editCustom.set('Afrobeat');
     c.addCustomCert();
-    expect(c.editCerts().filter(x => x === 'Afrobeat')).toHaveLength(1);
+    expect(c.editCerts().filter((x) => x === 'Afrobeat')).toHaveLength(1);
   });
 
   it('saveEdit PATCHes the DJ with cert + student changes and closes the panel', () => {
@@ -149,8 +157,20 @@ describe('DjsComponent — certifications edit panel (EL-020)', () => {
       genre_tags: ['House'],
       certifications: ['House', 'Hip Hop'],
       is_student: false,
+      email: '',
     });
     expect(c.editing()).toBeNull();
+  });
+
+  it('saveEdit sends the roster email so the student can sign in', () => {
+    const c = makeComponent();
+    c.openEdit({ id: 'dj-1' });
+    c.editEmail.set('mia@example.com');
+    c.saveEdit();
+    expect(updateDJ).toHaveBeenCalledWith(
+      'dj-1',
+      expect.objectContaining({ email: 'mia@example.com' }),
+    );
   });
 });
 
@@ -175,7 +195,13 @@ describe('DjsComponent — certification status pills (EL-081)', () => {
 
   it('renders a held certification as a "Cleared" pill carrying BOTH an icon glyph and the label', () => {
     const root = render([
-      { id: 'dj-1', name: 'Mia', genre_tags: ['House'], certifications: ['House'], is_student: true },
+      {
+        id: 'dj-1',
+        name: 'Mia',
+        genre_tags: ['House'],
+        certifications: ['House'],
+        is_student: true,
+      },
     ]);
     const pill = root.querySelector('[data-testid="dj-cert-dj-1"]') as HTMLElement;
     expect(pill).toBeTruthy();
@@ -201,5 +227,202 @@ describe('DjsComponent — certification status pills (EL-081)', () => {
     const pill = root.querySelector('.dj-grad-pill') as HTMLElement;
     expect(pill).toBeTruthy();
     expect(pill.querySelector('svg.dj-grad-glyph')).toBeTruthy();
+  });
+});
+
+// EL-092: the roster is backed by the root DjsStore (stale-while-revalidate), so
+// a re-visit paints from cache with no spinner and every roster mutation refreshes
+// it — but generating a portal token (which doesn't change the roster) must not.
+describe('DjsComponent — cached roster (EL-092)', () => {
+  const ROSTER: DJ[] = [
+    { id: 'd1', name: 'Mia', genre_tags: ['House'], certifications: ['House'], is_student: true },
+  ];
+
+  const configure = (api: Partial<ApiService>, dialog: Partial<DialogService> = {}) =>
+    TestBed.configureTestingModule({
+      imports: [DjsComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: api },
+        {
+          provide: DialogService,
+          useValue: {
+            confirm: () => Promise.resolve(true),
+            alert: () => Promise.resolve(),
+            ...dialog,
+          },
+        },
+      ],
+    });
+
+  it('paints cached rows with NO spinner on a second visit (revalidates silently)', () => {
+    const first = new Subject<DJ[]>();
+    const second = new Subject<DJ[]>(); // stays pending — cache must cover the gap
+    let calls = 0;
+    configure({ getDJs: () => (++calls === 1 ? first : second).asObservable() });
+
+    // First visit: nothing cached → spinner, no table.
+    const f1 = TestBed.createComponent(DjsComponent);
+    f1.detectChanges();
+    const el1 = f1.nativeElement as HTMLElement;
+    expect(el1.querySelector('app-loading-meter')).toBeTruthy();
+    expect(el1.querySelector('app-data-table')).toBeFalsy();
+    first.next(ROSTER);
+    first.complete();
+    f1.detectChanges();
+    expect(el1.querySelector('app-data-table')).toBeTruthy();
+
+    // Second visit shares the singleton store: cached rows show immediately even
+    // though the revalidation request (`second`) is still in flight — no spinner.
+    const f2 = TestBed.createComponent(DjsComponent);
+    f2.detectChanges();
+    const el2 = f2.nativeElement as HTMLElement;
+    expect(el2.querySelector('app-loading-meter')).toBeFalsy();
+    expect(el2.querySelector('app-data-table')).toBeTruthy();
+  });
+
+  it('refreshes the shared store after adding a DJ', async () => {
+    configure({ getDJs: () => of(ROSTER), createDJ: () => of(ROSTER[0]) });
+    const refreshSpy = vi.spyOn(TestBed.inject(DjsStore), 'refresh');
+
+    const c = TestBed.createComponent(DjsComponent).componentInstance;
+    c.newDJ.set({ name: 'Nova' });
+    c.newDJGenres.set('Techno');
+    await c.addDJ();
+
+    expect(refreshSpy).toHaveBeenCalled();
+  });
+
+  it('refreshes the shared store after deleting a DJ', async () => {
+    configure({ getDJs: () => of(ROSTER), deleteDJ: () => of({}) });
+    const refreshSpy = vi.spyOn(TestBed.inject(DjsStore), 'refresh');
+
+    const c = TestBed.createComponent(DjsComponent).componentInstance;
+    await c.deleteDJ('d1');
+
+    expect(refreshSpy).toHaveBeenCalled();
+  });
+
+  it('refreshes the shared store after saving cert edits', () => {
+    configure({ getDJs: () => of(ROSTER), updateDJ: () => of(ROSTER[0]) });
+    const refreshSpy = vi.spyOn(TestBed.inject(DjsStore), 'refresh');
+
+    const c = TestBed.createComponent(DjsComponent).componentInstance;
+    c.openEdit({ id: 'd1' });
+    c.saveEdit();
+
+    expect(refreshSpy).toHaveBeenCalled();
+  });
+
+  it('does NOT refresh the store when generating a portal link (roster unchanged)', () => {
+    configure(
+      {
+        getDJs: () => of(ROSTER),
+        generateDJPortalToken: () => of({ portal_url: 'https://x/p', expires_at: '' }),
+      },
+      { shareLink: vi.fn() },
+    );
+    const refreshSpy = vi.spyOn(TestBed.inject(DjsStore), 'refresh');
+
+    const c = TestBed.createComponent(DjsComponent).componentInstance;
+    c.copyPortalLink('d1');
+
+    expect(refreshSpy).not.toHaveBeenCalled();
+  });
+});
+
+// EL-099: the "Add a DJ" action moves into the topbar (next to search, like the
+// Events "+ New") and opens the Name+Genres form in a modal — replacing the
+// always-visible inline add card. The modal reuses .modal-overlay/.modal-box-sm
+// so it inherits the shared present-animation (EL-096 motion foundation).
+describe('DjsComponent — add via topbar modal (EL-099)', () => {
+  const ROSTER: DJ[] = [
+    { id: 'd1', name: 'Mia', genre_tags: ['House'], certifications: ['House'], is_student: true },
+  ];
+  const createDJ = vi.fn(() => of(ROSTER[0]));
+
+  const setup = (api: Partial<ApiService> = {}) => {
+    TestBed.configureTestingModule({
+      imports: [DjsComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: { getDJs: () => of(ROSTER), createDJ, ...api } },
+        {
+          provide: DialogService,
+          useValue: { confirm: () => Promise.resolve(true), alert: () => Promise.resolve() },
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(DjsComponent);
+    fixture.detectChanges();
+    return fixture;
+  };
+
+  beforeEach(() => createDJ.mockClear());
+
+  it('shows no inline add form on load — only a topbar "+ Add" button', () => {
+    const el = setup().nativeElement as HTMLElement;
+    expect(el.querySelector('[data-testid="dj-name-input"]')).toBeNull(); // inline card gone
+    expect(el.querySelector('.modal-overlay')).toBeNull(); // modal closed
+    expect(el.querySelector('.shell-new-btn')).toBeTruthy(); // topbar add button
+  });
+
+  it('opens the add modal (reusing the shared modal shell) when the topbar button is clicked', () => {
+    const fixture = setup();
+    const el = fixture.nativeElement as HTMLElement;
+    (el.querySelector('.shell-new-btn') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    const modal = el.querySelector('.modal-overlay');
+    expect(modal).toBeTruthy();
+    // uses the shared animated box so it inherits the EL-096 present-animation
+    expect(modal!.querySelector('.modal-box-sm')).toBeTruthy();
+    expect(modal!.querySelector('[data-testid="dj-name-input"]')).toBeTruthy();
+    expect(modal!.querySelector('[data-testid="dj-genres-input"]')).toBeTruthy();
+  });
+
+  it('adds a DJ from the modal and closes it', () => {
+    const fixture = setup();
+    const el = fixture.nativeElement as HTMLElement;
+    const c = fixture.componentInstance;
+    c.openAddModal();
+    c.newDJ.set({ name: 'Nova' });
+    c.newDJGenres.set('Techno');
+    fixture.detectChanges();
+    (el.querySelector('[data-testid="dj-add-btn"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(createDJ).toHaveBeenCalledWith({ name: 'Nova', genre_tags: ['Techno'] });
+    expect(el.querySelector('.modal-overlay')).toBeNull(); // closed on success
+  });
+
+  it('cancel closes the modal without creating a DJ', () => {
+    const fixture = setup();
+    const el = fixture.nativeElement as HTMLElement;
+    fixture.componentInstance.openAddModal();
+    fixture.detectChanges();
+    (el.querySelector('[data-testid="dj-add-cancel"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(el.querySelector('.modal-overlay')).toBeNull();
+    expect(createDJ).not.toHaveBeenCalled();
+  });
+
+  // The add/cancel buttons must use the shared app-button style like every other
+  // modal (edit panel, confirm dialog) — i.e. carry the `.btn` base class + a
+  // variant. Raw `class="btn-primary"` buttons missed the base class, so they
+  // rendered unstyled and didn't match the rest of the app.
+  it('renders the add/cancel buttons with the shared app-button style (btn base + variant)', () => {
+    const fixture = setup();
+    const el = fixture.nativeElement as HTMLElement;
+    fixture.componentInstance.openAddModal();
+    fixture.detectChanges();
+
+    const add = el.querySelector('[data-testid="dj-add-btn"]') as HTMLButtonElement;
+    const cancel = el.querySelector('[data-testid="dj-add-cancel"]') as HTMLButtonElement;
+
+    expect(add.classList.contains('btn')).toBe(true);
+    expect(add.classList.contains('btn-primary')).toBe(true);
+    expect(cancel.classList.contains('btn')).toBe(true);
+    expect(cancel.classList.contains('btn-secondary')).toBe(true);
   });
 });

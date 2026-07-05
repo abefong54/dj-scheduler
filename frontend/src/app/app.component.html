@@ -2,41 +2,61 @@
   <!-- EL-078: Soundcheck wordmark — lowercase display face with a single amber
        VU-meter detail. Inline SVG so it doesn't depend on the finalized logo
        asset (EL-071 drops in later). -->
-  <span class="navbar-brand shell-wordmark" data-testid="brand-wordmark">
+  <a routerLink="/" class="navbar-brand shell-wordmark" data-testid="brand-wordmark" [attr.aria-label]="'nav.home' | translate">
     <svg class="shell-vu" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
       <rect class="shell-vu-bar" x="1" y="7" width="3" height="8" rx="1" />
       <rect class="shell-vu-bar" x="6.5" y="2" width="3" height="13" rx="1" />
       <rect class="shell-vu-bar" x="12" y="9" width="3" height="6" rx="1" />
     </svg>
     <span>soundcheck</span>
-  </span>
+  </a>
   <!-- Primary nav (Events/DJs) lives in the console sidebar (AdminShellComponent);
        the brand stays here so it appears in exactly one place. -->
-  <div class="lang-switcher">
-    <button (click)="langService.setLanguage('en')"
-      class="lang-btn"
-      [class]="langService.currentLang() === 'en' ? 'lang-btn-active' : 'lang-btn-inactive'">
-      EN
-    </button>
-    <button (click)="langService.setLanguage('zh-TW')"
-      class="lang-btn"
-      [class]="langService.currentLang() === 'zh-TW' ? 'lang-btn-active' : 'lang-btn-inactive'">
-      中文
-    </button>
-    @if (isLanding()) {
-      <a routerLink="/" fragment="lead-form" data-testid="nav-book-demo" class="btn btn-primary nav-cta">
-        {{ 'nav.bookDemo' | translate }}
-      </a>
-    }
-    @if (auth.isAuthenticated()) {
-      <button (click)="auth.signOut()" data-testid="signout" class="lang-btn lang-btn-inactive">
-        {{ 'nav.signOut' | translate }}
+  <div class="navbar-actions">
+    <!-- Secondary controls: inline on desktop, a hamburger dropdown <lg. -->
+    <div id="navbar-menu" class="navbar-menu lang-switcher"
+      [class.navbar-menu-open]="menuOpen()" data-testid="nav-menu">
+      <button (click)="langService.setLanguage('en'); closeMenu()"
+        class="lang-btn"
+        [class]="langService.currentLang() === 'en' ? 'lang-btn-active' : 'lang-btn-inactive'">
+        EN
       </button>
-    } @else {
-      <a routerLink="/login" data-testid="signin" class="lang-btn lang-btn-inactive">
-        {{ 'nav.signIn' | translate }}
-      </a>
+      <button (click)="langService.setLanguage('zh-TW'); closeMenu()"
+        class="lang-btn"
+        [class]="langService.currentLang() === 'zh-TW' ? 'lang-btn-active' : 'lang-btn-inactive'">
+        中文
+      </button>
+      @if (auth.isAuthenticated()) {
+        <button (click)="auth.signOut()" data-testid="signout" class="lang-btn lang-btn-inactive">
+          {{ 'nav.signOut' | translate }}
+        </button>
+      } @else {
+        <a routerLink="/login" data-testid="signin" class="lang-btn lang-btn-inactive">
+          {{ 'nav.signIn' | translate }}
+        </a>
+      }
+    </div>
+
+    <!-- Primary CTA stays in the bar at every width (landing route only). -->
+    @if (isLanding()) {
+      @if (auth.isAuthenticated()) {
+        <!-- Logged-in visitors on the marketing page: primary CTA is a way back
+             into their console (a prospect's "Book a demo" doesn't apply). -->
+        <a routerLink="/admin/events" data-testid="nav-console" class="btn btn-primary nav-cta">
+          {{ 'nav.console' | translate }}
+        </a>
+      } @else {
+        <a routerLink="/" fragment="lead-form" data-testid="nav-book-demo" class="btn btn-primary nav-cta">
+          {{ 'nav.bookDemo' | translate }}
+        </a>
+      }
     }
+
+    <button #menuToggle type="button" class="navbar-menu-toggle"
+      data-testid="nav-menu-toggle" (click)="toggleMenu()"
+      [attr.aria-expanded]="menuOpen()" aria-controls="navbar-menu" [attr.aria-label]="'nav.menu' | translate">
+      ☰
+    </button>
   </div>
 </nav>
 <main class="app-main">

@@ -2,6 +2,7 @@
   activeNav="events"
   [title]="event()?.name ?? ''"
   [breadcrumb]="'shell.nav.events' | translate"
+  [searchable]="true"
   [searchValue]="slotTable.search()"
   (searchValueChange)="slotTable.search.set($event)"
 >
@@ -26,14 +27,41 @@
 
       <!-- Monument header -->
       <header class="detail-hero">
-        <p class="detail-event-name">{{ event()!.name }}</p>
-        <p class="detail-event-meta">{{ dateRange() }} · {{ event()!.venue_name }} · #{{ event()!.id.slice(0, 8) }}</p>
-        @if (event()!.genres?.length) {
-          <div class="genre-pill-row">
-            @for (g of event()!.genres; track g) {
-              <span class="genre-pill">{{ g }}</span>
-            }
+        @if (editingHeader()) {
+          <div class="detail-hero-edit">
+            <input type="text" class="form-input" [ngModel]="hName()" (ngModelChange)="hName.set($event)"
+              [attr.aria-label]="'events.name' | translate" data-testid="detail-edit-name" />
+            <input type="text" class="form-input" [ngModel]="hVenue()" (ngModelChange)="hVenue.set($event)"
+              [attr.aria-label]="'events.col.venue' | translate" data-testid="detail-edit-venue" />
+            <div class="detail-hero-dates">
+              <input type="date" class="form-input" [ngModel]="hStart()" (ngModelChange)="hStart.set($event)"
+                [attr.aria-label]="('events.col.dates' | translate) + ' start'" />
+              <input type="date" class="form-input" [ngModel]="hEnd()" (ngModelChange)="hEnd.set($event)"
+                [attr.aria-label]="('events.col.dates' | translate) + ' end'" />
+            </div>
+            <input type="text" class="form-input" [ngModel]="hGenres()" (ngModelChange)="hGenres.set($event)"
+              [attr.aria-label]="'events.col.genres' | translate" data-testid="detail-edit-genres" />
+            <div class="detail-hero-actions">
+              <app-button variant="primary" [label]="'actions.save' | translate"
+                testId="detail-save" (click)="saveHeader()" />
+              <app-button variant="secondary" [label]="'actions.cancel' | translate"
+                testId="detail-cancel" (click)="cancelHeader()" />
+            </div>
           </div>
+        } @else {
+          <div class="detail-hero-head">
+            <p class="detail-event-name">{{ event()!.name }}</p>
+            <app-button variant="secondary" size="icon" icon="edit" [iconOnly]="true"
+              [label]="'actions.edit' | translate" testId="detail-edit" (click)="startHeaderEdit()" />
+          </div>
+          <p class="detail-event-meta">{{ dateRange() }} · {{ event()!.venue_name }} · #{{ event()!.id.slice(0, 8) }}</p>
+          @if (event()!.genres?.length) {
+            <div class="genre-pill-row">
+              @for (g of event()!.genres; track g) {
+                <span class="genre-pill">{{ g }}</span>
+              }
+            </div>
+          }
         }
       </header>
 
@@ -73,7 +101,59 @@
           </div>
         }
 
-        <div class="card slots-card">
+        @if (breakpoints.compact()) {
+          <!-- EL-094: below md the 7-col table is unusable; render each slot as
+               a stacked card. Add/edit happens in a dialog (below), not inline. -->
+          <div class="slot-cards">
+            @for (slot of slotTable.view(); track slot.id) {
+              <article class="slot-card" [attr.data-testid]="'slot-card-' + slot.id">
+                <div class="slot-card-top">
+                  <span class="slot-card-stage">
+                    <span class="slot-stage-dot" [style.background]="stageColor(slot.stage_id)"></span>
+                    {{ slot.stage_name }}
+                  </span>
+                  <span class="slot-card-time">{{ slot.start_time }} · {{ duration(slot.start_time, slot.end_time) }}</span>
+                </div>
+                <div class="slot-card-dj">
+                  <span class="slot-dj-name">{{ slot.dj_name || '—' }}</span>
+                  @if (slot.dj_name) {
+                    @switch (slot.dj_confirmation) {
+                      @case ('confirmed') {
+                        <app-status-badge status="confirmed" />
+                      }
+                      @case ('flagged') {
+                        <span class="status-badge status-pending">
+                          <span class="status-badge-dot"></span>{{ 'slot.confirmation.flagged' | translate }}
+                        </span>
+                      }
+                      @default {
+                        <span class="slot-await">{{ 'slot.confirmation.awaiting' | translate }}</span>
+                      }
+                    }
+                  }
+                </div>
+                @if (slot.genre || slot.notes) {
+                  <div class="slot-card-meta">
+                    @if (slot.genre) { <span class="slot-card-genre">{{ slot.genre }}</span> }
+                    @if (slot.notes) { <span class="slot-card-notes" [title]="slot.notes">{{ slot.notes }}</span> }
+                  </div>
+                }
+                <div class="slot-card-actions">
+                  <app-button variant="secondary" size="icon" icon="edit" [iconOnly]="true"
+                    [label]="'actions.edit' | translate" [testId]="'slot-edit-' + slot.id"
+                    (click)="startEdit(slot)" />
+                  <app-button variant="danger" size="icon" icon="trash" [iconOnly]="true"
+                    [label]="'actions.delete' | translate" [testId]="'slot-delete-' + slot.id"
+                    (click)="deleteSlot(slot.id)" />
+                </div>
+              </article>
+            }
+            <button type="button" class="slot-card-add" (click)="activateAddRow()" data-testid="add-slot-trigger">
+              + {{ 'slots.new' | translate }}
+            </button>
+          </div>
+        } @else {
+        <div class="card slots-card overflow-x-auto">
           <table class="slot-table">
             <thead>
               <tr class="slot-head-row">
@@ -221,6 +301,7 @@
                   <td class="add-cell">
                     <select [(ngModel)]="addStageId" name="addStageId" class="edit-select"
                       data-testid="add-stage-select"
+                      [attr.aria-invalid]="stageMissing() || null"
                       (keydown.escape)="cancelAddRow()">
                       <option value="">{{ 'slots.selectOption' | translate }}</option>
                       @for (s of stages(); track s.id) {
@@ -292,6 +373,13 @@
                     </td>
                   </tr>
                 }
+                @if (stageMissing()) {
+                  <tr>
+                    <td colspan="7" class="conflict-cell">
+                      <span class="conflict-text" data-testid="add-stage-error"><span aria-hidden="true">⚠</span> {{ 'slots.stageRequired' | translate }}</span>
+                    </td>
+                  </tr>
+                }
               } @else {
                 <tr class="add-trigger-row" (click)="activateAddRow()" data-testid="add-slot-trigger">
                   <td colspan="7" class="add-trigger-cell">
@@ -302,6 +390,7 @@
             </tbody>
           </table>
         </div>
+        }
       </div>
     </div>
   }
@@ -332,13 +421,129 @@
         </div>
       </div>
       <div class="form-actions">
-        <button type="button" (click)="submitNewStage()" class="btn-primary" data-testid="stage-create-btn"
-          [disabled]="stageGuard.pending()">
-          {{ 'actions.create' | translate }}
-        </button>
-        <button type="button" (click)="cancelStage()" class="btn-secondary">
-          {{ 'actions.cancel' | translate }}
-        </button>
+        <app-button variant="primary" [label]="'actions.create' | translate" testId="stage-create-btn"
+          [disabled]="stageGuard.pending()" (click)="submitNewStage()" />
+        <app-button [label]="'actions.cancel' | translate" (click)="cancelStage()" />
+      </div>
+    </div>
+  </div>
+}
+
+<!-- EL-094: mobile add-slot dialog. Below md the inline add row isn't rendered;
+     this dialog binds the SAME add* fields and calls the SAME submitAddRow(), so
+     conflict/cert handling and the SubmitGuard are shared, not duplicated. -->
+@if (breakpoints.compact() && addRowActive()) {
+  <div class="modal-overlay" (click)="cancelAddRow()">
+    <div class="modal-box-sm slot-dialog" (click)="$event.stopPropagation()" data-testid="add-slot-dialog">
+      <h2 class="modal-title">{{ 'slots.new' | translate }}</h2>
+      <div class="form-group">
+        <label class="form-label">{{ 'slots.stage' | translate }}</label>
+        <select class="form-input" [(ngModel)]="addStageId" name="da_stage" data-testid="dialog-add-stage"
+          [attr.aria-invalid]="stageMissing() || null">
+          <option value="">{{ 'slots.selectOption' | translate }}</option>
+          @for (s of stages(); track s.id) { <option [value]="s.id">{{ s.name }}</option> }
+        </select>
+        @if (stageMissing()) {
+          <p class="conflict-text" data-testid="dialog-stage-error"><span aria-hidden="true">⚠</span> {{ 'slots.stageRequired' | translate }}</p>
+        }
+      </div>
+      <div class="form-group">
+        <label class="form-label">{{ 'slots.dj' | translate }}</label>
+        <select class="form-input" [(ngModel)]="addDjId" name="da_dj" (ngModelChange)="onAddDjChange()" data-testid="dialog-add-dj">
+          <option value="">{{ 'slots.unassigned' | translate }}</option>
+          @for (o of djOptionsForAdd(); track o.dj.id) {
+            <option [value]="o.dj.id">{{ o.dj.name }}{{ o.certified ? '' : ' ⚠' }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">{{ 'slots.genre' | translate }}</label>
+        <select class="form-input" [(ngModel)]="addGenre" name="da_genre" (ngModelChange)="onAddGenreChange()">
+          <option value="">—</option>
+          @for (g of genreOptionsForAdd(); track g) { <option [value]="g">{{ g }}</option> }
+        </select>
+      </div>
+      <div class="slot-dialog-row">
+        <div class="form-group">
+          <label class="form-label">{{ 'slots.start' | translate }}</label>
+          <input type="time" class="form-input" [(ngModel)]="addStart" name="da_start" data-testid="dialog-add-start" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">{{ 'slots.duration' | translate }}</label>
+          <input type="number" min="5" step="5" list="durationPresets" class="form-input" [(ngModel)]="addDuration" name="da_dur" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">{{ 'slots.notes' | translate }}</label>
+        <input type="text" class="form-input" [(ngModel)]="addNotes" name="da_notes" [placeholder]="'slots.notes' | translate" />
+      </div>
+      @if (addConflictError()) {
+        <p class="conflict-text" data-testid="dialog-add-conflict"><span aria-hidden="true">⚠</span> {{ addConflictError() }}</p>
+      }
+      @if (addCertWarning()) {
+        <p class="conflict-text" data-testid="dialog-add-cert"><span aria-hidden="true">⚠</span> {{ addCertWarning() }}</p>
+      }
+      <div class="form-actions">
+        <app-button variant="primary" [label]="'actions.save' | translate" testId="dialog-add-save"
+          [disabled]="addSlotGuard.pending()" (click)="submitAddRow()" />
+        <app-button [label]="'actions.cancel' | translate" (click)="cancelAddRow()" />
+      </div>
+    </div>
+  </div>
+}
+
+<!-- EL-094: mobile edit-slot dialog — mirrors the inline edit row, same editSlot*
+     state and saveEdit()/cancelEdit(). -->
+@if (breakpoints.compact() && editingSlotId(); as editId) {
+  <div class="modal-overlay" (click)="cancelEdit()">
+    <div class="modal-box-sm slot-dialog" (click)="$event.stopPropagation()" data-testid="edit-slot-dialog">
+      <h2 class="modal-title">{{ 'actions.edit' | translate }}</h2>
+      <div class="form-group">
+        <label class="form-label">{{ 'slots.stage' | translate }}</label>
+        <select class="form-input" [(ngModel)]="editSlotStageId" name="de_stage">
+          @for (s of stages(); track s.id) { <option [value]="s.id">{{ s.name }}</option> }
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">{{ 'slots.dj' | translate }}</label>
+        <select class="form-input" [(ngModel)]="editSlotDjId" name="de_dj" (ngModelChange)="onEditDjChange()">
+          <option value="">—</option>
+          @for (o of djOptionsForEdit(); track o.dj.id) {
+            <option [value]="o.dj.id">{{ o.dj.name }}{{ o.certified ? '' : ' ⚠' }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">{{ 'slots.genre' | translate }}</label>
+        <select class="form-input" [(ngModel)]="editSlotGenre" name="de_genre" (ngModelChange)="onEditGenreChange()">
+          <option value="">—</option>
+          @for (g of genreOptionsForEdit(); track g) { <option [value]="g">{{ g }}</option> }
+        </select>
+      </div>
+      <div class="slot-dialog-row">
+        <div class="form-group">
+          <label class="form-label">{{ 'slots.start' | translate }}</label>
+          <input type="time" class="form-input" [(ngModel)]="editSlotStart" name="de_start" data-testid="dialog-edit-start" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">{{ 'slots.duration' | translate }}</label>
+          <input type="number" min="5" step="5" list="durationPresets" class="form-input" [(ngModel)]="editSlotDuration" name="de_dur" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">{{ 'slots.notes' | translate }}</label>
+        <input type="text" class="form-input" [(ngModel)]="editSlotNotes" name="de_notes" [placeholder]="'slots.notes' | translate" />
+      </div>
+      @if (editConflictError()) {
+        <p class="conflict-text" data-testid="dialog-edit-conflict"><span aria-hidden="true">⚠</span> {{ editConflictError() }}</p>
+      }
+      @if (editCertWarning()) {
+        <p class="conflict-text" data-testid="dialog-edit-cert"><span aria-hidden="true">⚠</span> {{ editCertWarning() }}</p>
+      }
+      <div class="form-actions">
+        <app-button variant="primary" [label]="'actions.save' | translate" testId="dialog-edit-save"
+          [disabled]="editSlotGuard.pending()" (click)="saveEdit(editId)" />
+        <app-button [label]="'actions.cancel' | translate" (click)="cancelEdit()" />
       </div>
     </div>
   </div>

@@ -35,7 +35,7 @@ describe('DataTableComponent', () => {
   it('filters by search query case-insensitively', () => {
     component.searchQuery.set('dj');
     expect(component.filteredData().length).toBe(2);
-    expect(component.filteredData().map(r => r['name'])).toEqual(['DJ Alpha', 'DJ Beta']);
+    expect(component.filteredData().map((r) => r['name'])).toEqual(['DJ Alpha', 'DJ Beta']);
   });
 
   it('filters across all searchable columns', () => {

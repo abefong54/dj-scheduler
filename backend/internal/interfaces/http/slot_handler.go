@@ -82,8 +82,8 @@ func writeSlotError(c *gin.Context, err error) {
 // @Failure     500  {object}  map[string]string
 // @Router      /api/events/{id}/slots [get]
 func (h *SlotHandler) list(c *gin.Context) {
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	slots, err := h.uc.List(c.Request.Context(), c.Param("id"), organizerID)
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	slots, err := h.uc.List(c.Request.Context(), c.Param("id"), schoolID)
 	if errors.Is(err, apperrors.ErrNotFound) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "event not found"})
 		return
@@ -106,8 +106,8 @@ func (h *SlotHandler) list(c *gin.Context) {
 // @Failure     500      {object}  map[string]string
 // @Router      /api/events/{id}/slots/{slot_id} [get]
 func (h *SlotHandler) get(c *gin.Context) {
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	s, err := h.uc.Get(c.Request.Context(), c.Param("slot_id"), c.Param("id"), organizerID)
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	s, err := h.uc.Get(c.Request.Context(), c.Param("slot_id"), c.Param("id"), schoolID)
 	if errors.Is(err, apperrors.ErrNotFound) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "slot not found"})
 		return
@@ -142,7 +142,7 @@ func (h *SlotHandler) create(c *gin.Context) {
 		return
 	}
 
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
+	schoolID := c.GetString(middleware.SchoolIDKey)
 	s, err := h.uc.Create(c.Request.Context(), model.Slot{
 		StageID:   req.StageID,
 		DjID:      req.DjID,
@@ -151,7 +151,7 @@ func (h *SlotHandler) create(c *gin.Context) {
 		StartTime: req.StartTime,
 		EndTime:   req.EndTime,
 		Notes:     req.Notes,
-	}, c.Param("id"), organizerID)
+	}, c.Param("id"), schoolID)
 	if err != nil {
 		writeSlotError(c, err)
 		return
@@ -184,7 +184,7 @@ func (h *SlotHandler) update(c *gin.Context) {
 		return
 	}
 
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
+	schoolID := c.GetString(middleware.SchoolIDKey)
 	s, err := h.uc.Update(c.Request.Context(), model.Slot{
 		ID:        c.Param("slot_id"),
 		StageID:   req.StageID,
@@ -194,7 +194,7 @@ func (h *SlotHandler) update(c *gin.Context) {
 		StartTime: req.StartTime,
 		EndTime:   req.EndTime,
 		Notes:     req.Notes,
-	}, c.Param("id"), organizerID)
+	}, c.Param("id"), schoolID)
 	if err != nil {
 		writeSlotError(c, err)
 		return
@@ -212,8 +212,8 @@ func (h *SlotHandler) update(c *gin.Context) {
 // @Failure     500  {object}  map[string]string
 // @Router      /api/events/{id}/slots/{slot_id} [delete]
 func (h *SlotHandler) delete(c *gin.Context) {
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	err := h.uc.Delete(c.Request.Context(), c.Param("slot_id"), c.Param("id"), organizerID)
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	err := h.uc.Delete(c.Request.Context(), c.Param("slot_id"), c.Param("id"), schoolID)
 	if errors.Is(err, apperrors.ErrNotFound) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "slot not found"})
 		return

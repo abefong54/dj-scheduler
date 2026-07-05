@@ -30,11 +30,16 @@ func TestMigrateUpDownIdempotent(t *testing.T) {
 	}
 	ctx := context.Background()
 
+	// Latest version = the highest embedded migration. Derived from the source
+	// count (migrations are sequential 001..NNN) so this can't go stale as new
+	// migrations land.
+	latest := int64(len(p.ListSources()))
+
 	if _, err := p.Up(ctx); err != nil {
 		t.Fatalf("up: %v", err)
 	}
-	if v, _ := p.GetDBVersion(ctx); v != 9 {
-		t.Fatalf("version after up = %d, want 9", v)
+	if v, _ := p.GetDBVersion(ctx); v != latest {
+		t.Fatalf("version after up = %d, want %d", v, latest)
 	}
 
 	// Idempotent: a second up on an up-to-date DB applies nothing.
@@ -50,15 +55,15 @@ func TestMigrateUpDownIdempotent(t *testing.T) {
 	if _, err := p.Down(ctx); err != nil {
 		t.Fatalf("down: %v", err)
 	}
-	if v, _ := p.GetDBVersion(ctx); v != 8 {
-		t.Fatalf("version after down = %d, want 8", v)
+	if v, _ := p.GetDBVersion(ctx); v != latest-1 {
+		t.Fatalf("version after down = %d, want %d", v, latest-1)
 	}
 
 	// And it re-applies cleanly.
 	if _, err := p.Up(ctx); err != nil {
 		t.Fatalf("re-up: %v", err)
 	}
-	if v, _ := p.GetDBVersion(ctx); v != 9 {
-		t.Fatalf("version after re-up = %d, want 9", v)
+	if v, _ := p.GetDBVersion(ctx); v != latest {
+		t.Fatalf("version after re-up = %d, want %d", v, latest)
 	}
 }

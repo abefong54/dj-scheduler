@@ -40,6 +40,18 @@ func (f *fakeDJRepo) ListSlotsForDJ(context.Context, string) ([]model.PortalSlot
 	return nil, nil
 }
 
+// Student Google login methods (migration 014) — unused by these tests.
+func (f *fakeDJRepo) FindByGoogleID(context.Context, string) (model.DJ, error) {
+	return model.DJ{}, nil
+}
+func (f *fakeDJRepo) FindByEmail(context.Context, string) (model.DJ, error) {
+	return model.DJ{}, nil
+}
+func (f *fakeDJRepo) SetGoogleID(context.Context, string, string) error { return nil }
+func (f *fakeDJRepo) SetEmail(context.Context, string, string, string) error {
+	return nil
+}
+
 // TestGeneratePortalTokenTTL asserts a freshly minted token expires ~2 weeks out
 // (EL-088 — shortened from 90 days), and that the returned expiry matches what
 // was persisted.

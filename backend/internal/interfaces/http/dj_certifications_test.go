@@ -18,8 +18,9 @@ func seedDJWithCerts(t *testing.T, pool *pgxpool.Pool, organizerID, name string,
 	t.Helper()
 	var id string
 	if err := pool.QueryRow(context.Background(),
-		`INSERT INTO djs (name, genre_tags, certifications, is_student, organizer_id)
-		 VALUES ($1, '{}', $2, $3, $4) RETURNING id`,
+		`INSERT INTO djs (name, genre_tags, certifications, is_student, organizer_id, school_id)
+		 VALUES ($1, '{}', $2, $3, $4,
+		         (SELECT school_id FROM memberships WHERE organizer_id = $4 AND status = 'active' LIMIT 1)) RETURNING id`,
 		name, certs, isStudent, organizerID).Scan(&id); err != nil {
 		t.Fatalf("seed dj with certs: %v", err)
 	}

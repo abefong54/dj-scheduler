@@ -39,7 +39,7 @@ describe('ApiService', () => {
     it('getDJPortal sends the token as a Bearer header, not a query param', () => {
       api.getDJPortal('portal-tok-123').subscribe();
 
-      const req = httpMock.expectOne(r => r.url === '/api/dj/portal');
+      const req = httpMock.expectOne((r) => r.url === '/api/dj/portal');
       expect(req.request.headers.get('Authorization')).toBe('Bearer portal-tok-123');
       expect(req.request.params.get('token')).toBeNull();
       expect(req.request.urlWithParams).not.toContain('token=');
@@ -49,7 +49,7 @@ describe('ApiService', () => {
     it('confirmSlot sends the token as a Bearer header, not a query param', () => {
       api.confirmSlot('slot-1', 'confirmed', 'portal-tok-456').subscribe();
 
-      const req = httpMock.expectOne(r => r.url === '/api/dj/portal/slots/slot-1');
+      const req = httpMock.expectOne((r) => r.url === '/api/dj/portal/slots/slot-1');
       expect(req.request.method).toBe('PATCH');
       expect(req.request.headers.get('Authorization')).toBe('Bearer portal-tok-456');
       expect(req.request.params.get('token')).toBeNull();
@@ -62,10 +62,20 @@ describe('ApiService', () => {
     // Verify the method+path the backend actually registers (GET
     // /api/slots/:id/public) — the EL-035 contract guard for the share card.
     it('GETs the public single-slot endpoint and returns {slot, event}', () => {
-      const payload: PublicSlot = { slot: SLOT, event: { id: 'evt-1', name: 'Spring Showcase', venue_name: 'Revolver', start_date: '2026-07-01', end_date: '2026-07-01', genres: [] } };
+      const payload: PublicSlot = {
+        slot: SLOT,
+        event: {
+          id: 'evt-1',
+          name: 'Spring Showcase',
+          venue_name: 'Revolver',
+          start_date: '2026-07-01',
+          end_date: '2026-07-01',
+          genres: [],
+        },
+      };
 
       let result: PublicSlot | undefined;
-      api.getPublicSlot('slot-1').subscribe(r => (result = r));
+      api.getPublicSlot('slot-1').subscribe((r) => (result = r));
 
       const req = httpMock.expectOne('/api/slots/slot-1/public');
       expect(req.request.method).toBe('GET');
@@ -81,12 +91,15 @@ describe('ApiService', () => {
   describe('generateDJPortalToken', () => {
     it('POSTs to the DJ token route and returns the portal URL', () => {
       let result: { portal_url: string; expires_at: string } | undefined;
-      api.generateDJPortalToken('dj-9').subscribe(r => (result = r));
+      api.generateDJPortalToken('dj-9').subscribe((r) => (result = r));
 
       const req = httpMock.expectOne('/api/djs/dj-9/token');
       expect(req.request.method).toBe('POST');
 
-      const body = { portal_url: 'http://localhost:4200/dj/portal?token=abc', expires_at: '2026-10-01T00:00:00Z' };
+      const body = {
+        portal_url: 'http://localhost:4200/dj/portal?token=abc',
+        expires_at: '2026-10-01T00:00:00Z',
+      };
       req.flush(body);
       expect(result).toEqual(body);
     });
@@ -107,7 +120,7 @@ describe('ApiService', () => {
       };
 
       let result: Slot | undefined;
-      api.updateSlot('evt-1', 'slot-1', body).subscribe(s => (result = s));
+      api.updateSlot('evt-1', 'slot-1', body).subscribe((s) => (result = s));
 
       const req = httpMock.expectOne('/api/events/evt-1/slots/slot-1');
       expect(req.request.method).toBe('PATCH');
@@ -115,6 +128,23 @@ describe('ApiService', () => {
 
       req.flush(SLOT);
       expect(result).toEqual(SLOT);
+    });
+  });
+
+  describe('updateEvent', () => {
+    it('issues a PATCH to the event route with the full event body', () => {
+      const body = {
+        name: 'Summer Fest',
+        venue_name: 'The Warehouse',
+        start_date: '2026-07-04',
+        end_date: '2026-07-06',
+        genres: ['House', 'Techno'],
+      };
+      api.updateEvent('evt-1', body).subscribe();
+      const req = httpMock.expectOne('/api/events/evt-1');
+      expect(req.request.method).toBe('PATCH');
+      expect(req.request.body).toEqual(body);
+      req.flush({ id: 'evt-1', ...body });
     });
   });
 
@@ -130,7 +160,7 @@ describe('ApiService', () => {
 
     it('getPerformance forwards event_id/from/to as query params', () => {
       api.getPerformance({ eventId: 'e1', from: '2026-07-01', to: '2026-07-31' }).subscribe();
-      const req = httpMock.expectOne(r => r.url === '/api/performance');
+      const req = httpMock.expectOne((r) => r.url === '/api/performance');
       expect(req.request.params.get('event_id')).toBe('e1');
       expect(req.request.params.get('from')).toBe('2026-07-01');
       expect(req.request.params.get('to')).toBe('2026-07-31');
@@ -139,7 +169,7 @@ describe('ApiService', () => {
 
     it('getUnderserved GETs /api/performance/underserved and passes threshold', () => {
       api.getUnderserved(3).subscribe();
-      const req = httpMock.expectOne(r => r.url === '/api/performance/underserved');
+      const req = httpMock.expectOne((r) => r.url === '/api/performance/underserved');
       expect(req.request.method).toBe('GET');
       expect(req.request.params.get('threshold')).toBe('3');
       req.flush([]);
@@ -156,7 +186,14 @@ describe('ApiService', () => {
       api.getDJPerformance('dj-1').subscribe();
       const req = httpMock.expectOne('/api/djs/dj-1/performance');
       expect(req.request.method).toBe('GET');
-      req.flush({ dj_id: 'dj-1', dj_name: 'X', reps: 0, total_minutes: 0, last_played: '', by_genre: [] });
+      req.flush({
+        dj_id: 'dj-1',
+        dj_name: 'X',
+        reps: 0,
+        total_minutes: 0,
+        last_played: '',
+        by_genre: [],
+      });
     });
   });
 });

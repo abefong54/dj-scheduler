@@ -1,11 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { of, Subject } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { provideTranslateService } from '@ngx-translate/core';
 import { vi } from 'vitest';
 
 import { EventsListComponent } from './events-list.component';
 import { ApiService, Event } from '../../services/api.service';
+import { EventsStore } from '../../services/events-store';
 import { DialogService } from '../../shared/dialog.service';
 
 // Deterministic "today" anchor; the component's `today` field is overridden below.
@@ -45,6 +46,7 @@ describe('EventsListComponent — Console restyle (EL-064)', () => {
     getEvents: () => of([LIVE_EVENT, FUTURE_EVENT, PAST_EVENT]),
     deleteEvent: () => of({}),
     cloneEvent: () => of({}),
+    updateEvent: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -54,7 +56,10 @@ describe('EventsListComponent — Console restyle (EL-064)', () => {
         provideRouter([]),
         provideTranslateService(),
         { provide: ApiService, useValue: apiMock },
-        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+        {
+          provide: DialogService,
+          useValue: { confirm: () => Promise.resolve(true), alert: () => Promise.resolve() },
+        },
       ],
     }).compileComponents();
 
@@ -74,31 +79,30 @@ describe('EventsListComponent — Console restyle (EL-064)', () => {
   });
 
   it('renders stat tiles with real derived counts (upcoming / past / total)', () => {
-    const numbers = Array.from(root().querySelectorAll('.stat-tile-number')).map(
-      el => el.textContent?.trim(),
+    const numbers = Array.from(root().querySelectorAll('.stat-tile-number')).map((el) =>
+      el.textContent?.trim(),
     );
     // 2 upcoming (live + future), 1 past, 3 total.
     expect(numbers).toEqual(['2', '1', '3']);
   });
 
-  it('renders a mono uppercase table header row', () => {
-    const headers = root().querySelectorAll('.events-table .table-header');
+  it('renders a header row with 6 columns via the shared data-table', () => {
+    const headers = root().querySelectorAll('.dt-th');
     expect(headers.length).toBe(6);
   });
 
-  it('renders one row per upcoming event with its data-testid', () => {
-    expect(root().querySelector('[data-testid="event-card-evt-live"]')).toBeTruthy();
-    expect(root().querySelector('[data-testid="event-card-evt-future"]')).toBeTruthy();
+  it('renders one row per upcoming event (identified by its view link)', () => {
+    expect(root().querySelector('[data-testid="event-view-evt-live"]')).toBeTruthy();
+    expect(root().querySelector('[data-testid="event-view-evt-future"]')).toBeTruthy();
     // Past event is on the Past tab, not the default Upcoming tab.
-    expect(root().querySelector('[data-testid="event-card-evt-past"]')).toBeFalsy();
+    expect(root().querySelector('[data-testid="event-view-evt-past"]')).toBeFalsy();
   });
 
   it('shows a LIVE status badge only for an in-progress event', () => {
-    const liveRow = root().querySelector('[data-testid="event-card-evt-live"]');
-    expect(liveRow?.querySelector('app-status-badge .status-live')).toBeTruthy();
-
-    const futureRow = root().querySelector('[data-testid="event-card-evt-future"]');
-    expect(futureRow?.querySelector('app-status-badge')).toBeFalsy();
+    // Live event: status badge appears
+    expect(root().querySelector('app-status-badge .status-live')).toBeTruthy();
+    // Exactly one badge on the upcoming tab (only the live event, not the future one)
+    expect(root().querySelectorAll('app-status-badge').length).toBe(1);
   });
 
   it('preserves navigation to the event detail page via the name link', () => {
@@ -111,8 +115,8 @@ describe('EventsListComponent — Console restyle (EL-064)', () => {
   it('switches to the Past tab and shows past events there', () => {
     component.activeTab.set('past');
     fixture.detectChanges();
-    expect(root().querySelector('[data-testid="event-card-evt-past"]')).toBeTruthy();
-    expect(root().querySelector('[data-testid="event-card-evt-live"]')).toBeFalsy();
+    expect(root().querySelector('[data-testid="event-view-evt-past"]')).toBeTruthy();
+    expect(root().querySelector('[data-testid="event-view-evt-live"]')).toBeFalsy();
   });
 
   // EL-080: Soundcheck reskin — the tab strip carries the active/inactive hooks
@@ -133,10 +137,9 @@ describe('EventsListComponent — Console restyle (EL-064)', () => {
   });
 
   it('renders the Actions column as icon-only buttons (edit, clone, delete)', () => {
-    const liveRow = root().querySelector('[data-testid="event-card-evt-live"]')!;
-    const editBtn = liveRow.querySelector('[data-testid="event-edit-evt-live"]');
-    const cloneBtn = liveRow.querySelector('[data-testid="event-clone-evt-live"]');
-    const deleteBtn = liveRow.querySelector('[data-testid="event-delete-evt-live"]');
+    const editBtn = root().querySelector('[data-testid="event-edit-evt-live"]');
+    const cloneBtn = root().querySelector('[data-testid="event-clone-evt-live"]');
+    const deleteBtn = root().querySelector('[data-testid="event-delete-evt-live"]');
 
     // All three actions present, each rendered as an icon (no visible text label).
     for (const btn of [editBtn, cloneBtn, deleteBtn]) {
@@ -152,9 +155,11 @@ describe('EventsListComponent — Console restyle (EL-064)', () => {
     expect(deleteBtn!.getAttribute('aria-label')).toBe('actions.delete');
   });
 
-  it('centers the Actions column header and cell', () => {
-    expect(root().querySelector('.events-th-actions')).toBeTruthy();
-    expect(root().querySelector('.events-td-actions')).toBeTruthy();
+  it('renders the Actions column within the shared data-table', () => {
+    // DataTableComponent renders all columns uniformly (dt-th / dt-td); action
+    // buttons confirm the actions column is projected and rendered correctly.
+    expect(root().querySelector('[data-testid="event-edit-evt-live"]')).toBeTruthy();
+    expect(root().querySelector('[data-testid="event-delete-evt-live"]')).toBeTruthy();
   });
 
   it('navigates to the event detail page when the edit icon is clicked', () => {
@@ -205,7 +210,10 @@ describe('EventsListComponent — loading state (EL-087)', () => {
         provideRouter([]),
         provideTranslateService(),
         { provide: ApiService, useValue: { getEvents } },
-        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true) } },
+        {
+          provide: DialogService,
+          useValue: { confirm: () => Promise.resolve(true), alert: () => Promise.resolve() },
+        },
       ],
     });
     const fixture = TestBed.createComponent(EventsListComponent);
@@ -219,7 +227,7 @@ describe('EventsListComponent — loading state (EL-087)', () => {
     const el = fixture.nativeElement as HTMLElement;
 
     expect(el.querySelector('app-loading-meter')).toBeTruthy();
-    expect(el.querySelector('.events-table')).toBeFalsy();
+    expect(el.querySelector('app-data-table')).toBeFalsy();
 
     // FUTURE_EVENT is upcoming vs. the real clock, so it lands on the default tab.
     subject.next([FUTURE_EVENT]);
@@ -227,7 +235,7 @@ describe('EventsListComponent — loading state (EL-087)', () => {
     fixture.detectChanges();
 
     expect(el.querySelector('app-loading-meter')).toBeFalsy();
-    expect(el.querySelector('.events-table')).toBeTruthy();
+    expect(el.querySelector('app-data-table')).toBeTruthy();
   });
 
   it('shows a retry fallback when the load fails', () => {
@@ -240,5 +248,199 @@ describe('EventsListComponent — loading state (EL-087)', () => {
 
     expect(el.querySelector('app-loading-meter')).toBeFalsy();
     expect(el.querySelector('button.btn-primary')?.textContent).toContain('common.retry');
+  });
+});
+
+// EL-091: the list is backed by the root EventsStore (stale-while-revalidate), so
+// a re-visit paints from cache with no spinner and every mutation refreshes it.
+describe('EventsListComponent — cached list (EL-091)', () => {
+  const configure = (api: Partial<ApiService>) =>
+    TestBed.configureTestingModule({
+      imports: [EventsListComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        { provide: ApiService, useValue: api },
+        {
+          provide: DialogService,
+          useValue: { confirm: () => Promise.resolve(true), alert: () => Promise.resolve() },
+        },
+      ],
+    });
+
+  it('paints cached rows with NO spinner on a second visit (revalidates silently)', () => {
+    const first = new Subject<Event[]>();
+    const second = new Subject<Event[]>(); // stays pending — cache must cover the gap
+    let calls = 0;
+    configure({
+      getEvents: () => (++calls === 1 ? first : second).asObservable(),
+    });
+
+    // First visit: nothing cached → spinner, no table.
+    const f1 = TestBed.createComponent(EventsListComponent);
+    f1.detectChanges();
+    const el1 = f1.nativeElement as HTMLElement;
+    expect(el1.querySelector('app-loading-meter')).toBeTruthy();
+    first.next([FUTURE_EVENT]);
+    first.complete();
+    f1.detectChanges();
+    expect(el1.querySelector('app-data-table')).toBeTruthy();
+
+    // Second visit shares the singleton store: cached rows show immediately even
+    // though the revalidation request (`second`) is still in flight — no spinner.
+    const f2 = TestBed.createComponent(EventsListComponent);
+    f2.detectChanges();
+    const el2 = f2.nativeElement as HTMLElement;
+    expect(el2.querySelector('app-loading-meter')).toBeFalsy();
+    expect(el2.querySelector('[data-testid="event-view-evt-future"]')).toBeTruthy();
+  });
+
+  it('refreshes the shared store after deleting an event', async () => {
+    configure({ getEvents: () => of([FUTURE_EVENT]), deleteEvent: () => of({}) });
+    const store = TestBed.inject(EventsStore);
+    const refreshSpy = vi.spyOn(store, 'refresh');
+
+    const fixture = TestBed.createComponent(EventsListComponent);
+    fixture.detectChanges();
+    await fixture.componentInstance.delete('evt-future');
+
+    expect(refreshSpy).toHaveBeenCalled();
+  });
+
+  it('refreshes the shared store after cloning an event', async () => {
+    configure({
+      getEvents: () => of([FUTURE_EVENT]),
+      cloneEvent: () => of({ ...FUTURE_EVENT, id: 'evt-clone' }),
+    });
+    const store = TestBed.inject(EventsStore);
+    const refreshSpy = vi.spyOn(store, 'refresh');
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+    const fixture = TestBed.createComponent(EventsListComponent);
+    fixture.detectChanges();
+    await fixture.componentInstance.clone('evt-future');
+
+    expect(refreshSpy).toHaveBeenCalled();
+  });
+
+  it('refreshes the shared store after a successful inline edit (commitVenue)', () => {
+    configure({
+      getEvents: () => of([LIVE_EVENT, FUTURE_EVENT, PAST_EVENT]),
+      updateEvent: () => of({ ...LIVE_EVENT, venue_name: 'New Venue' }),
+    });
+    const store = TestBed.inject(EventsStore);
+    const refreshSpy = vi.spyOn(store, 'refresh');
+
+    const fixture = TestBed.createComponent(EventsListComponent);
+    (fixture.componentInstance as EventsListComponent).today = TODAY;
+    fixture.detectChanges();
+
+    const cmp = fixture.componentInstance as EventsListComponent;
+    const row = cmp.rowsForActiveTab()[0];
+    cmp.commitVenue(row, { value: 'New Venue', endValue: '' });
+
+    expect(refreshSpy).toHaveBeenCalled();
+  });
+});
+
+// Task 3: editable cells — commitVenue / commitDates / commitGenres call
+// updateEvent() and the signal updates or reverts based on success/error.
+describe('EventsListComponent — inline edits (Task 3)', () => {
+  let fixture: ComponentFixture<EventsListComponent>;
+  let component: EventsListComponent;
+  let updateEventSpy: ReturnType<typeof vi.fn>;
+
+  beforeEach(async () => {
+    updateEventSpy = vi.fn().mockReturnValue(of(LIVE_EVENT));
+
+    await TestBed.configureTestingModule({
+      imports: [EventsListComponent],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        {
+          provide: ApiService,
+          useValue: {
+            getEvents: () => of([LIVE_EVENT, FUTURE_EVENT, PAST_EVENT]),
+            updateEvent: updateEventSpy,
+          },
+        },
+        {
+          provide: DialogService,
+          useValue: { confirm: () => Promise.resolve(true), alert: () => Promise.resolve() },
+        },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(EventsListComponent);
+    component = fixture.componentInstance;
+    component.today = TODAY;
+    fixture.detectChanges();
+  });
+
+  it('renders events through the shared data-table', () => {
+    const host: HTMLElement = fixture.nativeElement;
+    expect(host.querySelector('app-data-table')).not.toBeNull();
+    expect(host.textContent).toContain('Warehouse 9');
+  });
+
+  it('editing a venue cell PATCHes the event and updates the row', () => {
+    const updatedEvent: Event = { ...LIVE_EVENT, venue_name: 'New Venue' };
+    updateEventSpy.mockReturnValue(of(updatedEvent));
+    // Stub out the store refresh so the synchronous mock getEvents() doesn't
+    // reset the linkedSignal before we can assert the optimistic update.
+    // (The refresh path is covered separately in the EL-091 cached-list suite.)
+    vi.spyOn(TestBed.inject(EventsStore), 'refresh').mockImplementation(() => {});
+
+    const cmp = fixture.componentInstance;
+    const row = cmp.rowsForActiveTab()[0];
+    cmp.commitVenue(row, { value: 'New Venue', endValue: '' });
+    fixture.detectChanges();
+
+    expect(updateEventSpy).toHaveBeenCalledWith(
+      'evt-live',
+      expect.objectContaining({ venue_name: 'New Venue' }),
+    );
+    expect(cmp.events().find((e) => e.id === 'evt-live')!.venue_name).toBe('New Venue');
+  });
+
+  it('reverts (leaves events unchanged) when the PATCH errors', () => {
+    updateEventSpy.mockReturnValue(throwError(() => new Error('500')));
+
+    const cmp = fixture.componentInstance;
+    const row = cmp.rowsForActiveTab()[0];
+    const before = cmp.events().find((e) => e.id === String(row['id']))!.venue_name;
+    cmp.commitVenue(row, { value: 'Broken', endValue: '' });
+    fixture.detectChanges();
+
+    expect(cmp.events().find((e) => e.id === String(row['id']))!.venue_name).toBe(before);
+  });
+
+  it('commitDates sends start and end', () => {
+    const updatedEvent: Event = { ...LIVE_EVENT, start_date: '2026-08-01', end_date: '2026-08-03' };
+    updateEventSpy.mockReturnValue(of(updatedEvent));
+
+    const cmp = fixture.componentInstance;
+    const row = cmp.rowsForActiveTab()[0];
+    cmp.commitDates(row, { value: '2026-08-01', endValue: '2026-08-03' });
+
+    expect(updateEventSpy).toHaveBeenCalledWith(
+      String(row['id']),
+      expect.objectContaining({ start_date: '2026-08-01', end_date: '2026-08-03' }),
+    );
+  });
+
+  it('commitGenres splits the comma string into an array', () => {
+    const updatedEvent: Event = { ...LIVE_EVENT, genres: ['House', 'Techno'] };
+    updateEventSpy.mockReturnValue(of(updatedEvent));
+
+    const cmp = fixture.componentInstance;
+    const row = cmp.rowsForActiveTab()[0];
+    cmp.commitGenres(row, { value: 'House, Techno , ', endValue: '' });
+
+    expect(updateEventSpy).toHaveBeenCalledWith(
+      String(row['id']),
+      expect.objectContaining({ genres: ['House', 'Techno'] }),
+    );
   });
 });

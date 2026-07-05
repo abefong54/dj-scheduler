@@ -6,6 +6,7 @@ import { provideTranslateService } from '@ngx-translate/core';
 
 import { EventNewComponent } from './event-new.component';
 import { ApiService } from '../../services/api.service';
+import { EventsStore } from '../../services/events-store';
 
 describe('EventNewComponent (EL-065 Console restyle)', () => {
   let fixture: ComponentFixture<EventNewComponent>;
@@ -13,7 +14,8 @@ describe('EventNewComponent (EL-065 Console restyle)', () => {
   const root = () => fixture.nativeElement as HTMLElement;
 
   const createEvent = vi.fn(() => of({}));
-  const apiMock = { createEvent } as unknown as ApiService;
+  // getEvents is reached via EventsStore.refresh() after a successful create (EL-091).
+  const apiMock = { createEvent, getEvents: () => of([]) } as unknown as ApiService;
 
   beforeEach(async () => {
     createEvent.mockClear();
@@ -68,6 +70,49 @@ describe('EventNewComponent (EL-065 Console restyle)', () => {
     expect(createEvent).not.toHaveBeenCalled();
   });
 
+  // EL: the silent no-op bug. Pressing Create with a required field empty used to
+  // do nothing at all — no navigation, no message — so on mobile (fiddly native
+  // date picker leaving Start empty) the button looked dead. It must now surface
+  // per-field validation feedback instead of silently returning.
+  it('surfaces per-field errors instead of silently doing nothing when Create is pressed empty', () => {
+    component.submit();
+    fixture.detectChanges();
+
+    expect(root().querySelector('[data-testid="event-name-error"]')).toBeTruthy();
+    expect(root().querySelector('[data-testid="event-venue-error"]')).toBeTruthy();
+    expect(root().querySelector('[data-testid="event-start-error"]')).toBeTruthy();
+    expect(createEvent).not.toHaveBeenCalled();
+  });
+
+  it('shows no validation error before the first submit attempt', () => {
+    expect(root().querySelector('[data-testid="event-name-error"]')).toBeNull();
+    expect(root().querySelector('[data-testid="event-venue-error"]')).toBeNull();
+    expect(root().querySelector('[data-testid="event-start-error"]')).toBeNull();
+  });
+
+  it('clears a field error once that field is filled', () => {
+    component.submit();
+    fixture.detectChanges();
+    expect(root().querySelector('[data-testid="event-start-error"]')).toBeTruthy();
+
+    component.start_date.set('2026-07-01');
+    fixture.detectChanges();
+    expect(root().querySelector('[data-testid="event-start-error"]')).toBeNull();
+  });
+
+  it('shows no errors and submits when the required fields are present', () => {
+    component.name.set('Summer Fest');
+    component.venue_name.set('The Warehouse');
+    component.start_date.set('2026-07-01');
+
+    component.submit();
+    fixture.detectChanges();
+
+    expect(root().querySelector('[data-testid="event-name-error"]')).toBeNull();
+    expect(root().querySelector('[data-testid="event-start-error"]')).toBeNull();
+    expect(createEvent).toHaveBeenCalled();
+  });
+
   it('submits the existing payload when required fields are filled', () => {
     component.name.set('Summer Fest');
     component.venue_name.set('The Warehouse');
@@ -84,5 +129,18 @@ describe('EventNewComponent (EL-065 Console restyle)', () => {
       end_date: '2026-07-02',
       genres: ['House', 'Techno'],
     });
+  });
+
+  // EL-091: creating an event must invalidate the cached events list so the new
+  // event is present when the list repaints from cache.
+  it('refreshes the events cache after a successful create', () => {
+    const refreshSpy = vi.spyOn(TestBed.inject(EventsStore), 'refresh');
+
+    component.name.set('Summer Fest');
+    component.venue_name.set('The Warehouse');
+    component.start_date.set('2026-07-01');
+    component.submit();
+
+    expect(refreshSpy).toHaveBeenCalled();
   });
 });

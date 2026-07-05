@@ -34,8 +34,8 @@ func (h *StageHandler) Register(rg *gin.RouterGroup) {
 // @Failure     500  {object}  map[string]string
 // @Router      /api/events/{id}/stages [get]
 func (h *StageHandler) list(c *gin.Context) {
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	stages, err := h.uc.List(c.Request.Context(), c.Param("id"), organizerID)
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	stages, err := h.uc.List(c.Request.Context(), c.Param("id"), schoolID)
 	if errors.Is(err, apperrors.ErrNotFound) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "event not found"})
 		return
@@ -58,8 +58,8 @@ func (h *StageHandler) list(c *gin.Context) {
 // @Failure     500       {object}  map[string]string
 // @Router      /api/events/{id}/stages/{stage_id} [get]
 func (h *StageHandler) get(c *gin.Context) {
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	s, err := h.uc.Get(c.Request.Context(), c.Param("stage_id"), c.Param("id"), organizerID)
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	s, err := h.uc.Get(c.Request.Context(), c.Param("stage_id"), c.Param("id"), schoolID)
 	if errors.Is(err, apperrors.ErrNotFound) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "stage not found"})
 		return
@@ -96,8 +96,8 @@ func (h *StageHandler) create(c *gin.Context) {
 	if body.Color == "" {
 		body.Color = "#6366F1"
 	}
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	s, err := h.uc.Create(c.Request.Context(), c.Param("id"), body.Name, body.Color, organizerID)
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	s, err := h.uc.Create(c.Request.Context(), c.Param("id"), body.Name, body.Color, schoolID)
 	if errors.Is(err, apperrors.ErrNotFound) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "event not found"})
 		return
@@ -137,8 +137,8 @@ func (h *StageHandler) patch(c *gin.Context) {
 	}
 	body.ID = c.Param("stage_id")
 	body.EventID = c.Param("id")
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	s, err := h.uc.Update(c.Request.Context(), body, organizerID)
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	s, err := h.uc.Update(c.Request.Context(), body, schoolID)
 	if errors.Is(err, apperrors.ErrNotFound) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "stage not found"})
 		return
@@ -159,8 +159,8 @@ func (h *StageHandler) patch(c *gin.Context) {
 // @Failure     500  {object}  map[string]string
 // @Router      /api/events/{id}/stages/{stage_id} [delete]
 func (h *StageHandler) delete(c *gin.Context) {
-	organizerID := c.MustGet(middleware.OrganizerIDKey).(string)
-	err := h.uc.Delete(c.Request.Context(), c.Param("stage_id"), c.Param("id"), organizerID)
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	err := h.uc.Delete(c.Request.Context(), c.Param("stage_id"), c.Param("id"), schoolID)
 	if errors.Is(err, apperrors.ErrNotFound) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "stage not found"})
 		return

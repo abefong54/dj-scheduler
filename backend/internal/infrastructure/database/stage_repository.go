@@ -17,8 +17,8 @@ func NewStageRepository(pool *pgxpool.Pool) *stageRepo {
 	return &stageRepo{pool: pool}
 }
 
-func (r *stageRepo) List(ctx context.Context, eventID, organizerID string) ([]model.Stage, error) {
-	rows, err := r.pool.Query(ctx, queryStageList, eventID, organizerID)
+func (r *stageRepo) List(ctx context.Context, eventID, schoolID string) ([]model.Stage, error) {
+	rows, err := r.pool.Query(ctx, queryStageList, eventID, schoolID)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (r *stageRepo) List(ctx context.Context, eventID, organizerID string) ([]mo
 	// An empty result is ambiguous: the event may be the organizer's but have no
 	// stages, or it may belong to someone else. Surface the latter as not-found.
 	if len(stages) == 0 {
-		owned, err := eventOwnedBy(ctx, r.pool, eventID, organizerID)
+		owned, err := eventOwnedBy(ctx, r.pool, eventID, schoolID)
 		if err != nil {
 			return nil, err
 		}
@@ -67,9 +67,9 @@ func (r *stageRepo) ListPublic(ctx context.Context, eventID string) ([]model.Sta
 	return stages, rows.Err()
 }
 
-func (r *stageRepo) Get(ctx context.Context, id, eventID, organizerID string) (model.Stage, error) {
+func (r *stageRepo) Get(ctx context.Context, id, eventID, schoolID string) (model.Stage, error) {
 	var s model.Stage
-	err := r.pool.QueryRow(ctx, queryStageGet, id, eventID, organizerID).
+	err := r.pool.QueryRow(ctx, queryStageGet, id, eventID, schoolID).
 		Scan(&s.ID, &s.EventID, &s.Name, &s.Color, &s.DisplayOrder)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return model.Stage{}, apperrors.ErrNotFound
@@ -77,9 +77,9 @@ func (r *stageRepo) Get(ctx context.Context, id, eventID, organizerID string) (m
 	return s, err
 }
 
-func (r *stageRepo) Create(ctx context.Context, eventID, name, color, organizerID string) (model.Stage, error) {
+func (r *stageRepo) Create(ctx context.Context, eventID, name, color, schoolID string) (model.Stage, error) {
 	var s model.Stage
-	err := r.pool.QueryRow(ctx, queryStageInsert, eventID, name, color, organizerID).
+	err := r.pool.QueryRow(ctx, queryStageInsert, eventID, name, color, schoolID).
 		Scan(&s.ID, &s.EventID, &s.Name, &s.Color, &s.DisplayOrder)
 	// No row inserted means the event isn't this organizer's — report not-found
 	// rather than leaking that the event exists.
@@ -89,9 +89,9 @@ func (r *stageRepo) Create(ctx context.Context, eventID, name, color, organizerI
 	return s, err
 }
 
-func (r *stageRepo) Update(ctx context.Context, s model.Stage, organizerID string) (model.Stage, error) {
+func (r *stageRepo) Update(ctx context.Context, s model.Stage, schoolID string) (model.Stage, error) {
 	var out model.Stage
-	err := r.pool.QueryRow(ctx, queryStageUpdate, s.Name, s.Color, s.ID, s.EventID, organizerID).
+	err := r.pool.QueryRow(ctx, queryStageUpdate, s.Name, s.Color, s.ID, s.EventID, schoolID).
 		Scan(&out.ID, &out.EventID, &out.Name, &out.Color, &out.DisplayOrder)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return model.Stage{}, apperrors.ErrNotFound
@@ -99,8 +99,8 @@ func (r *stageRepo) Update(ctx context.Context, s model.Stage, organizerID strin
 	return out, err
 }
 
-func (r *stageRepo) Delete(ctx context.Context, id, eventID, organizerID string) error {
-	tag, err := r.pool.Exec(ctx, queryStageDelete, id, eventID, organizerID)
+func (r *stageRepo) Delete(ctx context.Context, id, eventID, schoolID string) error {
+	tag, err := r.pool.Exec(ctx, queryStageDelete, id, eventID, schoolID)
 	if err != nil {
 		return err
 	}

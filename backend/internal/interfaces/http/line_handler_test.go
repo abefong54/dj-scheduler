@@ -27,7 +27,7 @@ func lineRouterForOrg(t *testing.T, pool *pgxpool.Pool, organizerID string) *gin
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	r.Use(orgContext(organizerID))
+	r.Use(orgContext(pool, organizerID))
 	api := r.Group("/api")
 	repo := database.NewEventRepository(pool)
 	httphandler.NewLineHandler(linenotifyuc.New(repo, lineTestKey)).Register(api)
@@ -124,7 +124,7 @@ func TestGetEventExposesEnabledNotToken(t *testing.T) {
 	// Build a combined router with both event GET and the line handler.
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	r.Use(orgContext(org))
+	r.Use(orgContext(pool, org))
 	api := r.Group("/api")
 	repo := database.NewEventRepository(pool)
 	httphandler.NewEventHandler(eventuc.New(repo)).Register(api)

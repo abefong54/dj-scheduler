@@ -9,11 +9,22 @@ import { ApiService, RosterPerformance, DJPerformance } from '../../services/api
 
 const ROSTER: RosterPerformance[] = [
   { dj_id: 'a', dj_name: 'Ana', is_student: true, reps: 0, total_minutes: 0, last_played: '' },
-  { dj_id: 'b', dj_name: 'Ben', is_student: true, reps: 5, total_minutes: 150, last_played: '2026-07-03' },
+  {
+    dj_id: 'b',
+    dj_name: 'Ben',
+    is_student: true,
+    reps: 5,
+    total_minutes: 150,
+    last_played: '2026-07-03',
+  },
 ];
 const UNDER: RosterPerformance[] = [ROSTER[0]];
 const PERF: DJPerformance = {
-  dj_id: 'b', dj_name: 'Ben', reps: 5, total_minutes: 150, last_played: '2026-07-03',
+  dj_id: 'b',
+  dj_name: 'Ben',
+  reps: 5,
+  total_minutes: 150,
+  last_played: '2026-07-03',
   by_genre: [
     { genre: 'House', reps: 3, total_minutes: 90 },
     { genre: 'Techno', reps: 2, total_minutes: 60 },
@@ -57,9 +68,9 @@ describe('PerformanceComponent — roster + under-served (EL-044)', () => {
   it('keeps zero-rep students in the roster and flags under-served ones', () => {
     const c = render().componentInstance;
     const rows = c.rows();
-    expect(rows.map(r => r['id'] as string)).toEqual(['a', 'b']); // zero-rep "a" not dropped
-    expect(rows.find(r => r['id'] === 'a')!['underserved']).toBe(true);
-    const ben = rows.find(r => r['id'] === 'b')!;
+    expect(rows.map((r) => r['id'] as string)).toEqual(['a', 'b']); // zero-rep "a" not dropped
+    expect(rows.find((r) => r['id'] === 'a')!['underserved']).toBe(true);
+    const ben = rows.find((r) => r['id'] === 'b')!;
     expect(ben['underserved']).toBe(false);
     expect(ben['stageTime']).toBe('2h 30m');
   });

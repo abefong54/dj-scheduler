@@ -33,7 +33,7 @@ func djPortalRouters(t *testing.T, pool *pgxpool.Pool, organizerID string) (org 
 	)
 
 	org = gin.New()
-	org.Use(orgContext(organizerID))
+	org.Use(orgContext(pool, organizerID))
 	h.RegisterProtected(org.Group("/api"))
 
 	public = gin.New()

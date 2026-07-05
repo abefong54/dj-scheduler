@@ -2,6 +2,32 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
+// EL-106: session/school types for /api/me and /api/schools.
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface School {
+  id: string;
+  name: string;
+  city?: string;
+  role: string;
+}
+
+export interface Member {
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+}
+
+export interface MeResponse {
+  user: User;
+  school: School | null;
+}
+
 export interface DJ {
   id: string;
   name: string;
@@ -10,6 +36,9 @@ export interface DJ {
   // Optional so existing DJ literals/tests stay valid; the API always returns them.
   certifications?: string[];
   is_student?: boolean;
+  // The student's roster email — the login "invite" a teacher sets so the student
+  // can sign in with Google. Organizer-facing only (never in public payloads).
+  email?: string;
 }
 
 export interface Event {
@@ -134,6 +163,18 @@ export class ApiService {
 
   constructor(private http: HttpClient) {}
 
+  // Session / school (EL-106)
+  getMe() { return this.http.get<MeResponse>(`${this.base}/api/me`); }
+  createSchool(body: { name: string; city?: string }) {
+    return this.http.post<School>(`${this.base}/api/schools`, body);
+  }
+  listMembers() {
+    return this.http.get<Member[]>(`${this.base}/api/schools/current/members`);
+  }
+  inviteMember(body: { email: string; role: string }) {
+    return this.http.post<Member>(`${this.base}/api/schools/current/members`, body);
+  }
+
   // DJs
   getDJs() { return this.http.get<DJ[]>(`${this.base}/api/djs`); }
   // EL-019: optional ?certified_for= / ?ready=true filters on the roster.
@@ -145,7 +186,7 @@ export class ApiService {
   }
   createDJ(d: Pick<DJ, 'name' | 'genre_tags'>) { return this.http.post<DJ>(`${this.base}/api/djs`, d); }
   // EL-020: update a DJ's name, genres, certifications, and student status (PATCH).
-  updateDJ(id: string, d: Pick<DJ, 'name' | 'genre_tags' | 'certifications' | 'is_student'>) {
+  updateDJ(id: string, d: Pick<DJ, 'name' | 'genre_tags' | 'certifications' | 'is_student' | 'email'>) {
     return this.http.patch<DJ>(`${this.base}/api/djs/${id}`, d);
   }
   deleteDJ(id: string) { return this.http.delete(`${this.base}/api/djs/${id}`); }
@@ -176,6 +217,10 @@ export class ApiService {
   // Unauthenticated single slot + its event, for the per-DJ share card (EL-049).
   getPublicSlot(slotId: string) { return this.http.get<PublicSlot>(`${this.base}/api/slots/${slotId}/public`); }
   createEvent(e: Omit<Event, 'id'>) { return this.http.post<Event>(`${this.base}/api/events`, e); }
+  // Update an event's name, venue, dates, and genres (PATCH). Mirrors updateDJ.
+  updateEvent(id: string, e: Omit<Event, 'id'>) {
+    return this.http.patch<Event>(`${this.base}/api/events/${id}`, e);
+  }
   deleteEvent(id: string) { return this.http.delete(`${this.base}/api/events/${id}`); }
   cloneEvent(id: string) { return this.http.post<Event>(`${this.base}/api/events/${id}/clone`, {}); }
 

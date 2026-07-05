@@ -16,6 +16,8 @@ export const ADMIN_STORAGE_STATE = resolve(__dirname, '.auth/admin.json');
 // Seeded fixtures (see backend/seed/seed_test.sql).
 export const SEED = {
   organizerId: '00000000-0000-0000-0000-000000000001',
+  // The organizer's school (seed_test.sql). Student sessions are scoped to it.
+  schoolId: '00000000-0000-0000-0000-0000000005c1',
   event: {
     id: '00000000-0000-0000-0000-0000000000e1',
     name: 'E2E Fest',

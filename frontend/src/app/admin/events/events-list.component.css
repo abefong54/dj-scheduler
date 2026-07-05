@@ -36,3 +36,6 @@
 .empty-state {
   color: var(--muted);
 }
+
+/* Name cell: inline-flex so the lifecycle dot and name text sit on the same baseline. */
+.events-name-cell { display: inline-flex; align-items: center; }
