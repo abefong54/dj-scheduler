@@ -88,6 +88,13 @@ describe('LandingComponent (EL-075 Soundcheck landing)', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('app-lead-form')).not.toBeNull();
   });
 
+  it('links the privacy policy from the footer', async () => {
+    const el = (await build()).nativeElement as HTMLElement;
+    const link = el.querySelector('[data-testid="footer-privacy-link"]');
+    expect(link).toBeTruthy();
+    expect(link?.getAttribute('href')).toBe('/privacy');
+  });
+
   it('uses translate keys (not raw copy) for section headings', async () => {
     const el = (await build()).nativeElement as HTMLElement;
     // With no translations loaded, the pipe echoes the key — proves i18n wiring.

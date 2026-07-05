@@ -69,6 +69,12 @@ export const routes: Routes = [
     loadComponent: () => import('./card/card.component')
       .then(m => m.CardComponent),
   },
+  {
+    // Public privacy policy (EL-112) — linked from the landing footer + login.
+    path: 'privacy',
+    loadComponent: () => import('./legal/privacy.component')
+      .then(m => m.PrivacyComponent),
+  },
   // Student features (2026-07-05 sprint). /student/login is public (it also lands
   // the Google callback); the portal surfaces are gated on the student JWT.
   {
