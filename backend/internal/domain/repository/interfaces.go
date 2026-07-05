@@ -85,8 +85,12 @@ type LeadRepository interface {
 
 type OrganizerRepository interface {
 	FindByGoogleID(ctx context.Context, googleID string) (model.Organizer, error)
+	FindByLineID(ctx context.Context, lineID string) (model.Organizer, error)
+	FindByEmail(ctx context.Context, email string) (model.Organizer, error)
 	FindByID(ctx context.Context, id string) (model.Organizer, error)
 	Create(ctx context.Context, email, name, googleID string) (model.Organizer, error)
+	CreateWithLineID(ctx context.Context, email, name, lineID string) (model.Organizer, error)
+	LinkLineID(ctx context.Context, organizerID, lineID string) error
 }
 
 // SchoolRepository manages tenant schools — the owner of events and DJs (EL-103).

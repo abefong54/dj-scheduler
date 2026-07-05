@@ -49,6 +49,37 @@ func (r *fakeOrgRepo) Create(_ context.Context, email, name, googleID string) (m
 	r.created = append(r.created, o)
 	return o, nil
 }
+func (r *fakeOrgRepo) FindByLineID(_ context.Context, lineID string) (model.Organizer, error) {
+	for _, o := range r.created {
+		if lineID != "" && o.LineID == lineID {
+			return o, nil
+		}
+	}
+	return model.Organizer{}, apperrors.ErrNotFound
+}
+func (r *fakeOrgRepo) FindByEmail(_ context.Context, email string) (model.Organizer, error) {
+	for _, o := range r.created {
+		if o.Email == email {
+			return o, nil
+		}
+	}
+	return model.Organizer{}, apperrors.ErrNotFound
+}
+func (r *fakeOrgRepo) CreateWithLineID(_ context.Context, email, name, lineID string) (model.Organizer, error) {
+	r.nextID++
+	o := model.Organizer{ID: fmt.Sprintf("org-%d", r.nextID), Email: email, Name: name, LineID: lineID}
+	r.created = append(r.created, o)
+	return o, nil
+}
+func (r *fakeOrgRepo) LinkLineID(_ context.Context, organizerID, lineID string) error {
+	for i := range r.created {
+		if r.created[i].ID == organizerID {
+			r.created[i].LineID = lineID
+			return nil
+		}
+	}
+	return apperrors.ErrNotFound
+}
 
 type fakeMemRepo struct{ linked int }
 

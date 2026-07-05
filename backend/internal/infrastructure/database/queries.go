@@ -257,19 +257,36 @@ const (
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, name, organization, email, message, source, created_at::text`
 
-	// Organizer queries
+	// Organizer queries. google_id / line_id are nullable (a user has at least
+	// one — see migration 014), so reads COALESCE them to '' for the string model.
 	queryOrganizerFindByGoogleID = `
-		SELECT id, email, name, google_id, created_at::text
+		SELECT id, email, name, COALESCE(google_id, ''), COALESCE(line_id, ''), created_at::text
 		FROM organizers WHERE google_id = $1`
 
+	queryOrganizerFindByLineID = `
+		SELECT id, email, name, COALESCE(google_id, ''), COALESCE(line_id, ''), created_at::text
+		FROM organizers WHERE line_id = $1`
+
+	queryOrganizerFindByEmail = `
+		SELECT id, email, name, COALESCE(google_id, ''), COALESCE(line_id, ''), created_at::text
+		FROM organizers WHERE email = $1`
+
 	queryOrganizerFindByID = `
-		SELECT id, email, name, google_id, created_at::text
+		SELECT id, email, name, COALESCE(google_id, ''), COALESCE(line_id, ''), created_at::text
 		FROM organizers WHERE id = $1`
 
 	queryOrganizerInsert = `
 		INSERT INTO organizers (email, name, google_id)
 		VALUES ($1, $2, $3)
-		RETURNING id, email, name, google_id, created_at::text`
+		RETURNING id, email, name, COALESCE(google_id, ''), COALESCE(line_id, ''), created_at::text`
+
+	queryOrganizerInsertLine = `
+		INSERT INTO organizers (email, name, line_id)
+		VALUES ($1, $2, $3)
+		RETURNING id, email, name, COALESCE(google_id, ''), COALESCE(line_id, ''), created_at::text`
+
+	queryOrganizerLinkLineID = `
+		UPDATE organizers SET line_id = $2 WHERE id = $1`
 
 	// School + membership queries (EL-103, multi-tenant schools). These use
 	// organizer_id as the MEMBERSHIP FK (which person), not as event/DJ scope.
