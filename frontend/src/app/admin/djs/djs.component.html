@@ -142,13 +142,10 @@
             (keydown.enter)="addDJ()" (keydown.escape)="cancelAdd()" />
         </div>
         <div class="form-actions">
-          <button type="button" (click)="addDJ()" class="btn-primary" data-testid="dj-add-btn"
-            [disabled]="addGuard.pending()">
-            {{ 'actions.add' | translate }}
-          </button>
-          <button type="button" (click)="cancelAdd()" class="btn-secondary" data-testid="dj-add-cancel">
-            {{ 'actions.cancel' | translate }}
-          </button>
+          <app-button variant="primary" [label]="'actions.add' | translate"
+            testId="dj-add-btn" [disabled]="addGuard.pending()" (click)="addDJ()" />
+          <app-button [label]="'actions.cancel' | translate"
+            testId="dj-add-cancel" (click)="cancelAdd()" />
         </div>
       </div>
     </div>

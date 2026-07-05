@@ -371,4 +371,23 @@ describe('DjsComponent — add via topbar modal (EL-099)', () => {
     expect(el.querySelector('.modal-overlay')).toBeNull();
     expect(createDJ).not.toHaveBeenCalled();
   });
+
+  // The add/cancel buttons must use the shared app-button style like every other
+  // modal (edit panel, confirm dialog) — i.e. carry the `.btn` base class + a
+  // variant. Raw `class="btn-primary"` buttons missed the base class, so they
+  // rendered unstyled and didn't match the rest of the app.
+  it('renders the add/cancel buttons with the shared app-button style (btn base + variant)', () => {
+    const fixture = setup();
+    const el = fixture.nativeElement as HTMLElement;
+    fixture.componentInstance.openAddModal();
+    fixture.detectChanges();
+
+    const add = el.querySelector('[data-testid="dj-add-btn"]') as HTMLButtonElement;
+    const cancel = el.querySelector('[data-testid="dj-add-cancel"]') as HTMLButtonElement;
+
+    expect(add.classList.contains('btn')).toBe(true);
+    expect(add.classList.contains('btn-primary')).toBe(true);
+    expect(cancel.classList.contains('btn')).toBe(true);
+    expect(cancel.classList.contains('btn-secondary')).toBe(true);
+  });
 });
