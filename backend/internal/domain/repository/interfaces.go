@@ -73,6 +73,9 @@ type SubmissionRepository interface {
 	Review(ctx context.Context, id, schoolID, status, note, badgeLabel, badgeIcon string) (model.Submission, error)
 	// ListFeed returns the school's passed submissions, newest first (the feed).
 	ListFeed(ctx context.Context, schoolID string) ([]model.Submission, error)
+	// ListForReview returns the school's posted (awaiting sign-off) submissions,
+	// oldest first, for the teacher review queue.
+	ListForReview(ctx context.Context, schoolID string) ([]model.Submission, error)
 	// ListForStudent returns one student's submissions across all their challenges.
 	ListForStudent(ctx context.Context, djID, schoolID string) ([]model.Submission, error)
 }
