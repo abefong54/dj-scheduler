@@ -53,6 +53,18 @@ export const routes: Routes = [
       .then(m => m.PerformanceComponent),
   },
   {
+    path: 'admin/challenges',
+    canActivate: [authGuard, onboardingGuard],
+    loadComponent: () => import('./admin/challenges/challenges.component')
+      .then(m => m.AdminChallengesComponent),
+  },
+  {
+    path: 'admin/review',
+    canActivate: [authGuard, onboardingGuard],
+    loadComponent: () => import('./admin/review/review.component')
+      .then(m => m.AdminReviewComponent),
+  },
+  {
     path: 'events/:id',
     loadComponent: () => import('./schedule/schedule.component')
       .then(m => m.ScheduleComponent),

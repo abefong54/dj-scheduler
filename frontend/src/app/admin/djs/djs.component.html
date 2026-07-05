@@ -72,6 +72,13 @@
       </div>
 
       <div class="form-group">
+        <label class="form-label">Login email</label>
+        <input [ngModel]="editEmail()" (ngModelChange)="editEmail.set($event)" name="editEmail"
+          type="email" class="form-input" data-testid="dj-edit-email"
+          placeholder="student@email.com — lets them sign in with Google" />
+      </div>
+
+      <div class="form-group">
         <label class="form-label">{{ 'djs.status' | translate }}</label>
         <div class="flex gap-2">
           <app-button size="sm" [variant]="editIsStudent() ? 'primary' : 'secondary'"

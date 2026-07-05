@@ -157,8 +157,20 @@ describe('DjsComponent — certifications edit panel (EL-020)', () => {
       genre_tags: ['House'],
       certifications: ['House', 'Hip Hop'],
       is_student: false,
+      email: '',
     });
     expect(c.editing()).toBeNull();
+  });
+
+  it('saveEdit sends the roster email so the student can sign in', () => {
+    const c = makeComponent();
+    c.openEdit({ id: 'dj-1' });
+    c.editEmail.set('mia@example.com');
+    c.saveEdit();
+    expect(updateDJ).toHaveBeenCalledWith(
+      'dj-1',
+      expect.objectContaining({ email: 'mia@example.com' }),
+    );
   });
 });
 
