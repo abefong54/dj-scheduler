@@ -479,7 +479,7 @@ const (
 	querySubmissionUpsert = `
 		INSERT INTO submissions
 			(school_id, challenge_id, dj_id, media_kind, media_provider, media_ref, caption, status)
-		VALUES ($1,$2,$3,$4,$5,$6,NULLIF($7,''),'posted')
+		VALUES ($1,$2,$3,$4,$5,$6,$7,'posted')
 		ON CONFLICT (dj_id, challenge_id) DO UPDATE SET
 			media_kind = EXCLUDED.media_kind,
 			media_provider = EXCLUDED.media_provider,
