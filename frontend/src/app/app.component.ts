@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, ElementRef, HostListener, inject, signal, viewChild } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
@@ -24,6 +24,50 @@ export class AppComponent {
   private readonly theme = inject(ThemeService);
 
   private readonly router = inject(Router);
+  private readonly host = inject(ElementRef<HTMLElement>);
+  // Below lg the secondary nav items collapse behind this hamburger; focus
+  // returns here on close (keyboard/outside-click/Escape).
+  private readonly menuToggle = viewChild<ElementRef<HTMLButtonElement>>('menuToggle');
+
+  /** Mobile nav dropdown open state (only meaningful <lg; inline ≥lg). */
+  protected readonly menuOpen = signal(false);
+
+  protected toggleMenu(): void {
+    this.menuOpen.update((open) => !open);
+  }
+
+  protected closeMenu(): void {
+    if (!this.menuOpen()) return;
+    this.menuOpen.set(false);
+    this.menuToggle()?.nativeElement.focus();
+  }
+
+  /** Escape closes the open dropdown. */
+  @HostListener('document:keydown.escape')
+  protected onEscape(): void {
+    this.closeMenu();
+  }
+
+  /** A click outside the toggle and the menu dismisses the dropdown. */
+  @HostListener('document:click', ['$event'])
+  protected onDocumentClick(event: MouseEvent): void {
+    if (!this.menuOpen()) return;
+    const target = event.target as Node;
+    const el = this.host.nativeElement as HTMLElement;
+    const toggle = el.querySelector('.navbar-menu-toggle');
+    const menu = el.querySelector('#navbar-menu');
+    if (toggle?.contains(target) || menu?.contains(target)) return;
+    this.closeMenu();
+  }
+
+  /** Back at desktop width the items are inline again — clear any open dropdown. */
+  @HostListener('window:resize')
+  protected onResize(): void {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      this.menuOpen.set(false);
+    }
+  }
+
   readonly isLanding = toSignal(
     this.router.events.pipe(
       filter((e) => e instanceof NavigationEnd),

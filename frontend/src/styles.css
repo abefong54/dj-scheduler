@@ -924,6 +924,61 @@ a.navbar-brand {
   cursor: pointer;
 }
 
+/* ── Global top bar — mobile hamburger menu ── */
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+/* Desktop: the hamburger is hidden and the menu is a normal inline row
+   (.lang-switcher already supplies flex + gap). */
+.navbar-menu-toggle {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .navbar-menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  /* The secondary items drop into a panel anchored under the sticky navbar. */
+  .navbar-menu {
+    position: absolute;
+    top: 100%;
+    right: 1.5rem; /* aligns with the navbar's px-6 gutter */
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+    min-width: 11rem;
+    padding: 0.5rem;
+    background-color: var(--sc-booth-black, #1a1a2e);
+    border: 1px solid var(--sc-border, rgba(255, 255, 255, 0.12));
+    border-radius: 0.5rem;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    z-index: 60; /* above the navbar's z-50 */
+  }
+  .navbar-menu.navbar-menu-open {
+    display: flex;
+  }
+  /* Full-width, comfortable tap targets inside the dropdown. */
+  .navbar-menu .lang-btn {
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
 /* ── App shell chrome: amber gel replaces the violet bloom ── */
 [data-brand='soundcheck'] .shell-brand::before {
   background: radial-gradient(circle, rgba(255, 158, 44, 0.32), transparent 70%);

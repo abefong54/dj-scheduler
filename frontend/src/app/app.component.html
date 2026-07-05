@@ -12,17 +12,32 @@
   </a>
   <!-- Primary nav (Events/DJs) lives in the console sidebar (AdminShellComponent);
        the brand stays here so it appears in exactly one place. -->
-  <div class="lang-switcher">
-    <button (click)="langService.setLanguage('en')"
-      class="lang-btn"
-      [class]="langService.currentLang() === 'en' ? 'lang-btn-active' : 'lang-btn-inactive'">
-      EN
-    </button>
-    <button (click)="langService.setLanguage('zh-TW')"
-      class="lang-btn"
-      [class]="langService.currentLang() === 'zh-TW' ? 'lang-btn-active' : 'lang-btn-inactive'">
-      中文
-    </button>
+  <div class="navbar-actions">
+    <!-- Secondary controls: inline on desktop, a hamburger dropdown <lg. -->
+    <div id="navbar-menu" class="navbar-menu lang-switcher"
+      [class.navbar-menu-open]="menuOpen()" data-testid="nav-menu">
+      <button (click)="langService.setLanguage('en')"
+        class="lang-btn"
+        [class]="langService.currentLang() === 'en' ? 'lang-btn-active' : 'lang-btn-inactive'">
+        EN
+      </button>
+      <button (click)="langService.setLanguage('zh-TW')"
+        class="lang-btn"
+        [class]="langService.currentLang() === 'zh-TW' ? 'lang-btn-active' : 'lang-btn-inactive'">
+        中文
+      </button>
+      @if (auth.isAuthenticated()) {
+        <button (click)="auth.signOut()" data-testid="signout" class="lang-btn lang-btn-inactive">
+          {{ 'nav.signOut' | translate }}
+        </button>
+      } @else {
+        <a routerLink="/login" data-testid="signin" class="lang-btn lang-btn-inactive">
+          {{ 'nav.signIn' | translate }}
+        </a>
+      }
+    </div>
+
+    <!-- Primary CTA stays in the bar at every width (landing route only). -->
     @if (isLanding()) {
       @if (auth.isAuthenticated()) {
         <!-- Logged-in visitors on the marketing page: primary CTA is a way back
@@ -36,15 +51,12 @@
         </a>
       }
     }
-    @if (auth.isAuthenticated()) {
-      <button (click)="auth.signOut()" data-testid="signout" class="lang-btn lang-btn-inactive">
-        {{ 'nav.signOut' | translate }}
-      </button>
-    } @else {
-      <a routerLink="/login" data-testid="signin" class="lang-btn lang-btn-inactive">
-        {{ 'nav.signIn' | translate }}
-      </a>
-    }
+
+    <button #menuToggle type="button" class="navbar-menu-toggle"
+      data-testid="nav-menu-toggle" (click)="toggleMenu()"
+      [attr.aria-expanded]="menuOpen()" aria-controls="navbar-menu" aria-label="Menu">
+      ☰
+    </button>
   </div>
 </nav>
 <main class="app-main">
