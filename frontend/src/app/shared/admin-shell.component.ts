@@ -15,7 +15,7 @@ import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { SessionStore } from '../services/session.store';
 
-export type ShellNav = 'events' | 'djs' | 'performance';
+export type ShellNav = 'events' | 'djs' | 'performance' | 'challenges';
 
 interface NavItem {
   readonly id: ShellNav;
@@ -109,6 +109,7 @@ export class AdminShellComponent {
     { id: 'events', labelKey: 'shell.nav.events', link: '/admin/events' },
     { id: 'djs', labelKey: 'shell.nav.djs', link: '/admin/djs' },
     { id: 'performance', labelKey: 'shell.nav.performance', link: '/admin/performance' },
+    { id: 'challenges', labelKey: 'shell.nav.challenges', link: '/admin/challenges' },
   ];
 
   protected isActive(id: ShellNav): boolean {

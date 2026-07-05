@@ -19,8 +19,9 @@ func NewSubmissionHandler(uc *submissionuc.UseCase) *SubmissionHandler {
 	return &SubmissionHandler{uc: uc}
 }
 
-// RegisterProtected mounts the teacher review route on the organizer-authed group.
+// RegisterProtected mounts the teacher routes on the organizer-authed group.
 func (h *SubmissionHandler) RegisterProtected(rg *gin.RouterGroup) {
+	rg.GET("/submissions/pending", h.pending)
 	rg.POST("/submissions/:id/review", h.review)
 }
 
@@ -43,6 +44,16 @@ type reviewRequest struct {
 }
 
 // --- teacher (organizer JWT + school scope) ---
+
+func (h *SubmissionHandler) pending(c *gin.Context) {
+	schoolID := c.GetString(middleware.SchoolIDKey)
+	subs, err := h.uc.Pending(c.Request.Context(), schoolID)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, subs)
+}
 
 func (h *SubmissionHandler) review(c *gin.Context) {
 	var req reviewRequest

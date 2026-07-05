@@ -56,6 +56,11 @@ func (uc *UseCase) Feed(ctx context.Context, schoolID string) ([]model.Submissio
 	return uc.repo.ListFeed(ctx, schoolID)
 }
 
+// Pending returns the school's posted submissions awaiting teacher sign-off.
+func (uc *UseCase) Pending(ctx context.Context, schoolID string) ([]model.Submission, error) {
+	return uc.repo.ListForReview(ctx, schoolID)
+}
+
 // ListForStudent returns one student's submissions across all their challenges.
 func (uc *UseCase) ListForStudent(ctx context.Context, djID, schoolID string) ([]model.Submission, error) {
 	return uc.repo.ListForStudent(ctx, djID, schoolID)

@@ -67,29 +67,71 @@ describe('ScheduleExportService', () => {
     });
 
     it('emits a data row with the six columns in order', () => {
-      const aoa = svc.buildAoa('E', [
-        slot({ slot_date: '2026-07-01', stage_name: 'Main', dj_name: 'Marcus', start_time: '16:00', end_time: '17:30', genre: 'Techno', notes: 'mic check' }),
-      ], EN_LABELS);
-      expect(aoa[2]).toEqual(['2026-07-01', 'Main', '16:00 - 17:30 (1.5hr)', 'Marcus', 'Techno', 'mic check']);
+      const aoa = svc.buildAoa(
+        'E',
+        [
+          slot({
+            slot_date: '2026-07-01',
+            stage_name: 'Main',
+            dj_name: 'Marcus',
+            start_time: '16:00',
+            end_time: '17:30',
+            genre: 'Techno',
+            notes: 'mic check',
+          }),
+        ],
+        EN_LABELS,
+      );
+      expect(aoa[2]).toEqual([
+        '2026-07-01',
+        'Main',
+        '16:00 - 17:30 (1.5hr)',
+        'Marcus',
+        'Techno',
+        'mic check',
+      ]);
     });
 
     it('sorts by date, then stage name, then start time', () => {
-      const aoa = svc.buildAoa('E', [
-        slot({ slot_date: '2026-07-02', stage_name: 'Main', start_time: '10:00', dj_name: 'D2' }),
-        slot({ slot_date: '2026-07-01', stage_name: 'Patio', start_time: '09:00', dj_name: 'D1b' }),
-        slot({ slot_date: '2026-07-01', stage_name: 'Main', start_time: '12:00', dj_name: 'D1a-late' }),
-        slot({ slot_date: '2026-07-01', stage_name: 'Main', start_time: '09:00', dj_name: 'D1a-early' }),
-      ], EN_LABELS);
+      const aoa = svc.buildAoa(
+        'E',
+        [
+          slot({ slot_date: '2026-07-02', stage_name: 'Main', start_time: '10:00', dj_name: 'D2' }),
+          slot({
+            slot_date: '2026-07-01',
+            stage_name: 'Patio',
+            start_time: '09:00',
+            dj_name: 'D1b',
+          }),
+          slot({
+            slot_date: '2026-07-01',
+            stage_name: 'Main',
+            start_time: '12:00',
+            dj_name: 'D1a-late',
+          }),
+          slot({
+            slot_date: '2026-07-01',
+            stage_name: 'Main',
+            start_time: '09:00',
+            dj_name: 'D1a-early',
+          }),
+        ],
+        EN_LABELS,
+      );
       // Skip title+header; first data block is 2026-07-01, Main(09,12) then Patio(09)
-      const djCol = aoa.slice(2).map(r => r[3]);
+      const djCol = aoa.slice(2).map((r) => r[3]);
       expect(djCol).toEqual(['D1a-early', 'D1a-late', 'D1b', '', 'D2']);
     });
 
     it('inserts one blank row between date groups but not at the ends', () => {
-      const aoa = svc.buildAoa('E', [
-        slot({ slot_date: '2026-07-01', dj_name: 'A' }),
-        slot({ slot_date: '2026-07-02', dj_name: 'B' }),
-      ], EN_LABELS);
+      const aoa = svc.buildAoa(
+        'E',
+        [
+          slot({ slot_date: '2026-07-01', dj_name: 'A' }),
+          slot({ slot_date: '2026-07-02', dj_name: 'B' }),
+        ],
+        EN_LABELS,
+      );
       // row0 title, row1 headers, row2 A, row3 blank, row4 B
       expect(aoa.length).toBe(5);
       expect(aoa[3]).toEqual(['', '', '', '', '', '']);
@@ -104,7 +146,14 @@ describe('ScheduleExportService', () => {
     });
 
     it('uses the provided (translated) headers', () => {
-      const zh: ExportLabels = { date: '日期', stage: '舞台', timeSlot: '時段', dj: 'DJ', genre: '風格', notes: '備註' };
+      const zh: ExportLabels = {
+        date: '日期',
+        stage: '舞台',
+        timeSlot: '時段',
+        dj: 'DJ',
+        genre: '風格',
+        notes: '備註',
+      };
       const aoa = svc.buildAoa('E', [slot({})], zh);
       expect(aoa[1]).toEqual(['日期', '舞台', '時段', 'DJ', '風格', '備註']);
     });
@@ -112,7 +161,15 @@ describe('ScheduleExportService', () => {
 
   describe('buildWorkbook', () => {
     const SAMPLE = [
-      slot({ slot_date: '2026-07-01', stage_name: 'Main', dj_name: 'Marcus', start_time: '16:00', end_time: '17:30', genre: 'Techno', notes: 'mic' }),
+      slot({
+        slot_date: '2026-07-01',
+        stage_name: 'Main',
+        dj_name: 'Marcus',
+        start_time: '16:00',
+        end_time: '17:30',
+        genre: 'Techno',
+        notes: 'mic',
+      }),
     ];
 
     it('sets a bold title and merges it across all six columns', () => {
@@ -131,7 +188,12 @@ describe('ScheduleExportService', () => {
       expect(ws['A1'].v).toBe('Summer Bash');
       expect(ws['!merges']).toEqual([{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }]);
       expect([ws['A2'].v, ws['C2'].v, ws['F2'].v]).toEqual(['Date', 'Time Slot', 'Notes']);
-      expect([ws['A3'].v, ws['C3'].v, ws['D3'].v, ws['E3'].v]).toEqual(['2026-07-01', '16:00 - 17:30 (1.5hr)', 'Marcus', 'Techno']);
+      expect([ws['A3'].v, ws['C3'].v, ws['D3'].v, ws['E3'].v]).toEqual([
+        '2026-07-01',
+        '16:00 - 17:30 (1.5hr)',
+        'Marcus',
+        'Techno',
+      ]);
     });
   });
 });

@@ -34,9 +34,9 @@ describe('DjsComponent — Console shell', () => {
     const root = render();
     expect(root.querySelector('app-admin-shell')).toBeTruthy();
     expect(root.querySelector('.shell-sidebar')).toBeTruthy();
-    expect(
-      root.querySelector('[data-nav="djs"]')?.classList.contains('shell-nav-active'),
-    ).toBe(true);
+    expect(root.querySelector('[data-nav="djs"]')?.classList.contains('shell-nav-active')).toBe(
+      true,
+    );
   });
 });
 
@@ -51,7 +51,8 @@ describe('DjsComponent — portal link dialog (US-012 / EL-089)', () => {
       of({
         portal_url: 'http://localhost:4200/dj/portal?token=tok',
         expires_at: '2026-07-17T00:00:00Z',
-      })),
+      }),
+    ),
   };
 
   beforeEach(() => {
@@ -83,7 +84,13 @@ describe('DjsComponent — portal link dialog (US-012 / EL-089)', () => {
 
 // EL-020: the certifications edit panel.
 describe('DjsComponent — certifications edit panel (EL-020)', () => {
-  const DJ = { id: 'dj-1', name: 'Mia', genre_tags: ['House'], certifications: ['House'], is_student: true };
+  const DJ = {
+    id: 'dj-1',
+    name: 'Mia',
+    genre_tags: ['House'],
+    certifications: ['House'],
+    is_student: true,
+  };
   const updateDJ = vi.fn(() => of({ ...DJ }));
   const apiMock = {
     getDJs: vi.fn(() => of([DJ])),
@@ -135,7 +142,7 @@ describe('DjsComponent — certifications edit panel (EL-020)', () => {
     // Adding the same value again is a no-op.
     c.editCustom.set('Afrobeat');
     c.addCustomCert();
-    expect(c.editCerts().filter(x => x === 'Afrobeat')).toHaveLength(1);
+    expect(c.editCerts().filter((x) => x === 'Afrobeat')).toHaveLength(1);
   });
 
   it('saveEdit PATCHes the DJ with cert + student changes and closes the panel', () => {
@@ -150,8 +157,20 @@ describe('DjsComponent — certifications edit panel (EL-020)', () => {
       genre_tags: ['House'],
       certifications: ['House', 'Hip Hop'],
       is_student: false,
+      email: '',
     });
     expect(c.editing()).toBeNull();
+  });
+
+  it('saveEdit sends the roster email so the student can sign in', () => {
+    const c = makeComponent();
+    c.openEdit({ id: 'dj-1' });
+    c.editEmail.set('mia@example.com');
+    c.saveEdit();
+    expect(updateDJ).toHaveBeenCalledWith(
+      'dj-1',
+      expect.objectContaining({ email: 'mia@example.com' }),
+    );
   });
 });
 
@@ -176,7 +195,13 @@ describe('DjsComponent — certification status pills (EL-081)', () => {
 
   it('renders a held certification as a "Cleared" pill carrying BOTH an icon glyph and the label', () => {
     const root = render([
-      { id: 'dj-1', name: 'Mia', genre_tags: ['House'], certifications: ['House'], is_student: true },
+      {
+        id: 'dj-1',
+        name: 'Mia',
+        genre_tags: ['House'],
+        certifications: ['House'],
+        is_student: true,
+      },
     ]);
     const pill = root.querySelector('[data-testid="dj-cert-dj-1"]') as HTMLElement;
     expect(pill).toBeTruthy();
@@ -222,7 +247,11 @@ describe('DjsComponent — cached roster (EL-092)', () => {
         { provide: ApiService, useValue: api },
         {
           provide: DialogService,
-          useValue: { confirm: () => Promise.resolve(true), alert: () => Promise.resolve(), ...dialog },
+          useValue: {
+            confirm: () => Promise.resolve(true),
+            alert: () => Promise.resolve(),
+            ...dialog,
+          },
         },
       ],
     });
@@ -288,7 +317,10 @@ describe('DjsComponent — cached roster (EL-092)', () => {
 
   it('does NOT refresh the store when generating a portal link (roster unchanged)', () => {
     configure(
-      { getDJs: () => of(ROSTER), generateDJPortalToken: () => of({ portal_url: 'https://x/p', expires_at: '' }) },
+      {
+        getDJs: () => of(ROSTER),
+        generateDJPortalToken: () => of({ portal_url: 'https://x/p', expires_at: '' }),
+      },
       { shareLink: vi.fn() },
     );
     const refreshSpy = vi.spyOn(TestBed.inject(DjsStore), 'refresh');
@@ -317,7 +349,10 @@ describe('DjsComponent — add via topbar modal (EL-099)', () => {
         provideRouter([]),
         provideTranslateService(),
         { provide: ApiService, useValue: { getDJs: () => of(ROSTER), createDJ, ...api } },
-        { provide: DialogService, useValue: { confirm: () => Promise.resolve(true), alert: () => Promise.resolve() } },
+        {
+          provide: DialogService,
+          useValue: { confirm: () => Promise.resolve(true), alert: () => Promise.resolve() },
+        },
       ],
     });
     const fixture = TestBed.createComponent(DjsComponent);
@@ -329,9 +364,9 @@ describe('DjsComponent — add via topbar modal (EL-099)', () => {
 
   it('shows no inline add form on load — only a topbar "+ Add" button', () => {
     const el = setup().nativeElement as HTMLElement;
-    expect(el.querySelector('[data-testid="dj-name-input"]')).toBeNull();  // inline card gone
-    expect(el.querySelector('.modal-overlay')).toBeNull();                 // modal closed
-    expect(el.querySelector('.shell-new-btn')).toBeTruthy();               // topbar add button
+    expect(el.querySelector('[data-testid="dj-name-input"]')).toBeNull(); // inline card gone
+    expect(el.querySelector('.modal-overlay')).toBeNull(); // modal closed
+    expect(el.querySelector('.shell-new-btn')).toBeTruthy(); // topbar add button
   });
 
   it('opens the add modal (reusing the shared modal shell) when the topbar button is clicked', () => {
@@ -358,7 +393,7 @@ describe('DjsComponent — add via topbar modal (EL-099)', () => {
     (el.querySelector('[data-testid="dj-add-btn"]') as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(createDJ).toHaveBeenCalledWith({ name: 'Nova', genre_tags: ['Techno'] });
-    expect(el.querySelector('.modal-overlay')).toBeNull();  // closed on success
+    expect(el.querySelector('.modal-overlay')).toBeNull(); // closed on success
   });
 
   it('cancel closes the modal without creating a DJ', () => {

@@ -75,25 +75,40 @@ describe('OnboardingComponent', () => {
     });
 
     it('register-school-btn is disabled when school name is empty', () => {
-      const btn = qs<HTMLButtonElement>(fixture.nativeElement, '[data-testid="register-school-btn"]');
+      const btn = qs<HTMLButtonElement>(
+        fixture.nativeElement,
+        '[data-testid="register-school-btn"]',
+      );
       expect(btn?.disabled).toBe(true);
     });
 
     it('register-school-btn is enabled after entering a school name', () => {
-      const input = qs<HTMLInputElement>(fixture.nativeElement, '[data-testid="school-name-input"]');
+      const input = qs<HTMLInputElement>(
+        fixture.nativeElement,
+        '[data-testid="school-name-input"]',
+      );
       input!.value = 'IMDJ School';
       input!.dispatchEvent(new Event('input'));
       fixture.detectChanges();
-      const btn = qs<HTMLButtonElement>(fixture.nativeElement, '[data-testid="register-school-btn"]');
+      const btn = qs<HTMLButtonElement>(
+        fixture.nativeElement,
+        '[data-testid="register-school-btn"]',
+      );
       expect(btn?.disabled).toBe(false);
     });
 
     it('createSchool is called with name and city on submit', () => {
-      const nameInput = qs<HTMLInputElement>(fixture.nativeElement, '[data-testid="school-name-input"]');
+      const nameInput = qs<HTMLInputElement>(
+        fixture.nativeElement,
+        '[data-testid="school-name-input"]',
+      );
       nameInput!.value = 'IMDJ School';
       nameInput!.dispatchEvent(new Event('input'));
 
-      const cityInput = qs<HTMLInputElement>(fixture.nativeElement, '[data-testid="school-city-input"]');
+      const cityInput = qs<HTMLInputElement>(
+        fixture.nativeElement,
+        '[data-testid="school-city-input"]',
+      );
       cityInput!.value = 'Taipei';
       cityInput!.dispatchEvent(new Event('input'));
       fixture.detectChanges();
@@ -112,9 +127,14 @@ describe('OnboardingComponent', () => {
 
     it('calls session.refresh() and advances to step 2 after successful registration', () => {
       let refreshCalled = false;
-      stubSession.refresh = () => { refreshCalled = true; };
+      stubSession.refresh = () => {
+        refreshCalled = true;
+      };
 
-      const nameInput = qs<HTMLInputElement>(fixture.nativeElement, '[data-testid="school-name-input"]');
+      const nameInput = qs<HTMLInputElement>(
+        fixture.nativeElement,
+        '[data-testid="school-name-input"]',
+      );
       nameInput!.value = 'IMDJ School';
       nameInput!.dispatchEvent(new Event('input'));
       fixture.detectChanges();
@@ -136,7 +156,10 @@ describe('OnboardingComponent', () => {
   describe('step 2 — add team', () => {
     /** Advance from step 1 to step 2 within the same test setup. */
     function advanceToStep2() {
-      const nameInput = qs<HTMLInputElement>(fixture.nativeElement, '[data-testid="school-name-input"]');
+      const nameInput = qs<HTMLInputElement>(
+        fixture.nativeElement,
+        '[data-testid="school-name-input"]',
+      );
       nameInput!.value = 'IMDJ School';
       nameInput!.dispatchEvent(new Event('input'));
       fixture.detectChanges();

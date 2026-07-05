@@ -20,7 +20,16 @@ export const CERT_OPTIONS = ['House', 'Hip Hop', 'Pop', 'Techno', 'Trance', 'Dru
 @Component({
   selector: 'app-djs',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, DataTableComponent, ColumnDefDirective, ButtonComponent, AdminShellComponent, StatusBadgeComponent, LoadingMeterComponent],
+  imports: [
+    FormsModule,
+    TranslatePipe,
+    DataTableComponent,
+    ColumnDefDirective,
+    ButtonComponent,
+    AdminShellComponent,
+    StatusBadgeComponent,
+    LoadingMeterComponent,
+  ],
   templateUrl: './djs.component.html',
   styleUrl: './djs.component.css',
 })
@@ -52,6 +61,8 @@ export class DjsComponent {
   editIsStudent = signal(true);
   editCerts = signal<string[]>([]);
   editCustom = signal('');
+  // The student's roster email (login invite). Blank = not yet provisioned.
+  editEmail = signal('');
 
   constructor() {
     this.store.ensure();
@@ -74,13 +85,16 @@ export class DjsComponent {
 
   // Convert DJ[] to Record<string, unknown>[] for DataTableComponent
   djsAsRows = computed((): Record<string, unknown>[] =>
-    this.djs().map(d => ({
-      id: d.id,
-      name: d.name,
-      genre_tags: d.genre_tags,
-      certifications: d.certifications ?? [],
-      is_student: d.is_student ?? true,
-    }) as Record<string, unknown>)
+    this.djs().map(
+      (d) =>
+        ({
+          id: d.id,
+          name: d.name,
+          genre_tags: d.genre_tags,
+          certifications: d.certifications ?? [],
+          is_student: d.is_student ?? true,
+        }) as Record<string, unknown>,
+    ),
   );
 
   // Reactive column labels — re-evaluates when language changes
@@ -89,8 +103,17 @@ export class DjsComponent {
     return [
       { key: 'name', label: this.translate.instant('djs.name') },
       { key: 'genre_tags', label: this.translate.instant('djs.genres'), sortable: false },
-      { key: 'certifications', label: this.translate.instant('djs.certifications'), sortable: false },
-      { key: 'actions', label: this.translate.instant('actions.title'), sortable: false, searchable: false },
+      {
+        key: 'certifications',
+        label: this.translate.instant('djs.certifications'),
+        sortable: false,
+      },
+      {
+        key: 'actions',
+        label: this.translate.instant('actions.title'),
+        sortable: false,
+        searchable: false,
+      },
     ];
   });
 
@@ -114,8 +137,8 @@ export class DjsComponent {
     const name = this.newDJ().name;
     const genres = this.newDJGenres()
       .split(',')
-      .map(g => g.trim())
-      .filter(g => g.length > 0);
+      .map((g) => g.trim())
+      .filter((g) => g.length > 0);
 
     if (!name || genres.length === 0) {
       await this.dialog.alert({
@@ -142,7 +165,9 @@ export class DjsComponent {
         message: this.translate.instant('dj.portal_link.warning'),
         url: portal_url,
         expiresLabel: expires_at
-          ? this.translate.instant('dj.portal_link.expires', { date: this.formatExpiry(expires_at) })
+          ? this.translate.instant('dj.portal_link.expires', {
+              date: this.formatExpiry(expires_at),
+            })
           : undefined,
         copyLabel: this.translate.instant('dj.portal_link.copy'),
         copiedLabel: this.translate.instant('dj.portal_link.copied'),
@@ -173,13 +198,14 @@ export class DjsComponent {
 
   // openEdit loads a DJ into the edit panel from the table row.
   openEdit(row: Record<string, unknown>) {
-    const dj = this.djs().find(d => d.id === this.rowId(row));
+    const dj = this.djs().find((d) => d.id === this.rowId(row));
     if (!dj) return;
     this.editing.set(dj);
     this.editName.set(dj.name);
     this.editIsStudent.set(dj.is_student ?? true);
     this.editCerts.set([...(dj.certifications ?? [])]);
     this.editCustom.set('');
+    this.editEmail.set(dj.email ?? '');
   }
 
   isCertSelected(genre: string): boolean {
@@ -187,14 +213,15 @@ export class DjsComponent {
   }
 
   toggleCert(genre: string) {
-    this.editCerts.update(certs =>
-      certs.includes(genre) ? certs.filter(c => c !== genre) : [...certs, genre]);
+    this.editCerts.update((certs) =>
+      certs.includes(genre) ? certs.filter((c) => c !== genre) : [...certs, genre],
+    );
   }
 
   addCustomCert() {
     const value = this.editCustom().trim();
     if (value && !this.editCerts().includes(value)) {
-      this.editCerts.update(certs => [...certs, value]);
+      this.editCerts.update((certs) => [...certs, value]);
     }
     this.editCustom.set('');
   }
@@ -202,17 +229,21 @@ export class DjsComponent {
   saveEdit() {
     const dj = this.editing();
     if (!dj || !this.editName().trim()) return;
-    this.saveGuard.run(this.api.updateDJ(dj.id, {
-      name: this.editName().trim(),
-      genre_tags: dj.genre_tags,
-      certifications: this.editCerts(),
-      is_student: this.editIsStudent(),
-    }), {
-      next: () => {
-        this.cancelEdit();
-        this.store.refresh();
+    this.saveGuard.run(
+      this.api.updateDJ(dj.id, {
+        name: this.editName().trim(),
+        genre_tags: dj.genre_tags,
+        certifications: this.editCerts(),
+        is_student: this.editIsStudent(),
+        email: this.editEmail().trim(),
+      }),
+      {
+        next: () => {
+          this.cancelEdit();
+          this.store.refresh();
+        },
       },
-    });
+    );
   }
 
   cancelEdit() {

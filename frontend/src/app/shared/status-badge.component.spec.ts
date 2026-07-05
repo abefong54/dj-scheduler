@@ -25,8 +25,7 @@ describe('StatusBadgeComponent', () => {
     fixture = TestBed.createComponent(HostComponent);
   });
 
-  const badge = () =>
-    fixture.nativeElement.querySelector('.status-badge') as HTMLElement;
+  const badge = () => fixture.nativeElement.querySelector('.status-badge') as HTMLElement;
 
   const STATES: { status: BadgeStatus; cls: string; key: string }[] = [
     { status: 'confirmed', cls: 'status-confirmed', key: 'badge.confirmed' },

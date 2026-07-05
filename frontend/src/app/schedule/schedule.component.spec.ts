@@ -22,10 +22,18 @@ const SCHEDULE: PublicSchedule = {
   ],
   slots: [
     {
-      id: 'slot-1', event_id: 'evt-1', stage_id: 'st-1', stage_name: 'Main Stage',
-      dj_id: 'dj-1', dj_name: 'Cody', genre: 'House',
-      slot_date: '2026-07-12', start_time: '22:00', end_time: '23:00',
-      notes: '', dj_confirmation: null,
+      id: 'slot-1',
+      event_id: 'evt-1',
+      stage_id: 'st-1',
+      stage_name: 'Main Stage',
+      dj_id: 'dj-1',
+      dj_name: 'Cody',
+      genre: 'House',
+      slot_date: '2026-07-12',
+      start_time: '22:00',
+      end_time: '23:00',
+      notes: '',
+      dj_confirmation: null,
     },
   ],
 };
@@ -33,7 +41,10 @@ const SCHEDULE: PublicSchedule = {
 describe('ScheduleComponent (EL-011 / EL-082 reskin)', () => {
   let getPublicSchedule: ReturnType<typeof vi.fn>;
 
-  async function build(): Promise<{ fixture: ComponentFixture<ScheduleComponent>; component: ScheduleComponent }> {
+  async function build(): Promise<{
+    fixture: ComponentFixture<ScheduleComponent>;
+    component: ScheduleComponent;
+  }> {
     getPublicSchedule = vi.fn().mockReturnValue(of(SCHEDULE));
     const apiMock = { getPublicSchedule };
 
@@ -68,7 +79,7 @@ describe('ScheduleComponent (EL-011 / EL-082 reskin)', () => {
     const { component } = await build();
     expect(component.selectedDate()).toBe('2026-07-12');
     // Only Main Stage has a slot on the selected date; Booth 2 is filtered out.
-    expect(component.stagesForDate().map(s => s.id)).toEqual(['st-1']);
+    expect(component.stagesForDate().map((s) => s.id)).toEqual(['st-1']);
   });
 
   it('resolves a stage colour, falling back for an unknown stage', async () => {

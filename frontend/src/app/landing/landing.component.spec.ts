@@ -11,7 +11,12 @@ describe('LandingComponent (EL-075 Soundcheck landing)', () => {
   async function build(): Promise<ComponentFixture<LandingComponent>> {
     await TestBed.configureTestingModule({
       imports: [LandingComponent],
-      providers: [provideRouter([]), provideTranslateService(), provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
     }).compileComponents();
     const fixture = TestBed.createComponent(LandingComponent);
     fixture.detectChanges();
@@ -71,13 +76,23 @@ describe('LandingComponent (EL-075 Soundcheck landing)', () => {
     await TestBed.configureTestingModule({
       imports: [LandingComponent],
       providers: [
-        provideRouter([]), provideTranslateService(), provideHttpClient(), provideHttpClientTesting(),
+        provideRouter([]),
+        provideTranslateService(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
         { provide: ActivatedRoute, useValue: { fragment: of('lead-form') } },
       ],
     }).compileComponents();
     const fixture = TestBed.createComponent(LandingComponent);
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).querySelector('app-lead-form')).not.toBeNull();
+  });
+
+  it('links the privacy policy from the footer', async () => {
+    const el = (await build()).nativeElement as HTMLElement;
+    const link = el.querySelector('[data-testid="footer-privacy-link"]');
+    expect(link).toBeTruthy();
+    expect(link?.getAttribute('href')).toBe('/privacy');
   });
 
   it('uses translate keys (not raw copy) for section headings', async () => {

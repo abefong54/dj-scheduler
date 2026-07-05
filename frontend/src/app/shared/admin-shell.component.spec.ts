@@ -63,23 +63,21 @@ describe('AdminShellComponent', () => {
       expect(root().querySelector('.shell-sidebar')).toBeTruthy();
       // The wordmark was moved to the global top bar so the brand appears once.
       expect(root().querySelector('.shell-wordmark')).toBeNull();
-      expect(
-        root().querySelector('.shell-section-label')?.textContent,
-      ).toContain('shell.workspace');
+      expect(root().querySelector('.shell-section-label')?.textContent).toContain(
+        'shell.workspace',
+      );
     });
 
     it('renders the white topbar with the page title from the title input', () => {
       expect(root().querySelector('.shell-topbar')).toBeTruthy();
-      expect(root().querySelector('.shell-page-title')?.textContent).toContain(
-        'My Page',
-      );
+      expect(root().querySelector('.shell-page-title')?.textContent).toContain('My Page');
     });
 
-    it('renders the three nav items (Events / DJs / Performance)', () => {
+    it('renders the nav items (Events / DJs / Performance / Challenges)', () => {
       const items = root().querySelectorAll('.shell-nav-item');
-      expect(items.length).toBe(3);
+      expect(items.length).toBe(4);
       const navIds = Array.from(items).map((el) => el.getAttribute('data-nav'));
-      expect(navIds).toEqual(['events', 'djs', 'performance']);
+      expect(navIds).toEqual(['events', 'djs', 'performance', 'challenges']);
     });
 
     it('does not render the removed Lineup/schedule nav item (dead /admin/schedule link)', () => {
@@ -95,8 +93,7 @@ describe('AdminShellComponent', () => {
   describe('active-nav logic', () => {
     let fixture: ComponentFixture<AdminShellComponent>;
     const root = () => fixture.nativeElement as HTMLElement;
-    const navClasses = (id: ShellNav) =>
-      root().querySelector(`[data-nav="${id}"]`)!.classList;
+    const navClasses = (id: ShellNav) => root().querySelector(`[data-nav="${id}"]`)!.classList;
 
     beforeEach(() => {
       fixture = TestBed.createComponent(AdminShellComponent);
@@ -227,7 +224,6 @@ describe('AdminShellComponent', () => {
       expect(root().querySelector('.shell-search')).toBeTruthy();
     });
   });
-
 });
 
 // ── EL-107: school name in sidebar ───────────────────────────────────────────
@@ -247,7 +243,9 @@ describe('AdminShellComponent — school name in sidebar (EL-107)', () => {
     const fixture = TestBed.createComponent(AdminShellComponent);
     fixture.detectChanges();
     expect(
-      (fixture.nativeElement as HTMLElement).querySelector('.shell-section-label')?.textContent?.trim(),
+      (fixture.nativeElement as HTMLElement)
+        .querySelector('.shell-section-label')
+        ?.textContent?.trim(),
     ).toContain('shell.workspace');
   });
 
@@ -263,7 +261,9 @@ describe('AdminShellComponent — school name in sidebar (EL-107)', () => {
     const fixture = TestBed.createComponent(AdminShellComponent);
     fixture.detectChanges();
     expect(
-      (fixture.nativeElement as HTMLElement).querySelector('.shell-section-label')?.textContent?.trim(),
+      (fixture.nativeElement as HTMLElement)
+        .querySelector('.shell-section-label')
+        ?.textContent?.trim(),
     ).toContain('IMDJ School');
   });
 });
