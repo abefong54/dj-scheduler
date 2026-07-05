@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -27,7 +27,20 @@ export class EventNewComponent {
   genres_input = '';
   readonly submitting = new SubmitGuard();
 
+  // Flips true on the first submit attempt so the template can reveal per-field
+  // errors. Before that we stay quiet — no red text on a pristine form.
+  readonly submitted = signal(false);
+  // A required field is "missing" only once the user has tried to submit. Kept in
+  // lockstep with the submit() guard below so what we show always matches what
+  // actually blocks the create.
+  readonly nameMissing = computed(() => this.submitted() && !this.name());
+  readonly venueMissing = computed(() => this.submitted() && !this.venue_name());
+  readonly startMissing = computed(() => this.submitted() && !this.start_date());
+
   submit() {
+    // Surface validation before the guard: pressing Create with a field empty
+    // must show why, not silently do nothing (the mobile "dead button" bug).
+    this.submitted.set(true);
     if (!this.name() || !this.venue_name() || !this.start_date()) return;
 
     this.submitting.run(this.api.createEvent({

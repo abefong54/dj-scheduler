@@ -3,20 +3,41 @@
     <div class="console-field">
       <label class="console-label" for="event-name">{{ 'events.name' | translate }}</label>
       <input id="event-name" [(ngModel)]="name" name="name" type="text"
-        class="console-input" required data-testid="event-name-input" />
+        class="console-input" [class.console-input-error]="nameMissing()" required
+        [attr.aria-invalid]="nameMissing() || null" aria-describedby="event-name-error"
+        data-testid="event-name-input" />
+      @if (nameMissing()) {
+        <p id="event-name-error" class="console-field-error" data-testid="event-name-error">
+          {{ 'events.error.nameRequired' | translate }}
+        </p>
+      }
     </div>
 
     <div class="console-field">
       <label class="console-label" for="event-venue">{{ 'events.venue' | translate }}</label>
       <input id="event-venue" [(ngModel)]="venue_name" name="venue_name" type="text"
-        class="console-input" required data-testid="event-venue-input" />
+        class="console-input" [class.console-input-error]="venueMissing()" required
+        [attr.aria-invalid]="venueMissing() || null" aria-describedby="event-venue-error"
+        data-testid="event-venue-input" />
+      @if (venueMissing()) {
+        <p id="event-venue-error" class="console-field-error" data-testid="event-venue-error">
+          {{ 'events.error.venueRequired' | translate }}
+        </p>
+      }
     </div>
 
     <div class="console-field console-grid-2">
       <div>
         <label class="console-label" for="event-start">{{ 'events.startDate' | translate }}</label>
         <input id="event-start" [(ngModel)]="start_date" name="start_date" type="date"
-          class="console-input" required data-testid="event-start-date" />
+          class="console-input" [class.console-input-error]="startMissing()" required
+          [attr.aria-invalid]="startMissing() || null" aria-describedby="event-start-error"
+          data-testid="event-start-date" />
+        @if (startMissing()) {
+          <p id="event-start-error" class="console-field-error" data-testid="event-start-error">
+            {{ 'events.error.startRequired' | translate }}
+          </p>
+        }
       </div>
       <div>
         <label class="console-label" for="event-end">{{ 'events.endDate' | translate }}</label>
