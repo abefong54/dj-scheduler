@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { LoginComponent } from './login.component';
@@ -15,6 +15,7 @@ describe('LoginComponent (EL-079 Soundcheck reskin)', () => {
     await TestBed.configureTestingModule({
       imports: [LoginComponent],
       providers: [
+        provideRouter([]),
         provideTranslateService(),
         { provide: AuthService, useValue: { signInWithGoogle, signInWithLine } },
         {
@@ -85,6 +86,15 @@ describe('LoginComponent (EL-079 Soundcheck reskin)', () => {
     const fixture = await build('no_email');
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('[data-testid="login-error"]')).toBeTruthy();
+  });
+
+  it('shows an email-consent notice that links the privacy policy', async () => {
+    const fixture = await build();
+    const el = fixture.nativeElement as HTMLElement;
+
+    const consent = el.querySelector('[data-testid="login-consent"]');
+    expect(consent).toBeTruthy();
+    expect(consent!.querySelector('a')?.getAttribute('href')).toBe('/privacy');
   });
 
   it('shows no error banner when there is no error param', async () => {

@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../services/auth.service';
 import { environment } from '../../environments/environment';
@@ -19,7 +19,7 @@ import { environment } from '../../environments/environment';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, RouterLink],
   template: `
     <section
       class="relative flex min-h-[calc(100dvh-3.5rem)] items-center justify-center overflow-hidden px-6 py-16"
@@ -72,6 +72,13 @@ import { environment } from '../../environments/environment';
             {{ 'auth.signInWithLine' | translate }}
           </button>
         }
+
+        <!-- Consent notice (EL-112): tells users we collect their email + why,
+             and links the privacy policy. Backs the LINE email-permission review. -->
+        <p class="mt-4 text-xs leading-relaxed" style="color: var(--muted);" data-testid="login-consent">
+          {{ 'auth.consent' | translate }}
+          <a routerLink="/privacy" class="underline" style="color: var(--muted);">{{ 'auth.privacyLink' | translate }}</a>
+        </p>
 
         <div
           class="my-6 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.18em]"
