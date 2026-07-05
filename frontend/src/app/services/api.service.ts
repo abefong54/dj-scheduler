@@ -36,6 +36,9 @@ export interface DJ {
   // Optional so existing DJ literals/tests stay valid; the API always returns them.
   certifications?: string[];
   is_student?: boolean;
+  // The student's roster email — the login "invite" a teacher sets so the student
+  // can sign in with Google. Organizer-facing only (never in public payloads).
+  email?: string;
 }
 
 export interface Event {
@@ -183,7 +186,7 @@ export class ApiService {
   }
   createDJ(d: Pick<DJ, 'name' | 'genre_tags'>) { return this.http.post<DJ>(`${this.base}/api/djs`, d); }
   // EL-020: update a DJ's name, genres, certifications, and student status (PATCH).
-  updateDJ(id: string, d: Pick<DJ, 'name' | 'genre_tags' | 'certifications' | 'is_student'>) {
+  updateDJ(id: string, d: Pick<DJ, 'name' | 'genre_tags' | 'certifications' | 'is_student' | 'email'>) {
     return this.http.patch<DJ>(`${this.base}/api/djs/${id}`, d);
   }
   deleteDJ(id: string) { return this.http.delete(`${this.base}/api/djs/${id}`); }

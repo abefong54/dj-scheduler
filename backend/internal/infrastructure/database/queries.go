@@ -7,7 +7,7 @@ const (
 	// (case-insensitive genre, '' = no filter) and $3 ready_only (true = only DJs
 	// with ≥1 certification).
 	queryDJList = `
-		SELECT id, name, COALESCE(genre_tags, '{}'), COALESCE(certifications, '{}'), is_student, created_at::text
+		SELECT id, name, COALESCE(genre_tags, '{}'), COALESCE(certifications, '{}'), is_student, COALESCE(email, ''), created_at::text
 		FROM djs
 		WHERE school_id = $1
 		  AND ($2 = '' OR EXISTS (SELECT 1 FROM unnest(certifications) c WHERE LOWER(c) = LOWER($2)))
@@ -18,16 +18,19 @@ const (
 	// insert sets school_id only.
 	queryDJInsert = `
 		INSERT INTO djs (name, genre_tags, school_id) VALUES ($1, $2, $3)
-		RETURNING id, name, COALESCE(genre_tags, '{}'), COALESCE(certifications, '{}'), is_student, created_at::text`
+		RETURNING id, name, COALESCE(genre_tags, '{}'), COALESCE(certifications, '{}'), is_student, COALESCE(email, ''), created_at::text`
 
 	queryDJGet = `
-		SELECT id, name, COALESCE(genre_tags, '{}'), COALESCE(certifications, '{}'), is_student, created_at::text
+		SELECT id, name, COALESCE(genre_tags, '{}'), COALESCE(certifications, '{}'), is_student, COALESCE(email, ''), created_at::text
 		FROM djs WHERE id = $1 AND school_id = $2`
 
+	// EL: the roster email (the student-login "invite") is set alongside the other
+	// teacher-editable fields. NULLIF keeps an intentionally-blank email NULL so the
+	// partial unique index on lower(email) doesn't collide across empty rows.
 	queryDJUpdate = `
-		UPDATE djs SET name = $1, genre_tags = $2, certifications = $3, is_student = $4
+		UPDATE djs SET name = $1, genre_tags = $2, certifications = $3, is_student = $4, email = NULLIF($7, '')
 		WHERE id = $5 AND school_id = $6
-		RETURNING id, name, COALESCE(genre_tags, '{}'), COALESCE(certifications, '{}'), is_student, created_at::text`
+		RETURNING id, name, COALESCE(genre_tags, '{}'), COALESCE(certifications, '{}'), is_student, COALESCE(email, ''), created_at::text`
 
 	queryDJDelete = `DELETE FROM djs WHERE id = $1 AND school_id = $2`
 
@@ -524,4 +527,12 @@ const (
 		FROM submissions
 		WHERE dj_id = $1 AND school_id = $2
 		ORDER BY created_at DESC`
+
+	// querySubmissionListForReview is the teacher review queue: posted (awaiting
+	// sign-off) submissions, oldest first so the longest-waiting student is served.
+	querySubmissionListForReview = `
+		SELECT ` + submissionCols + `
+		FROM submissions
+		WHERE school_id = $1 AND status = 'posted'
+		ORDER BY created_at ASC`
 )

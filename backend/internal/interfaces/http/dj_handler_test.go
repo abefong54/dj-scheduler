@@ -126,6 +126,46 @@ func TestCreateDJ(t *testing.T) {
 	}
 }
 
+// The teacher sets a student's roster email (the login "invite"); it persists on
+// update and is returned on the organizer-facing roster read.
+func TestUpdateDJEmailForLogin(t *testing.T) {
+	pool := setupTestDB(t)
+	org := createTestOrganizer(t, pool)
+	dj := seedDJ(t, pool, org, "email-student")
+	email := "s-" + dj + "@example.com" // unique per run; seedDJ cleans the row up
+	r := djRouterForOrg(t, pool, org)
+
+	body, _ := json.Marshal(map[string]any{
+		"name": "email-student", "genre_tags": []string{"techno"}, "is_student": true, "email": email,
+	})
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPatch, "/api/djs/"+dj, bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("patch email: want 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var d model.DJ
+	json.NewDecoder(w.Body).Decode(&d)
+	if d.Email != email {
+		t.Fatalf("email not persisted on update, got %q", d.Email)
+	}
+
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/djs", nil))
+	var list []model.DJ
+	json.NewDecoder(w.Body).Decode(&list)
+	found := false
+	for _, x := range list {
+		if x.ID == dj && x.Email == email {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("updated email should appear in the organizer roster list")
+	}
+}
+
 func TestGetDJ(t *testing.T) {
 	pool := setupTestDB(t)
 	orgA := createTestOrganizer(t, pool)

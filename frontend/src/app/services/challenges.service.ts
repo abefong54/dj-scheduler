@@ -17,8 +17,8 @@ export interface Challenge {
   description: string;
   skill: string;
   assigned_dj_id: string; // custom only, else ''
-  badge_label: string;    // core only
-  badge_icon: string;     // core only
+  badge_label: string; // core only
+  badge_icon: string; // core only
   sort_order: number;
   created_by: string;
   archived: boolean;
@@ -31,8 +31,8 @@ export interface Submission {
   school_id: string;
   challenge_id: string;
   dj_id: string;
-  media_kind: string;      // 'embed' (future: 'file')
-  media_provider: string;  // youtube | soundcloud | mixcloud
+  media_kind: string; // 'embed' (future: 'file')
+  media_provider: string; // youtube | soundcloud | mixcloud
   media_ref: string;
   caption: string;
   status: 'posted' | 'passed' | 'needs_work';
@@ -105,6 +105,16 @@ export class ChallengesService {
 
   // --- teacher surfaces ---
 
+  /** List the school's challenges (core + custom) for the authoring view. */
+  listChallenges(): Observable<Challenge[]> {
+    return this.http.get<Challenge[]>(`${this.base}/api/challenges`);
+  }
+
+  /** Archive (soft-delete) a challenge; earned badges survive (snapshotted). */
+  archiveChallenge(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/api/challenges/${id}`);
+  }
+
   /** Author a custom challenge for one student. */
   authorChallenge(input: Partial<Challenge>): Observable<Challenge> {
     return this.http.post<Challenge>(`${this.base}/api/challenges`, input);
@@ -122,6 +132,11 @@ export class ChallengesService {
    */
   curateCore(input: Partial<Challenge>): Observable<Challenge> {
     return this.http.post<Challenge>(`${this.base}/api/challenges`, { type: 'core', ...input });
+  }
+
+  /** The teacher review queue: posted submissions awaiting sign-off, oldest first. */
+  listPending(): Observable<Submission[]> {
+    return this.http.get<Submission[]>(`${this.base}/api/submissions/pending`);
   }
 
   /** Pass or return a submission with an optional note. */

@@ -73,11 +73,11 @@ describe('AdminShellComponent', () => {
       expect(root().querySelector('.shell-page-title')?.textContent).toContain('My Page');
     });
 
-    it('renders the three nav items (Events / DJs / Performance)', () => {
+    it('renders the nav items (Events / DJs / Performance / Challenges)', () => {
       const items = root().querySelectorAll('.shell-nav-item');
-      expect(items.length).toBe(3);
+      expect(items.length).toBe(4);
       const navIds = Array.from(items).map((el) => el.getAttribute('data-nav'));
-      expect(navIds).toEqual(['events', 'djs', 'performance']);
+      expect(navIds).toEqual(['events', 'djs', 'performance', 'challenges']);
     });
 
     it('does not render the removed Lineup/schedule nav item (dead /admin/schedule link)', () => {
