@@ -19,6 +19,12 @@ test.describe('console side nav (EL-067)', () => {
     await expect(page.locator('[data-nav="djs"]')).toHaveClass(/shell-nav-active/);
   });
 
+  test('challenges page renders the sidebar with Challenges active', async ({ page }) => {
+    await page.goto('/admin/challenges');
+    await expect(page.locator('.shell-sidebar')).toBeVisible();
+    await expect(page.locator('[data-nav="challenges"]')).toHaveClass(/shell-nav-active/);
+  });
+
   test('sidebar persists when navigating Events → DJs via the side nav', async ({ page }) => {
     await page.goto('/admin/events');
     await page.locator('[data-nav="djs"]').click();

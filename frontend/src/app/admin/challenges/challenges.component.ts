@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ApiService, DJ } from '../../services/api.service';
 import { Challenge, ChallengesService } from '../../services/challenges.service';
+import { AdminShellComponent } from '../../shared/admin-shell.component';
 
 /**
  * Teacher challenge authoring (Track H). Curate the school's core (badge) set and
@@ -12,19 +13,17 @@ import { Challenge, ChallengesService } from '../../services/challenges.service'
 @Component({
   selector: 'app-admin-challenges',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, AdminShellComponent],
   template: `
-    <section class="mx-auto max-w-3xl px-6 py-8" style="color: var(--ink);">
-      <header class="mb-6 flex items-center justify-between">
-        <h1 class="font-display text-3xl font-bold tracking-tight">Challenges</h1>
-        <a
-          routerLink="/admin/review"
-          class="btn btn-secondary px-4 py-2 text-sm"
-          data-testid="review-link"
-          >Review queue →</a
-        >
-      </header>
-
+    <app-admin-shell activeNav="challenges" title="Challenges" breadcrumb="Workspace">
+      <a
+        shell-actions
+        routerLink="/admin/review"
+        class="btn btn-secondary px-4 py-2 text-sm"
+        data-testid="review-link"
+        >Review queue →</a
+      >
+      <section class="mx-auto max-w-3xl px-6 py-8" style="color: var(--ink);">
       <!-- Author form -->
       <div
         class="mb-8 rounded-[var(--radius-card)] border p-4"
@@ -147,6 +146,7 @@ import { Challenge, ChallengesService } from '../../services/challenges.service'
         </div>
       }
     </section>
+    </app-admin-shell>
   `,
 })
 export class AdminChallengesComponent {
